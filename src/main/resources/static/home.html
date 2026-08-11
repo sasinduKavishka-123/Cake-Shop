@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sugar &amp; Flour — Handmade Pastries &amp; Cakes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+        :root{
+            --cream: #FBF3EA;
+            --cream-warm: #FFFCF8;
+            --blush: #F3C9D0;
+            --blush-deep: #E8A9B5;
+            --cocoa: #3A2822;
+            --cocoa-soft: #6B5248;
+            --gold: #C79A4B;
+            --gold-light: #E8D5AE;
+            --line: rgba(58,40,34,0.12);
+            --shadow: 0 20px 50px -20px rgba(58,40,34,0.25);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+
+        html{scroll-behavior:smooth;}
+
+        body{
+            font-family:'Manrope', sans-serif;
+            background:var(--cream);
+            color:var(--cocoa);
+            -webkit-font-smoothing:antialiased;
+            overflow-x:hidden;
+        }
+
+        img{display:block;max-width:100%;}
+
+        a{text-decoration:none;color:inherit;}
+
+        h1,h2,h3,h4{
+            font-family:'Fraunces', serif;
+            font-weight:600;
+            line-height:1.08;
+            letter-spacing:-0.01em;
+        }
+
+        .eyebrow{
+            font-family:'Manrope', sans-serif;
+            text-transform:uppercase;
+            letter-spacing:0.18em;
+            font-size:0.72rem;
+            font-weight:700;
+            color:var(--gold);
+        }
+
+        .container{
+            max-width:1240px;
+            margin:0 auto;
+            padding:0 clamp(20px,5vw,64px);
+        }
+
+        button, .btn{
+            font-family:'Manrope', sans-serif;
+            cursor:pointer;
+            border:none;
+            font-weight:700;
+            font-size:0.95rem;
+            transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+        }
+
+        /* ================= HEADER ================= */
+        header{
+            position:fixed;
+            top:0; left:0; right:0;
+            z-index:100;
+            background:rgba(251,243,234,0.0);
+            transition:background .35s ease, box-shadow .35s ease, padding .35s ease;
+            padding:26px 0;
+        }
+        header.scrolled{
+            background:rgba(251,243,234,0.92);
+            backdrop-filter:blur(10px);
+            box-shadow:0 8px 30px -18px rgba(58,40,34,0.3);
+            padding:14px 0;
+        }
+        .nav-wrap{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .logo{
+            font-family:'Fraunces', serif;
+            font-size:1.5rem;
+            font-weight:600;
+            display:flex;
+            align-items:baseline;
+            gap:6px;
+            color:var(--cocoa);
+        }
+        header.scrolled .logo, header.scrolled .nav-links a, header.scrolled .icon-btn{
+            color:var(--cocoa);
+        }
+        .logo .amp{
+            font-style:italic;
+            color:var(--gold);
+            font-weight:500;
+        }
+        .logo-mark{
+            width:38px;height:38px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+            margin-right:4px;
+            flex:none;
+        }
+        .nav-links{
+            display:flex;
+            gap:2.6rem;
+            list-style:none;
+        }
+        .nav-links a{
+            font-weight:600;
+            font-size:0.94rem;
+            color:var(--cocoa);
+            position:relative;
+            padding:4px 0;
+        }
+        .nav-links a::after{
+            content:'';
+            position:absolute;
+            left:0; bottom:-2px;
+            width:0; height:2px;
+            background:var(--gold);
+            transition:width .25s ease;
+        }
+        .nav-links a:hover::after{width:100%;}
+        .nav-right{
+            display:flex;
+            align-items:center;
+            gap:1.6rem;
+        }
+        .order-btn{
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            padding:12px 26px;
+            border-radius:100px;
+            letter-spacing:0.02em;
+        }
+        .order-btn:hover{
+            background:var(--gold);
+            color:var(--cocoa);
+            transform:translateY(-2px);
+            box-shadow:0 10px 24px -10px rgba(199,154,75,0.6);
+        }
+        .burger{display:none;flex-direction:column;gap:5px;background:none;padding:6px;}
+        .burger span{width:24px;height:2px;background:var(--cocoa);border-radius:2px;}
+
+        /* ================= HERO ================= */
+        .hero{
+            position:relative;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            padding-top:120px;
+            padding-bottom:100px;
+            overflow:hidden;
+            background:linear-gradient(180deg,#FFFBF6 0%, #FBF3EA 60%);
+        }
+        .hero-grid{
+            display:grid;
+            grid-template-columns:1.05fr 0.95fr;
+            gap:56px;
+            align-items:center;
+            width:100%;
+        }
+        .hero-copy .eyebrow{margin-bottom:18px; display:inline-flex; align-items:center; gap:10px;}
+        .hero-copy .eyebrow::before{
+            content:'';
+            width:22px;height:1px;
+            background:var(--gold);
+            display:inline-block;
+        }
+        .hero-copy h1{
+            font-size:clamp(2.6rem, 5vw, 4.4rem);
+            margin-bottom:22px;
+            color:var(--cocoa);
+        }
+        .hero-copy h1 em{
+            font-style:italic;
+            color:var(--gold);
+            font-weight:500;
+        }
+        .hero-copy p{
+            font-size:1.08rem;
+            color:var(--cocoa-soft);
+            max-width:480px;
+            line-height:1.7;
+            margin-bottom:36px;
+        }
+        .hero-actions{
+            display:flex;
+            align-items:center;
+            gap:28px;
+            flex-wrap:wrap;
+        }
+        .btn-primary{
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            padding:17px 34px;
+            border-radius:100px;
+            font-size:1rem;
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+        }
+        .btn-primary:hover{
+            background:var(--gold);
+            color:var(--cocoa);
+            transform:translateY(-3px);
+            box-shadow:0 16px 30px -12px rgba(199,154,75,0.55);
+        }
+        .btn-ghost{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            font-weight:700;
+            color:var(--cocoa);
+            border-bottom:2px solid var(--blush-deep);
+            padding-bottom:4px;
+        }
+        .btn-ghost:hover{border-color:var(--gold); color:var(--gold);}
+
+        .hero-visual{
+            position:relative;
+            height:560px;
+        }
+        .hero-img-main{
+            position:absolute;
+            top:0; right:0;
+            width:82%;
+            height:78%;
+            border-radius:180px 20px 180px 20px;
+            overflow:hidden;
+            box-shadow:var(--shadow);
+            border:8px solid var(--cream-warm);
+        }
+        .hero-img-main img{width:100%;height:100%;object-fit:cover;}
+        .hero-img-sub{
+            position:absolute;
+            bottom:0; left:0;
+            width:56%;
+            height:44%;
+            border-radius:20px 120px 20px 120px;
+            overflow:hidden;
+            box-shadow:var(--shadow);
+            border:8px solid var(--cream-warm);
+        }
+        .hero-img-sub img{width:100%;height:100%;object-fit:cover;}
+        .hero-badge{
+            position:absolute;
+            left:-6px; top:38%;
+            background:var(--blush);
+            color:var(--cocoa);
+            width:118px;height:118px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            font-family:'Fraunces', serif;
+            font-weight:600;
+            font-size:0.92rem;
+            line-height:1.25;
+            box-shadow:0 14px 28px -12px rgba(232,169,181,0.7);
+            animation:spin-slow 16s linear infinite;
+            z-index:3;
+        }
+        .hero-badge span{display:block; font-family:'Manrope',sans-serif; font-size:0.62rem; letter-spacing:0.1em; font-weight:700; margin-top:2px;}
+        @keyframes spin-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+        @media (prefers-reduced-motion: reduce){
+            .hero-badge{animation:none;}
+        }
+
+        .hero-stats{
+            position:absolute;
+            bottom:26px; right:-10px;
+            background:var(--cream-warm);
+            border-radius:20px;
+            padding:16px 22px;
+            box-shadow:var(--shadow);
+            display:flex;
+            gap:20px;
+            align-items:center;
+            z-index:3;
+        }
+        .hero-stats .num{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--gold);}
+        .hero-stats .lbl{font-size:0.72rem;color:var(--cocoa-soft);font-weight:600;max-width:110px;line-height:1.3;}
+
+        /* scalloped divider - pie crust crimp */
+        .scallop{
+            width:100%;
+            height:46px;
+            display:block;
+            fill:var(--cream-warm);
+        }
+        .scallop-flip{transform:rotate(180deg);}
+
+        /* ================= SECTION HEADS ================= */
+        .section{padding:110px 0;}
+        .section-head{
+            text-align:center;
+            max-width:620px;
+            margin:0 auto 64px;
+        }
+        .section-head .eyebrow{display:block;margin-bottom:14px;}
+        .section-head h2{
+            font-size:clamp(2rem,3.6vw,2.9rem);
+            color:var(--cocoa);
+        }
+        .section-head p{
+            margin-top:16px;
+            color:var(--cocoa-soft);
+            font-size:1.02rem;
+            line-height:1.7;
+        }
+
+        /* ================= FEATURED ================= */
+        .featured{background:var(--cream-warm);position:relative;}
+        .card-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:26px;
+        }
+        .p-card{
+            background:var(--cream);
+            border-radius:24px;
+            overflow:hidden;
+            position:relative;
+            transition:transform .35s ease, box-shadow .35s ease;
+            border:1px solid var(--line);
+        }
+        .p-card:hover{
+            transform:translateY(-8px);
+            box-shadow:var(--shadow);
+        }
+        .p-card-img{
+            height:220px;
+            overflow:hidden;
+            position:relative;
+        }
+        .p-card-img img{
+            width:100%;height:100%;object-fit:cover;
+            transition:transform .6s ease;
+        }
+        .p-card:hover .p-card-img img{transform:scale(1.08);}
+        .p-tag{
+            position:absolute;
+            top:14px; left:14px;
+            background:var(--cream-warm);
+            color:var(--cocoa);
+            font-size:0.68rem;
+            font-weight:800;
+            letter-spacing:0.06em;
+            text-transform:uppercase;
+            padding:6px 12px;
+            border-radius:100px;
+        }
+        .p-card-body{padding:22px 22px 26px;}
+        .p-card-body h3{
+            font-size:1.15rem;
+            margin-bottom:6px;
+            font-weight:600;
+        }
+        .p-card-body p{
+            font-size:0.88rem;
+            color:var(--cocoa-soft);
+            line-height:1.55;
+            margin-bottom:16px;
+        }
+        .p-card-foot{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .price{
+            font-family:'Fraunces', serif;
+            font-weight:600;
+            font-size:1.15rem;
+            color:var(--gold);
+        }
+        .add-btn{
+            width:40px;height:40px;
+            border-radius:50%;
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.3rem;
+            font-weight:400;
+        }
+        .add-btn:hover{background:var(--blush-deep);color:var(--cocoa);transform:scale(1.08);}
+
+        .see-all-wrap{text-align:center;margin-top:50px;}
+
+        /* ================= ABOUT ================= */
+        .about{background:var(--cream);}
+        .about-grid{
+            display:grid;
+            grid-template-columns:0.9fr 1.1fr;
+            gap:70px;
+            align-items:center;
+        }
+        .about-visual{
+            position:relative;
+            height:480px;
+        }
+        .about-img-a{
+            position:absolute;
+            left:0; top:20px;
+            width:68%; height:75%;
+            border-radius:24px;
+            overflow:hidden;
+            box-shadow:var(--shadow);
+        }
+        .about-img-a img{width:100%;height:100%;object-fit:cover;}
+        .about-img-b{
+            position:absolute;
+            right:0; bottom:0;
+            width:52%; height:56%;
+            border-radius:24px;
+            overflow:hidden;
+            box-shadow:var(--shadow);
+            border:8px solid var(--cream);
+        }
+        .about-img-b img{width:100%;height:100%;object-fit:cover;}
+        .about-copy h2{
+            font-size:clamp(2rem,3.4vw,2.7rem);
+            margin-bottom:22px;
+        }
+        .about-copy p{
+            color:var(--cocoa-soft);
+            line-height:1.8;
+            font-size:1.02rem;
+            margin-bottom:18px;
+            max-width:520px;
+        }
+        .about-list{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+            margin-top:30px;
+            max-width:520px;
+        }
+        .about-list li{
+            list-style:none;
+            display:flex;
+            align-items:flex-start;
+            gap:10px;
+            font-size:0.92rem;
+            font-weight:600;
+            color:var(--cocoa);
+        }
+        .about-list li::before{
+            content:'✧';
+            color:var(--gold);
+            font-size:1.1rem;
+            line-height:1;
+        }
+
+        /* ================= PROCESS / SIGNATURE STRIP ================= */
+        .strip{
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            padding:90px 0;
+        }
+        .strip-inner{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:40px;
+            text-align:center;
+        }
+        .strip h4{
+            font-size:1.15rem;
+            color:var(--gold-light);
+            margin-bottom:10px;
+        }
+        .strip p{
+            color:rgba(255,252,248,0.7);
+            font-size:0.9rem;
+            line-height:1.6;
+        }
+        .strip-num{
+            font-family:'Fraunces', serif;
+            font-style:italic;
+            font-size:2.2rem;
+            color:var(--gold);
+            margin-bottom:14px;
+            display:block;
+        }
+
+        /* ================= TESTIMONIAL ================= */
+        .testimonial{
+            background:var(--blush);
+            padding:100px 0;
+            text-align:center;
+            position:relative;
+        }
+        .testimonial blockquote{
+            font-family:'Fraunces', serif;
+            font-style:italic;
+            font-weight:500;
+            font-size:clamp(1.4rem,2.8vw,2.1rem);
+            max-width:780px;
+            margin:0 auto 26px;
+            line-height:1.5;
+            color:var(--cocoa);
+        }
+        .testimonial cite{
+            font-style:normal;
+            font-weight:700;
+            font-size:0.9rem;
+            letter-spacing:0.04em;
+            color:var(--cocoa-soft);
+        }
+
+        /* ================= CTA / ORDER ================= */
+        .cta{
+            padding:110px 0;
+            text-align:center;
+            background:var(--cream-warm);
+        }
+        .cta h2{font-size:clamp(2rem,4vw,3rem); margin-bottom:20px;}
+        .cta p{color:var(--cocoa-soft); max-width:520px; margin:0 auto 40px; line-height:1.7;}
+
+        /* ================= FOOTER ================= */
+        footer{
+            background:var(--cocoa);
+            color:rgba(255,252,248,0.75);
+            padding:70px 0 30px;
+        }
+        .footer-grid{
+            display:grid;
+            grid-template-columns:1.4fr 1fr 1fr 1.2fr;
+            gap:40px;
+            padding-bottom:50px;
+            border-bottom:1px solid rgba(255,252,248,0.14);
+        }
+        .footer-logo{
+            font-family:'Fraunces', serif;
+            font-size:1.4rem;
+            color:var(--cream-warm);
+            margin-bottom:14px;
+        }
+        .footer-logo em{color:var(--gold); font-style:italic; font-weight:500;}
+        footer p{font-size:0.9rem; line-height:1.7; max-width:280px;}
+        footer h5{
+            color:var(--cream-warm);
+            font-size:0.85rem;
+            text-transform:uppercase;
+            letter-spacing:0.1em;
+            margin-bottom:18px;
+        }
+        footer ul{list-style:none;}
+        footer ul li{margin-bottom:12px;}
+        footer ul a{font-size:0.92rem;}
+        footer ul a:hover{color:var(--gold);}
+        .footer-bottom{
+            padding-top:26px;
+            display:flex;
+            justify-content:space-between;
+            font-size:0.8rem;
+            color:rgba(255,252,248,0.5);
+            flex-wrap:wrap;
+            gap:10px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width:980px){
+            .hero-grid{grid-template-columns:1fr;}
+            .hero-visual{height:420px; margin-top:20px;}
+            .card-grid{grid-template-columns:repeat(2,1fr);}
+            .about-grid{grid-template-columns:1fr; gap:50px;}
+            .about-visual{height:380px;}
+            .strip-inner{grid-template-columns:repeat(2,1fr); gap:36px;}
+            .footer-grid{grid-template-columns:1fr 1fr; gap:36px;}
+        }
+        @media (max-width:720px){
+            .nav-links{
+                position:fixed;
+                top:0; right:0;
+                height:100vh;
+                width:76%;
+                background:var(--cream-warm);
+                flex-direction:column;
+                justify-content:center;
+                align-items:flex-start;
+                padding:0 40px;
+                gap:2rem;
+                transform:translateX(100%);
+                transition:transform .35s ease;
+                box-shadow:-10px 0 40px rgba(0,0,0,0.1);
+            }
+            .nav-links.open{transform:translateX(0);}
+            .nav-links a{font-size:1.2rem;}
+            .burger{display:flex;}
+            .order-btn{display:none;}
+            .card-grid{grid-template-columns:1fr;}
+            .hero-badge{display:none;}
+            .hero-stats{right:6px;}
+            .hero{padding-top:100px;}
+        }
+    </style>
+</head>
+<body>
+
+<header id="siteHeader">
+    <div class="container nav-wrap">
+        <a href="#" class="logo">
+      <span class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+      </span>
+            Sugar<span class="amp">&amp;</span>Flour
+        </a>
+        <nav>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#order">Order Online</a></li>
+            </ul>
+        </nav>
+        <div class="nav-right">
+            <a href="#order" class="order-btn">Order Now</a>
+            <button class="burger" id="burgerBtn" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+        </div>
+    </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-copy">
+            <span class="eyebrow">Baked fresh, every single morning</span>
+            <h1>Little moments of<br><em>sweetness,</em> baked<br>with love.</h1>
+            <p>Buttery croissants, hand-piped cakes, and fruit tarts made from scratch daily in our Colombo kitchen — using real butter, real fruit, and absolutely no shortcuts.</p>
+            <div class="hero-actions">
+                <a href="#order" class="btn-primary">Order Now →</a>
+                <a href="#menu" class="btn-ghost">View Our Menu</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-img-main">
+                <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80" alt="Basket of freshly baked golden croissants">
+            </div>
+            <div class="hero-img-sub">
+                <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=700&q=80" alt="Fresh strawberry fruit tart">
+            </div>
+            <div class="hero-badge">Fresh<span>DAILY BAKE</span></div>
+            <div class="hero-stats">
+                <span class="num">12k+</span>
+                <span class="lbl">Pastries boxed &amp; delivered this year</span>
+            </div>
+        </div>
+    </div>
+</section>
+<svg class="scallop" viewBox="0 0 1200 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,46 L0,20 Q25,0 50,20 Q75,40 100,20 Q125,0 150,20 Q175,40 200,20 Q225,0 250,20 Q275,40 300,20 Q325,0 350,20 Q375,40 400,20 Q425,0 450,20 Q475,40 500,20 Q525,0 550,20 Q575,40 600,20 Q625,0 650,20 Q675,40 700,20 Q725,0 750,20 Q775,40 800,20 Q825,0 850,20 Q875,40 900,20 Q925,0 950,20 Q975,40 1000,20 Q1025,0 1050,20 Q1075,40 1100,20 Q1125,0 1150,20 Q1175,40 1200,20 L1200,46 Z"/>
+</svg>
+
+<!-- ================= FEATURED ================= -->
+<section class="featured section" id="menu">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Fan Favorites</span>
+            <h2>Straight from the oven</h2>
+            <p>The pastries our regulars order again and again — each one made in small batches so every bite tastes like it just came out of the oven.</p>
+        </div>
+        <div class="card-grid">
+
+            <div class="p-card">
+                <div class="p-card-img">
+                    <span class="p-tag">Best Seller</span>
+                    <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" alt="Flaky butter croissant">
+                </div>
+                <div class="p-card-body">
+                    <h3>Butter Croissant</h3>
+                    <p>72-hour laminated dough, baked golden and shatteringly flaky.</p>
+                    <div class="p-card-foot">
+                        <span class="price">Rs. 450</span>
+                        <span class="add-btn">+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-card">
+                <div class="p-card-img">
+                    <span class="p-tag">Popular</span>
+                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80" alt="Slice of layered celebration cake">
+                </div>
+                <div class="p-card-body">
+                    <h3>Rose Vanilla Cake</h3>
+                    <p>Soft vanilla sponge, whipped cream, and candied rose petals.</p>
+                    <div class="p-card-foot">
+                        <span class="price">Rs. 3,200</span>
+                        <span class="add-btn">+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-card">
+                <div class="p-card-img">
+                    <span class="p-tag">Seasonal</span>
+                    <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80" alt="Fresh mixed berry tart">
+                </div>
+                <div class="p-card-body">
+                    <h3>Berry Fruit Tart</h3>
+                    <p>Crisp shortcrust, silky custard, and glazed seasonal berries.</p>
+                    <div class="p-card-foot">
+                        <span class="price">Rs. 890</span>
+                        <span class="add-btn">+</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-card">
+                <div class="p-card-img">
+                    <span class="p-tag">New</span>
+                    <img src="https://images.unsplash.com/photo-1558326567-98ae2405596b?auto=format&fit=crop&w=500&q=80" alt="Colorful French macarons">
+                </div>
+                <div class="p-card-body">
+                    <h3>Macaron Box (6)</h3>
+                    <p>Crisp shells, chewy centers, six flavors hand-piped daily.</p>
+                    <div class="p-card-foot">
+                        <span class="price">Rs. 1,150</span>
+                        <span class="add-btn">+</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="see-all-wrap">
+            <a href="#order" class="btn-ghost">See the Full Menu</a>
+        </div>
+    </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="about section" id="about">
+    <div class="container about-grid">
+        <div class="about-visual">
+            <div class="about-img-a">
+                <img src="https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?auto=format&fit=crop&w=800&q=80" alt="Baker kneading dough in the kitchen">
+            </div>
+            <div class="about-img-b">
+                <img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=700&q=80" alt="Interior of the Sugar and Flour bakery shop">
+            </div>
+        </div>
+        <div class="about-copy">
+            <span class="eyebrow">Our Story</span>
+            <h2>A little kitchen with a very big oven.</h2>
+            <p>Sugar &amp; Flour started in 2016 as a home kitchen experiment and grew into a neighborhood spot where the ovens never really stop. We measure by hand, laminate our own butter into every croissant, and taste-test more batches than we'd like to admit.</p>
+            <p>No preservatives, no shortcuts — just proper technique, good ingredients, and a genuine love for the craft of baking.</p>
+            <ul class="about-list">
+                <li>Baked fresh every morning</li>
+                <li>Real butter, real fruit</li>
+                <li>Small-batch, made by hand</li>
+                <li>Custom cakes on request</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ================= SIGNATURE STRIP ================= -->
+<section class="strip">
+    <div class="container strip-inner">
+        <div>
+            <span class="strip-num">01</span>
+            <h4>We Mix</h4>
+            <p>Flour, butter, and time — laminated dough rests for up to three days.</p>
+        </div>
+        <div>
+            <span class="strip-num">02</span>
+            <h4>We Shape</h4>
+            <p>Every croissant, tart shell, and cake layer is shaped by hand.</p>
+        </div>
+        <div>
+            <span class="strip-num">03</span>
+            <h4>We Bake</h4>
+            <p>Small batches, low and slow, straight from our stone-deck ovens.</p>
+        </div>
+        <div>
+            <span class="strip-num">04</span>
+            <h4>We Deliver</h4>
+            <p>Boxed warm and brought to your door across Colombo, same day.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= TESTIMONIAL ================= -->
+<section class="testimonial">
+    <div class="container">
+        <blockquote>"Every box from Sugar &amp; Flour feels like a little celebration — the croissants alone are worth crossing town for."</blockquote>
+        <cite>— Amaya R., regular customer</cite>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta" id="order">
+    <div class="container">
+        <span class="eyebrow">Order Online</span>
+        <h2>Ready for something sweet?</h2>
+        <p>Order ahead for pickup, or have a warm box delivered to your door. Custom cakes need 48 hours' notice.</p>
+        <a href="#" class="btn-primary">Order Now →</a>
+    </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer id="contact">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo">Sugar<em>&amp;</em>Flour</div>
+                <p>Handmade pastries, cakes, and tarts baked fresh every morning in Colombo.</p>
+            </div>
+            <div>
+                <h5>Explore</h5>
+                <ul>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#order">Order Online</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5>Visit</h5>
+                <ul>
+                    <li><a href="#">Store Locator</a></li>
+                    <li><a href="#">Catering</a></li>
+                    <li><a href="#">Gift Cards</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5>Get in Touch</h5>
+                <ul>
+                    <li><a href="mailto:hello@sugarandflour.com">hello@sugarandflour.com</a></li>
+                    <li><a href="tel:+94112345678">+94 11 234 5678</a></li>
+                    <li><a href="#">42 Galle Road, Colombo</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 Sugar &amp; Flour Bakery. All rights reserved.</span>
+            <span>Made with butter, sugar, and a little flour.</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const header = document.getElementById('siteHeader');
+    window.addEventListener('scroll', () => {
+        header.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    const burger = document.getElementById('burgerBtn');
+    const navLinks = document.getElementById('navLinks');
+    burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+</script>
+
+</body>
+</html>
