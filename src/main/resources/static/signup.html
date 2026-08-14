@@ -179,26 +179,6 @@
         .form-head p a{font-weight:800;color:var(--terracotta-deep);border-bottom:1.5px solid var(--terracotta-deep);}
         .form-head p a:hover{color:var(--gold); border-color:var(--gold);}
 
-        .social-btn{
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:10px;
-            padding:13px 10px;
-            border-radius:14px;
-            border:1.5px solid var(--line);
-            background:var(--cream-warm);
-            font-weight:700;
-            font-size:0.86rem;
-            color:var(--espresso);
-            transition:all .2s ease;
-        }
-        .social-btn:hover{
-            border-color:var(--gold);
-            transform:translateY(-2px);
-            box-shadow:var(--shadow-sm);
-        }
-
         .divider{
             display:flex;
             align-items:center;
@@ -313,7 +293,6 @@
         .strength-wrap[data-level="4"] .strength-bars span{background:var(--success);}
         .strength-wrap[data-level="4"] .strength-label{color:var(--success);}
 
-
         .submit-btn{
             width:100%;
             padding:17px;
@@ -376,9 +355,11 @@
             .form-panel{min-height:100vh; padding:50px 24px; align-items:flex-start;}
             .mobile-logo{display:flex;}
         }
+        @media (max-width:420px){
+            .form-panel{padding:38px 18px;}
+        }
     </style>
 </head>
-
 <body>
 
 <div class="shell">
@@ -397,12 +378,15 @@
             <div class="visual-quote">
                 <span class="eyebrow">Join Us</span>
                 <h2>Create an account and skip to the good part.</h2>
-                <p>Sign up once to unlock faster checkout, get more discounts and a few sweet perks.</p>
+                <p>Sign up once to unlock faster checkout, order tracking, and a few sweet perks.</p>
                 <ul class="perk-list">
                     <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Save your favorite orders</li>
-                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Get more discounts on items</li>
+                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Track pickup &amp; delivery in real time</li>
                     <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Get early access to seasonal menus</li>
                 </ul>
+                <div class="visual-dots">
+                    <span></span><span class="active"></span><span></span>
+                </div>
             </div>
         </div>
     </div>
@@ -421,6 +405,7 @@
             <div class="form-head">
                 <span class="eyebrow">Create Account</span>
                 <h1>Let's get you set up.</h1>
+                <p>Already have an account? <a href="login.html">Sign in</a> instead.</p>
             </div>
 
             <div class="divider">sign up with email</div>
@@ -430,7 +415,7 @@
                 <div class="field-group">
                     <label for="fullname">Full Name</label>
                     <div class="input-wrap" id="nameWrap">
-                        <input type="text" id="fullname" placeholder="Sasindu Kavishka" autocomplete="name">
+                        <input type="text" id="fullname" placeholder="Amaya Ranasinghe" autocomplete="name">
                         <span class="status-icon icon-success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#4C7A4A"/><path d="M4.5 8.2L6.8 10.5L11.5 5.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     </div>
                     <div class="field-msg" id="nameMsg">Please enter your full name.</div>
@@ -479,171 +464,211 @@
 
 </div>
 
+<!-- ***** jQuery **** -->
+<script src="../lib/jquery-4.0.0.min.js"></script>
+
 <script>
-    /* ---- password visibility toggles ---- */
-    function wireToggle(btnId, inputId){
-        const btn = document.getElementById(btnId);
-        const input = document.getElementById(inputId);
-        btn.addEventListener('click', () => {
-            const show = input.type === 'password';
-            input.type = show ? 'text' : 'password';
-            btn.textContent = show ? 'HIDE' : 'SHOW';
-        });
-    }
-    wireToggle('togglePass1', 'password');
-    wireToggle('togglePass2', 'confirmPassword');
-
-    /* ---- terms checkbox ---- */
-    const termsToggle = document.getElementById('termsToggle');
-    const termsMsg = document.getElementById('termsMsg');
-    termsToggle.addEventListener('click', () => {
-        termsToggle.classList.toggle('checked');
-        if(termsToggle.classList.contains('checked')) termsMsg.classList.remove('show');
-    });
-
-    /* ---- field refs ---- */
-    const nameInput = document.getElementById('fullname');
-    const nameWrap = document.getElementById('nameWrap');
-    const nameMsg = document.getElementById('nameMsg');
-
-    const emailInput = document.getElementById('email');
-    const emailWrap = document.getElementById('emailWrap');
-    const emailMsg = document.getElementById('emailMsg');
-
-    const passwordInput = document.getElementById('password');
-    const passwordWrap = document.getElementById('passwordWrap');
-    const strengthWrap = document.getElementById('strengthWrap');
-    const strengthLabel = document.getElementById('strengthLabel');
-
-    const confirmInput = document.getElementById('confirmPassword');
-    const confirmWrap = document.getElementById('confirmWrap');
-    const confirmMsg = document.getElementById('confirmMsg');
-
-    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-    function validateName(){
-        const val = nameInput.value.trim();
-        if(val === ''){ nameWrap.classList.remove('error','success'); nameMsg.classList.remove('show'); return false; }
-        const ok = val.length >= 2;
-        nameWrap.classList.toggle('error', !ok);
-        nameWrap.classList.toggle('success', ok);
-        nameMsg.classList.toggle('show', !ok);
-        return ok;
-    }
-
-    function validateEmail(){
-        const val = emailInput.value.trim();
-        if(val === ''){ emailWrap.classList.remove('error','success'); emailMsg.classList.remove('show'); return false; }
-        const ok = validEmail(val);
-        emailWrap.classList.toggle('error', !ok);
-        emailWrap.classList.toggle('success', ok);
-        emailMsg.classList.toggle('show', !ok);
-        return ok;
-    }
-
-    function passwordScore(v){
-        let score = 0;
-        if(v.length >= 8) score++;
-        if(/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
-        if(/[0-9]/.test(v)) score++;
-        if(/[^A-Za-z0-9]/.test(v)) score++;
-        return score;
-    }
-
-    const strengthLabels = ['Too short','Weak — add numbers or symbols','Getting there — add a symbol','Good password strength','Great, strong password!'];
-
-    function validatePasswordStrength(){
-        const val = passwordInput.value;
-        if(val === ''){
-            strengthWrap.classList.remove('show');
-            passwordWrap.classList.remove('error','success');
-            return false;
+    $(document).ready(function() {
+        /* ---- password visibility toggles ---- */
+        function wireToggle(btnId, inputId) {
+            $('#' + btnId).on('click', function() {
+                const $input = $('#' + inputId);
+                const show = $input.attr('type') === 'password';
+                $input.attr('type', show ? 'text' : 'password');
+                $(this).text(show ? 'HIDE' : 'SHOW');
+            });
         }
-        strengthWrap.classList.add('show');
-        const score = passwordScore(val);
-        const level = val.length < 6 ? 1 : Math.max(1, score);
-        strengthWrap.dataset.level = level;
-        strengthLabel.textContent = val.length < 6 ? strengthLabels[0] : strengthLabels[level];
-        const ok = val.length >= 6;
-        passwordWrap.classList.toggle('error', !ok);
-        passwordWrap.classList.toggle('success', ok && level >= 3);
-        return ok;
-    }
+        wireToggle('togglePass1', 'password');
+        wireToggle('togglePass2', 'confirmPassword');
 
-    function validateConfirm(){
-        const val = confirmInput.value;
-        if(val === ''){ confirmWrap.classList.remove('error','success'); confirmMsg.classList.remove('show'); return false; }
-        const ok = val === passwordInput.value && val.length > 0;
-        confirmWrap.classList.toggle('error', !ok);
-        confirmWrap.classList.toggle('success', ok);
-        confirmMsg.classList.toggle('show', !ok);
-        return ok;
-    }
+        /* ---- field refs ---- */
+        const $nameInput = $('#fullname');
+        const $nameWrap = $('#nameWrap');
+        const $nameMsg = $('#nameMsg');
 
-    nameInput.addEventListener('blur', validateName);
-    nameInput.addEventListener('input', () => { if(nameWrap.classList.contains('error')) validateName(); });
+        const $emailInput = $('#email');
+        const $emailWrap = $('#emailWrap');
+        const $emailMsg = $('#emailMsg');
 
-    emailInput.addEventListener('blur', validateEmail);
-    emailInput.addEventListener('input', () => { if(emailWrap.classList.contains('error')) validateEmail(); });
+        const $passwordInput = $('#password');
+        const $passwordWrap = $('#passwordWrap');
+        const $strengthWrap = $('#strengthWrap');
+        const $strengthLabel = $('#strengthLabel');
 
-    passwordInput.addEventListener('input', () => {
-        validatePasswordStrength();
-        if(confirmInput.value !== '') validateConfirm();
-    });
-    passwordInput.addEventListener('blur', validatePasswordStrength);
+        const $confirmInput = $('#confirmPassword');
+        const $confirmWrap = $('#confirmWrap');
+        const $confirmMsg = $('#confirmMsg');
 
-    confirmInput.addEventListener('blur', validateConfirm);
-    confirmInput.addEventListener('input', () => { if(confirmWrap.classList.contains('error') || confirmInput.value) validateConfirm(); });
+        function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-    /* ---- submit flow ---- */
-    const form = document.getElementById('signupForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnLabel = submitBtn.querySelector('.btn-label');
+        function validateName() {
+            const val = $nameInput.val().trim();
+            if (val === '') {
+                $nameWrap.removeClass('error success');
+                $nameMsg.removeClass('show');
+                return false;
+            }
+            const ok = val.length >= 2;
+            $nameWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $nameMsg.toggleClass('show', !ok);
+            return ok;
+        }
 
-    form.addEventListener('submit', function(e){
-        e.preventDefault();
+        function validateEmail() {
+            const val = $emailInput.val().trim();
+            if (val === '') {
+                $emailWrap.removeClass('error success');
+                $emailMsg.removeClass('show');
+                return false;
+            }
+            const ok = validEmail(val);
+            $emailWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $emailMsg.toggleClass('show', !ok);
+            return ok;
+        }
 
-        const rect = submitBtn.getBoundingClientRect();
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple';
-        const size = Math.max(rect.width, rect.height);
-        ripple.style.width = ripple.style.height = size+'px';
-        const clickX = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
-        const clickY = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
-        ripple.style.left = clickX+'px';
-        ripple.style.top = clickY+'px';
-        submitBtn.appendChild(ripple);
-        setTimeout(()=>ripple.remove(), 650);
+        function passwordScore(v) {
+            let score = 0;
+            if (v.length >= 8) score++;
+            if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+            if (/[0-9]/.test(v)) score++;
+            if (/[^A-Za-z0-9]/.test(v)) score++;
+            return score;
+        }
 
-        const nameOk = validateName();
-        const emailOk = validateEmail();
-        const passOk = validatePasswordStrength();
-        const confirmOk = validateConfirm();
+        const strengthLabels = ['Too short', 'Weak — add numbers or symbols', 'Getting there — add a symbol', 'Good password strength', 'Great, strong password!'];
 
-        if(nameInput.value.trim() === ''){ nameWrap.classList.add('error'); nameMsg.classList.add('show'); }
-        if(emailInput.value.trim() === ''){ emailWrap.classList.add('error'); emailMsg.classList.add('show'); }
-        if(passwordInput.value === ''){ passwordWrap.classList.add('error'); }
-        if(confirmInput.value === ''){ confirmWrap.classList.add('error'); confirmMsg.classList.add('show'); }
+        function validatePasswordStrength() {
+            const val = $passwordInput.val();
+            if (val === '') {
+                $strengthWrap.removeClass('show');
+                $passwordWrap.removeClass('error success');
+                return false;
+            }
+            $strengthWrap.addClass('show');
+            const score = passwordScore(val);
+            const level = val.length < 6 ? 1 : Math.max(1, score);
+            $strengthWrap.attr('data-level', level);
+            $strengthLabel.text(val.length < 6 ? strengthLabels[0] : strengthLabels[level]);
+            const ok = val.length >= 6;
+            $passwordWrap.toggleClass('error', !ok).toggleClass('success', ok && level >= 3);
+            return ok;
+        }
 
-        const termsOk = termsToggle.classList.contains('checked');
-        termsMsg.classList.toggle('show', !termsOk);
+        function validateConfirm() {
+            const val = $confirmInput.val();
+            if (val === '') {
+                $confirmWrap.removeClass('error success');
+                $confirmMsg.removeClass('show');
+                return false;
+            }
+            const ok = val === $passwordInput.val() && val.length > 0;
+            $confirmWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $confirmMsg.toggleClass('show', !ok);
+            return ok;
+        }
 
-        if(!nameOk || !emailOk || !passOk || !confirmOk || !termsOk) return;
+        /* ---- input event listeners ---- */
+        $nameInput.on('blur', validateName);
+        $nameInput.on('input', function() {
+            if ($nameWrap.hasClass('error')) validateName();
+        });
 
-        submitBtn.classList.add('loading');
-        submitBtn.disabled = true;
+        $emailInput.on('blur', validateEmail);
+        $emailInput.on('input', function() {
+            if ($emailWrap.hasClass('error')) validateEmail();
+        });
 
-        setTimeout(() => {
-            submitBtn.classList.remove('loading');
-            submitBtn.classList.add('success');
-            btnLabel.textContent = '✓ Account Created';
-            btnLabel.style.opacity = 1;
+        $passwordInput.on('input', function() {
+            validatePasswordStrength();
+            if ($confirmInput.val() !== '') validateConfirm();
+        });
+        $passwordInput.on('blur', validatePasswordStrength);
+
+        $confirmInput.on('blur', validateConfirm);
+        $confirmInput.on('input', function() {
+            if ($confirmWrap.hasClass('error') || $confirmInput.val()) validateConfirm();
+        });
+
+        /* ---- submit flow ---- */
+        const $form = $('#signupForm');
+        const $submitBtn = $('#submitBtn');
+        const $btnLabel = $submitBtn.find('.btn-label');
+
+        $form.on('submit', function(e) {
+            e.preventDefault();
+
+            const rect = $submitBtn[0].getBoundingClientRect();
+            const $ripple = $('<span class="ripple"></span>');
+            const size = Math.max(rect.width, rect.height);
+            const clickX = (e.clientX || rect.left + rect.width / 2) - rect.left - size / 2;
+            const clickY = (e.clientY || rect.top + rect.height / 2) - rect.top - size / 2;
+
+            $ripple.css({
+                width: size + 'px',
+                height: size + 'px',
+                left: clickX + 'px',
+                top: clickY + 'px'
+            });
+            $submitBtn.append($ripple);
+            setTimeout(() => $ripple.remove(), 650);
+
+            const nameOk = validateName();
+            const emailOk = validateEmail();
+            const passOk = validatePasswordStrength();
+            const confirmOk = validateConfirm();
+
+            if ($nameInput.val().trim() === '') { $nameWrap.addClass('error'); $nameMsg.addClass('show'); }
+            if ($emailInput.val().trim() === '') { $emailWrap.addClass('error'); $emailMsg.addClass('show'); }
+            if ($passwordInput.val() === '') { $passwordWrap.addClass('error'); }
+            if ($confirmInput.val() === '') { $confirmWrap.addClass('error'); $confirmMsg.addClass('show'); }
+
+            if (!nameOk || !emailOk || !passOk || !confirmOk) return;
+
+            $submitBtn.addClass('loading').prop('disabled', true);
+            $btnLabel.css('opacity', 0);
+
             setTimeout(() => {
-                submitBtn.classList.remove('success');
-                submitBtn.disabled = false;
-                btnLabel.textContent = 'Create Account';
-            }, 1800);
-        }, 1400);
+                const obj = JSON.stringify({
+                    "userId":0,
+                    "userName":$nameInput.val().trim(),
+                    "userEmail":$emailInput.val().trim(),
+                    "password":$passwordInput.val(),
+                    "userRole":"Admin"
+                })
+
+                $.ajax({
+                    url:"http://localhost:8080/v1/test/saveUser",
+                    type:"POST",
+                    contentType:"application/json",
+                    data:obj,
+                    success:function (response){
+                        if(response.status == 200){
+                            alert(response.message);
+                        }
+
+                        $submitBtn.removeClass('loading').addClass('success');
+                        $btnLabel.text('✓ Account Created').css('opacity', 1);
+
+                        setTimeout(() => {
+                            window.location.href = "login.html";
+                        }, 500);
+                    },
+                    error: function(response){
+                        if(response.status == 403){
+                            alert("Sorry Email Already Exist.");
+                        }else{
+                            alert("UNEXPECTED_ERROR");
+                        }
+                        setTimeout(() => {
+                            $submitBtn.removeClass('loading').prop('disabled', false);
+                            $btnLabel.text('Create Account').css('opacity', 1);
+                        }, 500);
+                    }
+                })
+            }, 500);
+
+        });
     });
 </script>
 
