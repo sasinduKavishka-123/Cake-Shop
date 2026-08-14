@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserve a Table — Sugar &amp; Flour</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+        :root{
+            --cream: #FBF3EA;
+            --cream-warm: #FFFDFB;
+            --blush: #F3C9D0;
+            --terracotta: #C97B5F;
+            --terracotta-deep:#B4644B;
+            --espresso: #3A2822;
+            --espresso-soft: #6B5248;
+            --gold: #C79A4B;
+            --gold-light:#EFDDB8;
+            --line: rgba(58,40,34,0.10);
+            --error:#B3452E;
+            --success:#4C7A4A;
+            --shadow-sm: 0 8px 20px -12px rgba(58,40,34,0.22);
+            --shadow-lg: 0 30px 60px -24px rgba(58,40,34,0.32);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:'Manrope',sans-serif;
+            background:var(--cream);
+            color:var(--espresso);
+            -webkit-font-smoothing:antialiased;
+        }
+        img{display:block;max-width:100%;}
+        h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;line-height:1.12;}
+        button{font-family:inherit;cursor:pointer;border:none;background:none;}
+        a{color:inherit;text-decoration:none;}
+        .container{max-width:1180px;margin:0 auto;padding:0 clamp(20px,5vw,56px);}
+
+        /* ============ HEADER ============ */
+        header{
+            padding:22px 0;
+            border-bottom:1px solid var(--line);
+            background:var(--cream-warm);
+        }
+        .nav-wrap{display:flex;align-items:center;justify-content:space-between;}
+        .logo{
+            font-family:'Fraunces', serif;
+            font-size:1.35rem;
+            font-weight:600;
+            display:flex;align-items:center;gap:8px;
+        }
+        .logo-mark{
+            width:34px;height:34px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+            flex:none;
+        }
+        .amp{font-style:italic;color:var(--gold);font-weight:500;}
+        .nav-links{display:flex;gap:2.2rem;list-style:none;}
+        .nav-links a{font-weight:600;font-size:0.92rem;color:var(--espresso-soft);}
+        .nav-links a:hover{color:var(--espresso);}
+        .nav-links a.active{color:var(--terracotta-deep);}
+        .back-link{
+            display:flex;align-items:center;gap:8px;
+            font-weight:700;font-size:0.88rem;
+            color:var(--espresso-soft);
+        }
+        .back-link:hover{color:var(--terracotta-deep);}
+        @media (max-width:760px){.nav-links{display:none;}}
+
+        /* ============ PAGE HEAD ============ */
+        .page-head{
+            padding:56px 0 8px;
+            text-align:center;
+        }
+        .eyebrow{
+            text-transform:uppercase;
+            letter-spacing:0.18em;
+            font-size:0.72rem;
+            font-weight:800;
+            color:var(--terracotta);
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:16px;
+        }
+        .eyebrow::before,.eyebrow::after{content:'';width:20px;height:1px;background:var(--gold);}
+        .page-head h1{font-size:clamp(2.1rem,4vw,3rem);margin-bottom:14px;}
+        .page-head p{color:var(--espresso-soft);max-width:520px;margin:0 auto;line-height:1.7;font-size:1rem;}
+
+        /* ============ MAIN LAYOUT ============ */
+        .booking-wrap{
+            padding:50px 0 100px;
+            display:grid;
+            grid-template-columns:1.35fr 1fr;
+            gap:40px;
+            align-items:flex-start;
+        }
+
+        .card{
+            background:var(--cream-warm);
+            border-radius:24px;
+            border:1px solid var(--line);
+            padding:34px;
+        }
+
+        .form-block{margin-bottom:34px;}
+        .form-block:last-child{margin-bottom:0;}
+        .block-label{
+            display:flex;
+            align-items:baseline;
+            justify-content:space-between;
+            margin-bottom:16px;
+        }
+        .block-label h4{
+            font-family:'Manrope',sans-serif;
+            font-size:0.78rem;
+            text-transform:uppercase;
+            letter-spacing:0.09em;
+            font-weight:800;
+            color:var(--espresso-soft);
+        }
+        .block-label span{
+            font-size:0.78rem;
+            color:var(--espresso-soft);
+            font-weight:600;
+        }
+
+        /* ---- calendar ---- */
+        .calendar{
+            border:1.5px solid var(--line);
+            border-radius:18px;
+            padding:18px;
+        }
+        .cal-head{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:14px;
+            padding:0 4px;
+        }
+        .cal-head h3{font-size:1.05rem;}
+        .cal-nav{display:flex;gap:8px;}
+        .cal-nav button{
+            width:32px;height:32px;
+            border-radius:50%;
+            background:var(--cream);
+            display:flex;align-items:center;justify-content:center;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .cal-nav button:hover{background:var(--gold-light);}
+        .cal-nav button:disabled{opacity:0.3;cursor:not-allowed;}
+        .cal-grid{
+            display:grid;
+            grid-template-columns:repeat(7,1fr);
+            gap:6px;
+        }
+        .cal-dow{
+            text-align:center;
+            font-size:0.68rem;
+            font-weight:800;
+            color:var(--espresso-soft);
+            text-transform:uppercase;
+            padding-bottom:6px;
+        }
+        .cal-day{
+            aspect-ratio:1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:10px;
+            font-size:0.86rem;
+            font-weight:700;
+            color:var(--espresso);
+            transition:all .18s ease;
+            cursor:pointer;
+        }
+        .cal-day:hover:not(.disabled):not(.empty){background:var(--gold-light);}
+        .cal-day.empty{cursor:default;}
+        .cal-day.disabled{color:#CBBDB4;cursor:not-allowed;}
+        .cal-day.today{border:1.5px solid var(--gold);}
+        .cal-day.selected{
+            background:var(--terracotta);
+            color:var(--cream-warm);
+        }
+
+        /* ---- time slots ---- */
+        .slot-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:9px;
+        }
+        .slot{
+            padding:11px 6px;
+            text-align:center;
+            border-radius:12px;
+            border:1.5px solid var(--line);
+            font-size:0.82rem;
+            font-weight:700;
+            color:var(--espresso-soft);
+            transition:all .2s ease;
+            cursor:pointer;
+            position:relative;
+        }
+        .slot:hover:not(.unavailable){border-color:var(--gold);}
+        .slot.active{background:var(--espresso);border-color:var(--espresso);color:var(--cream-warm);}
+        .slot.unavailable{
+            color:#CBBDB4;
+            text-decoration:line-through;
+            cursor:not-allowed;
+            background:repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(58,40,34,0.03) 4px, rgba(58,40,34,0.03) 8px);
+        }
+        @media (max-width:520px){.slot-grid{grid-template-columns:repeat(3,1fr);}}
+
+        /* ---- party size stepper ---- */
+        .party-stepper{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border:1.5px solid var(--line);
+            border-radius:16px;
+            padding:14px 18px;
+        }
+        .party-stepper .p-info{display:flex;flex-direction:column;}
+        .party-stepper .p-info strong{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;}
+        .party-stepper .p-info span{font-size:0.76rem;color:var(--espresso-soft);font-weight:600;}
+        .stepper-btns{display:flex;align-items:center;gap:14px;}
+        .stepper-btns button{
+            width:38px;height:38px;
+            border-radius:50%;
+            background:var(--cream);
+            color:var(--espresso);
+            font-size:1.2rem;
+            font-weight:700;
+            display:flex;align-items:center;justify-content:center;
+            transition:all .2s ease;
+        }
+        .stepper-btns button:hover{background:var(--gold);}
+        .stepper-btns button:disabled{opacity:0.35;cursor:not-allowed;}
+        .party-note{margin-top:10px;font-size:0.78rem;color:var(--espresso-soft);}
+        .party-note a{font-weight:800;color:var(--terracotta-deep);border-bottom:1.5px solid var(--terracotta-deep);}
+
+        /* ---- seating preference ---- */
+        .seat-grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:12px;
+        }
+        .seat-card{
+            border:1.5px solid var(--line);
+            border-radius:16px;
+            padding:16px 12px;
+            text-align:center;
+            cursor:pointer;
+            transition:all .2s ease;
+        }
+        .seat-card:hover{border-color:var(--gold);}
+        .seat-card.active{
+            border-color:var(--terracotta);
+            background:linear-gradient(180deg, rgba(243,201,208,0.35), rgba(243,201,208,0.08));
+        }
+        .seat-card .seat-icon{font-size:1.5rem;margin-bottom:8px;}
+        .seat-card .seat-title{font-weight:800;font-size:0.84rem;display:block;margin-bottom:3px;}
+        .seat-card .seat-sub{font-size:0.7rem;color:var(--espresso-soft);}
+        @media (max-width:520px){.seat-grid{grid-template-columns:1fr;}}
+
+        /* ---- occasion chips ---- */
+        .chip-row{display:flex;flex-wrap:wrap;gap:10px;}
+        .chip{
+            padding:9px 18px;
+            border-radius:100px;
+            border:1.5px solid var(--line);
+            font-size:0.84rem;
+            font-weight:700;
+            color:var(--espresso-soft);
+            transition:all .2s ease;
+            cursor:pointer;
+        }
+        .chip:hover{border-color:var(--gold);}
+        .chip.active{background:var(--espresso);border-color:var(--espresso);color:var(--cream-warm);}
+
+        /* ---- contact fields ---- */
+        .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .field-group{margin-bottom:18px;}
+        .field-group label{
+            display:block;
+            font-size:0.76rem;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.06em;
+            color:var(--espresso-soft);
+            margin-bottom:9px;
+        }
+        .input-wrap input, .input-wrap textarea{
+            width:100%;
+            padding:14px 16px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            background:var(--cream);
+            font-family:'Manrope',sans-serif;
+            font-size:0.92rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .input-wrap textarea{resize:none;min-height:80px;}
+        .input-wrap input::placeholder, .input-wrap textarea::placeholder{color:#B8A99F;}
+        .input-wrap input:focus, .input-wrap textarea:focus{
+            outline:none;
+            border-color:var(--gold);
+            box-shadow:0 0 0 4px rgba(199,154,75,0.15);
+        }
+        .input-wrap.error input, .input-wrap.error textarea{border-color:var(--error);}
+        .field-msg{
+            font-size:0.76rem;
+            margin-top:7px;
+            color:var(--error);
+            display:none;
+        }
+        .field-msg.show{display:block;}
+        @media (max-width:600px){.field-row{grid-template-columns:1fr;}}
+
+        /* ============ SUMMARY SIDEBAR ============ */
+        .summary-card{
+            position:sticky;
+            top:24px;
+            overflow:hidden;
+            padding:0;
+        }
+        .summary-img{height:180px;overflow:hidden;position:relative;}
+        .summary-img img{width:100%;height:100%;object-fit:cover;}
+        .summary-img::after{
+            content:'';
+            position:absolute;inset:0;
+            background:linear-gradient(180deg, rgba(58,40,34,0) 55%, rgba(58,40,34,0.5) 100%);
+        }
+        .summary-img .s-title{
+            position:absolute;
+            bottom:14px;left:18px;
+            color:var(--cream-warm);
+            font-family:'Fraunces',serif;
+            font-size:1.2rem;
+            z-index:2;
+        }
+        .summary-body{padding:26px;}
+        .summary-body h4{
+            font-size:0.78rem;
+            text-transform:uppercase;
+            letter-spacing:0.09em;
+            font-weight:800;
+            color:var(--espresso-soft);
+            margin-bottom:18px;
+        }
+        .summary-row{
+            display:flex;
+            align-items:flex-start;
+            gap:12px;
+            padding:12px 0;
+            border-bottom:1px dashed var(--line);
+        }
+        .summary-row:last-of-type{border-bottom:none;}
+        .summary-row .s-icon{
+            width:34px;height:34px;
+            border-radius:10px;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+            flex:none;
+            font-size:1rem;
+        }
+        .summary-row .s-text{display:flex;flex-direction:column;}
+        .summary-row .s-label{font-size:0.7rem;color:var(--espresso-soft);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+        .summary-row .s-value{font-weight:700;font-size:0.9rem;color:var(--espresso);margin-top:2px;}
+        .summary-row .s-value.muted{color:#B8A99F;font-weight:600;}
+
+        .confirm-btn{
+            width:100%;
+            margin-top:22px;
+            padding:17px;
+            border-radius:14px;
+            background:var(--espresso);
+            color:var(--cream-warm);
+            font-weight:800;
+            font-size:0.96rem;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            position:relative;
+            overflow:hidden;
+            transition:transform .2s ease, background .3s ease;
+        }
+        .confirm-btn:hover{background:var(--gold); color:var(--espresso);}
+        .confirm-btn:active{transform:scale(0.98);}
+        .confirm-btn.loading .btn-label{opacity:0;}
+        .spinner{
+            position:absolute;
+            width:20px;height:20px;
+            border-radius:50%;
+            border:2.5px solid rgba(255,255,255,0.35);
+            border-top-color:#fff;
+            opacity:0;
+            animation:spin .7s linear infinite;
+        }
+        .confirm-btn.loading .spinner{opacity:1;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .ripple{
+            position:absolute;
+            border-radius:50%;
+            background:rgba(255,255,255,0.5);
+            transform:scale(0);
+            animation:ripple .6s ease-out;
+            pointer-events:none;
+        }
+        @keyframes ripple{to{transform:scale(3);opacity:0;}}
+
+        .policy-note{
+            margin-top:16px;
+            font-size:0.75rem;
+            color:var(--espresso-soft);
+            line-height:1.6;
+            text-align:center;
+        }
+
+        /* ============ SUCCESS STATE ============ */
+        .success-wrap{
+            display:none;
+            text-align:center;
+            padding:20px 10px 6px;
+        }
+        .success-wrap.show{display:block;}
+        .success-check{
+            width:74px;height:74px;
+            border-radius:50%;
+            background:var(--success);
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 22px;
+            animation:pop .4s cubic-bezier(.2,1.4,.4,1);
+        }
+        @keyframes pop{0%{transform:scale(0);}70%{transform:scale(1.1);}100%{transform:scale(1);}}
+        .success-wrap h2{font-size:1.6rem;margin-bottom:10px;}
+        .success-wrap p{color:var(--espresso-soft);line-height:1.6;font-size:0.92rem;margin-bottom:22px;}
+        .conf-code{
+            display:inline-block;
+            padding:10px 22px;
+            border-radius:100px;
+            background:var(--blush);
+            font-family:'Fraunces',serif;
+            font-weight:600;
+            letter-spacing:0.04em;
+            margin-bottom:26px;
+        }
+        .success-actions{display:flex;flex-direction:column;gap:10px;}
+        .btn-outline{
+            padding:14px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            font-weight:700;
+            font-size:0.88rem;
+            transition:all .2s ease;
+        }
+        .btn-outline:hover{border-color:var(--gold);}
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width:960px){
+            .booking-wrap{grid-template-columns:1fr;}
+            .summary-card{position:static;}
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container nav-wrap">
+        <a href="index.html" class="logo">
+      <span class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+      </span>
+            Sugar<span class="amp">&amp;</span>Flour
+        </a>
+        <ul class="nav-links">
+            <li><a href="menu-order.html">Menu</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#" class="active">Reserve a Table</a></li>
+            <li><a href="menu-order.html">Order Online</a></li>
+        </ul>
+        <a href="index.html" class="back-link">← Back to Home</a>
+    </div>
+</header>
+
+<div class="page-head container">
+    <span class="eyebrow">Book Ahead</span>
+    <h1>Reserve your table.</h1>
+    <p>Pick a date, grab your favorite seat, and we'll have a fresh pot of coffee waiting when you arrive.</p>
+</div>
+
+<div class="container booking-wrap">
+
+    <!-- ================= BOOKING FORM ================= -->
+    <div class="card" id="formCard">
+
+        <div class="form-block">
+            <div class="block-label">
+                <h4>Select a Date</h4>
+                <span id="calSelectedLabel">No date selected</span>
+            </div>
+            <div class="calendar">
+                <div class="cal-head">
+                    <button type="button" id="calPrev" aria-label="Previous month">‹</button>
+                    <h3 id="calMonthLabel"></h3>
+                    <button type="button" id="calNext" aria-label="Next month">›</button>
+                </div>
+                <div class="cal-grid" id="calGrid"></div>
+            </div>
+        </div>
+
+        <div class="form-block">
+            <div class="block-label">
+                <h4>Select a Time</h4>
+                <span id="slotSelectedLabel">No time selected</span>
+            </div>
+            <div class="slot-grid" id="slotGrid"></div>
+        </div>
+
+        <div class="form-block">
+            <div class="block-label"><h4>Party Size</h4></div>
+            <div class="party-stepper">
+                <div class="p-info">
+                    <strong id="partyCount">2</strong>
+                    <span>Guests</span>
+                </div>
+                <div class="stepper-btns">
+                    <button type="button" id="partyMinus">−</button>
+                    <button type="button" id="partyPlus">+</button>
+                </div>
+            </div>
+            <div class="party-note">Booking for a group of 10 or more? <a href="#">Contact us directly</a> for large-party arrangements.</div>
+        </div>
+
+        <div class="form-block">
+            <div class="block-label"><h4>Seating Preference</h4></div>
+            <div class="seat-grid" id="seatGrid">
+                <div class="seat-card active" data-seat="window">
+                    <div class="seat-icon">🪟</div>
+                    <span class="seat-title">Window Seat</span>
+                    <span class="seat-sub">Natural light &amp; street view</span>
+                </div>
+                <div class="seat-card" data-seat="communal">
+                    <div class="seat-icon">🪑</div>
+                    <span class="seat-title">Communal Table</span>
+                    <span class="seat-sub">Great for solo or casual visits</span>
+                </div>
+                <div class="seat-card" data-seat="corner">
+                    <div class="seat-icon">🕯️</div>
+                    <span class="seat-title">Quiet Corner</span>
+                    <span class="seat-sub">Cozy &amp; a little more private</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-block">
+            <div class="block-label"><h4>Occasion (optional)</h4></div>
+            <div class="chip-row" id="occasionRow">
+                <div class="chip">Just Because</div>
+                <div class="chip">Birthday</div>
+                <div class="chip">Anniversary</div>
+                <div class="chip">Catch-up</div>
+                <div class="chip">Business</div>
+            </div>
+        </div>
+
+        <div class="form-block">
+            <div class="block-label"><h4>Your Details</h4></div>
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="fullname">Full Name</label>
+                    <div class="input-wrap" id="nameWrap">
+                        <input type="text" id="fullname" placeholder="Amaya Ranasinghe">
+                    </div>
+                    <div class="field-msg" id="nameMsg">Please enter your name.</div>
+                </div>
+                <div class="field-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-wrap" id="phoneWrap">
+                        <input type="tel" id="phone" placeholder="+94 77 123 4567">
+                    </div>
+                    <div class="field-msg" id="phoneMsg">Please enter a valid phone number.</div>
+                </div>
+            </div>
+            <div class="field-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrap" id="emailWrap">
+                    <input type="email" id="email" placeholder="you@example.com">
+                </div>
+                <div class="field-msg" id="emailMsg">Please enter a valid email address.</div>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+                <label for="notes">Special Requests (optional)</label>
+                <div class="input-wrap">
+                    <textarea id="notes" placeholder="Allergies, high chair, birthday candle on the table, etc."></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= SUMMARY SIDEBAR ================= -->
+    <aside class="card summary-card">
+        <div class="summary-img">
+            <img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=700&q=80" alt="Sugar and Flour cafe interior">
+            <span class="s-title">Sugar &amp; Flour</span>
+        </div>
+        <div class="summary-body" id="summaryBody">
+            <h4>Reservation Summary</h4>
+
+            <div class="summary-row">
+                <span class="s-icon">📅</span>
+                <div class="s-text">
+                    <span class="s-label">Date</span>
+                    <span class="s-value muted" id="sumDate">Not selected</span>
+                </div>
+            </div>
+            <div class="summary-row">
+                <span class="s-icon">⏰</span>
+                <div class="s-text">
+                    <span class="s-label">Time</span>
+                    <span class="s-value muted" id="sumTime">Not selected</span>
+                </div>
+            </div>
+            <div class="summary-row">
+                <span class="s-icon">🥐</span>
+                <div class="s-text">
+                    <span class="s-label">Party Size</span>
+                    <span class="s-value" id="sumParty">2 Guests</span>
+                </div>
+            </div>
+            <div class="summary-row">
+                <span class="s-icon">🪟</span>
+                <div class="s-text">
+                    <span class="s-label">Seating</span>
+                    <span class="s-value" id="sumSeat">Window Seat</span>
+                </div>
+            </div>
+            <div class="summary-row">
+                <span class="s-icon">🎉</span>
+                <div class="s-text">
+                    <span class="s-label">Occasion</span>
+                    <span class="s-value muted" id="sumOccasion">None selected</span>
+                </div>
+            </div>
+
+            <button class="confirm-btn" id="confirmBtn">
+                <span class="btn-label">Confirm Reservation</span>
+                <span class="spinner"></span>
+            </button>
+            <p class="policy-note">We hold your table for 15 minutes past your reservation time. Cancel anytime up to 2 hours in advance.</p>
+        </div>
+
+        <!-- ================= SUCCESS STATE ================= -->
+        <div class="summary-body success-wrap" id="successWrap">
+            <div class="success-check">
+                <svg width="30" height="24" viewBox="0 0 30 24" fill="none"><path d="M2 12L11 21L28 2" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>Table reserved!</h2>
+            <p>We've sent a confirmation to your email. Show your reservation code when you arrive.</p>
+            <div class="conf-code" id="confCode">SF-000000</div>
+            <div class="success-actions">
+                <a href="index.html" class="btn-outline">Back to Home</a>
+                <a href="#" class="btn-outline" id="editBtn">Edit Reservation</a>
+            </div>
+        </div>
+
+    </aside>
+
+</div>
+
+<script>
+    /* ============ STATE ============ */
+    let today = new Date();
+    today.setHours(0,0,0,0);
+    let viewMonth = today.getMonth();
+    let viewYear = today.getFullYear();
+    let selectedDate = null; // Date object
+    let selectedSlot = null;
+    let partyCount = 2;
+    let selectedSeat = 'window';
+    let selectedOccasion = null;
+
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const dowNames = ['S','M','T','W','T','F','S'];
+
+    /* ============ CALENDAR ============ */
+    const calGrid = document.getElementById('calGrid');
+    const calMonthLabel = document.getElementById('calMonthLabel');
+    const calPrev = document.getElementById('calPrev');
+    const calNext = document.getElementById('calNext');
+    const calSelectedLabel = document.getElementById('calSelectedLabel');
+
+    function renderCalendar(){
+        calMonthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+        calGrid.innerHTML = '';
+
+        dowNames.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'cal-dow';
+            el.textContent = d;
+            calGrid.appendChild(el);
+        });
+
+        const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+        const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+        for(let i=0;i<firstDay;i++){
+            const el = document.createElement('div');
+            el.className = 'cal-day empty';
+            calGrid.appendChild(el);
+        }
+
+        for(let d=1; d<=daysInMonth; d++){
+            const thisDate = new Date(viewYear, viewMonth, d);
+            thisDate.setHours(0,0,0,0);
+            const el = document.createElement('div');
+            el.className = 'cal-day';
+            el.textContent = d;
+
+            if(thisDate < today){
+                el.classList.add('disabled');
+            } else {
+                if(thisDate.getTime() === today.getTime()) el.classList.add('today');
+                if(selectedDate && thisDate.getTime() === selectedDate.getTime()) el.classList.add('selected');
+                el.addEventListener('click', () => {
+                    selectedDate = thisDate;
+                    renderCalendar();
+                    updateSummary();
+                });
+            }
+            calGrid.appendChild(el);
+        }
+
+        const isCurrentMonth = viewMonth === today.getMonth() && viewYear === today.getFullYear();
+        calPrev.disabled = isCurrentMonth;
+
+        calSelectedLabel.textContent = selectedDate
+            ? selectedDate.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})
+            : 'No date selected';
+    }
+
+    calPrev.addEventListener('click', () => {
+        viewMonth--; if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+        renderCalendar();
+    });
+    calNext.addEventListener('click', () => {
+        viewMonth++; if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+        renderCalendar();
+    });
+
+    /* ============ TIME SLOTS ============ */
+    const slotGrid = document.getElementById('slotGrid');
+    const slotSelectedLabel = document.getElementById('slotSelectedLabel');
+    const allSlots = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+    const unavailableSlots = ['12:00 PM','1:00 PM','6:00 PM'];
+
+    function renderSlots(){
+        slotGrid.innerHTML = allSlots.map(s => {
+            const unavailable = unavailableSlots.includes(s);
+            const active = selectedSlot === s;
+            return `<div class="slot ${unavailable?'unavailable':''} ${active?'active':''}" data-slot="${s}">${s}</div>`;
+        }).join('');
+    }
+    slotGrid.addEventListener('click', e => {
+        const slot = e.target.closest('.slot');
+        if(!slot || slot.classList.contains('unavailable')) return;
+        selectedSlot = slot.dataset.slot;
+        renderSlots();
+        slotSelectedLabel.textContent = selectedSlot;
+        updateSummary();
+    });
+
+    /* ============ PARTY STEPPER ============ */
+    const partyCountEl = document.getElementById('partyCount');
+    document.getElementById('partyMinus').addEventListener('click', () => {
+        partyCount = Math.max(1, partyCount-1);
+        partyCountEl.textContent = partyCount;
+        updateSummary();
+    });
+    document.getElementById('partyPlus').addEventListener('click', () => {
+        partyCount = Math.min(9, partyCount+1);
+        partyCountEl.textContent = partyCount;
+        updateSummary();
+    });
+
+    /* ============ SEATING ============ */
+    const seatGrid = document.getElementById('seatGrid');
+    const seatLabels = {window:'Window Seat', communal:'Communal Table', corner:'Quiet Corner'};
+    seatGrid.addEventListener('click', e => {
+        const card = e.target.closest('.seat-card');
+        if(!card) return;
+        seatGrid.querySelectorAll('.seat-card').forEach(c=>c.classList.remove('active'));
+        card.classList.add('active');
+        selectedSeat = card.dataset.seat;
+        updateSummary();
+    });
+
+    /* ============ OCCASION CHIPS ============ */
+    const occasionRow = document.getElementById('occasionRow');
+    occasionRow.addEventListener('click', e => {
+        const chip = e.target.closest('.chip');
+        if(!chip) return;
+        const wasActive = chip.classList.contains('active');
+        occasionRow.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+        if(!wasActive){
+            chip.classList.add('active');
+            selectedOccasion = chip.textContent;
+        } else {
+            selectedOccasion = null;
+        }
+        updateSummary();
+    });
+
+    /* ============ SUMMARY ============ */
+    function updateSummary(){
+        document.getElementById('sumDate').textContent = selectedDate
+            ? selectedDate.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})
+            : 'Not selected';
+        document.getElementById('sumDate').classList.toggle('muted', !selectedDate);
+
+        document.getElementById('sumTime').textContent = selectedSlot || 'Not selected';
+        document.getElementById('sumTime').classList.toggle('muted', !selectedSlot);
+
+        document.getElementById('sumParty').textContent = `${partyCount} Guest${partyCount>1?'s':''}`;
+        document.getElementById('sumSeat').textContent = seatLabels[selectedSeat];
+        document.getElementById('sumOccasion').textContent = selectedOccasion || 'None selected';
+        document.getElementById('sumOccasion').classList.toggle('muted', !selectedOccasion);
+    }
+
+    /* ============ FIELD VALIDATION ============ */
+    const nameInput = document.getElementById('fullname');
+    const nameWrap = document.getElementById('nameWrap');
+    const nameMsg = document.getElementById('nameMsg');
+    const phoneInput = document.getElementById('phone');
+    const phoneWrap = document.getElementById('phoneWrap');
+    const phoneMsg = document.getElementById('phoneMsg');
+    const emailInput = document.getElementById('email');
+    const emailWrap = document.getElementById('emailWrap');
+    const emailMsg = document.getElementById('emailMsg');
+
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    function validPhone(v){ return /^[\d+\-\s()]{7,}$/.test(v); }
+
+    function validateName(){
+        const ok = nameInput.value.trim().length >= 2;
+        nameWrap.classList.toggle('error', !ok);
+        nameMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+    function validatePhone(){
+        const ok = validPhone(phoneInput.value.trim());
+        phoneWrap.classList.toggle('error', !ok);
+        phoneMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+    function validateEmail(){
+        const ok = validEmail(emailInput.value.trim());
+        emailWrap.classList.toggle('error', !ok);
+        emailMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+
+    /* ============ CONFIRM RESERVATION ============ */
+    const confirmBtn = document.getElementById('confirmBtn');
+    const btnLabel = confirmBtn.querySelector('.btn-label');
+
+    confirmBtn.addEventListener('click', function(e){
+        const rect = confirmBtn.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size+'px';
+        ripple.style.left = ((e.clientX||rect.left+rect.width/2) - rect.left - size/2)+'px';
+        ripple.style.top = ((e.clientY||rect.top+rect.height/2) - rect.top - size/2)+'px';
+        confirmBtn.appendChild(ripple);
+        setTimeout(()=>ripple.remove(), 650);
+
+        let valid = true;
+        if(!selectedDate){ document.getElementById('calSelectedLabel').style.color = 'var(--error)'; valid = false; }
+        if(!selectedSlot){ document.getElementById('slotSelectedLabel').style.color = 'var(--error)'; valid = false; }
+        if(!validateName()) valid = false;
+        if(!validatePhone()) valid = false;
+        if(!validateEmail()) valid = false;
+
+        if(!valid){
+            if(!selectedDate || !selectedSlot){
+                document.getElementById('formCard').scrollIntoView({behavior:'smooth', block:'start'});
+            } else {
+                nameInput.closest('.card') && nameInput.scrollIntoView({behavior:'smooth', block:'center'});
+            }
+            return;
+        }
+
+        confirmBtn.classList.add('loading');
+        confirmBtn.disabled = true;
+
+        setTimeout(() => {
+            confirmBtn.classList.remove('loading');
+            confirmBtn.disabled = false;
+            document.getElementById('summaryBody').style.display = 'none';
+            const code = 'SF-' + Math.floor(100000 + Math.random()*900000);
+            document.getElementById('confCode').textContent = code;
+            document.getElementById('successWrap').classList.add('show');
+        }, 1400);
+    });
+
+    document.getElementById('editBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('successWrap').classList.remove('show');
+        document.getElementById('summaryBody').style.display = 'block';
+    });
+
+    /* ---- clear error highlight on interaction ---- */
+    calGrid.addEventListener('click', () => { document.getElementById('calSelectedLabel').style.color = ''; });
+    slotGrid.addEventListener('click', () => { document.getElementById('slotSelectedLabel').style.color = ''; });
+    nameInput.addEventListener('input', () => { if(nameWrap.classList.contains('error')) validateName(); });
+    phoneInput.addEventListener('input', () => { if(phoneWrap.classList.contains('error')) validatePhone(); });
+    emailInput.addEventListener('input', () => { if(emailWrap.classList.contains('error')) validateEmail(); });
+    nameInput.addEventListener('blur', validateName);
+    phoneInput.addEventListener('blur', validatePhone);
+    emailInput.addEventListener('blur', validateEmail);
+
+    /* ============ INIT ============ */
+    renderCalendar();
+    renderSlots();
+    updateSummary();
+</script>
+
+</body>
+</html>

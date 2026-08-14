@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — Sugar &amp; Flour</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+        :root{
+            --cream: #FBF3EA;
+            --cream-warm: #FFFDFB;
+            --blush: #F3C9D0;
+            --terracotta: #C97B5F;
+            --terracotta-deep:#B4644B;
+            --espresso: #3A2822;
+            --espresso-soft: #6B5248;
+            --gold: #C79A4B;
+            --gold-light:#EFDDB8;
+            --line: rgba(58,40,34,0.10);
+            --error:#B3452E;
+            --success:#4C7A4A;
+            --warn:#C79A4B;
+            --shadow-sm: 0 8px 20px -12px rgba(58,40,34,0.22);
+            --shadow-lg: 0 30px 60px -24px rgba(58,40,34,0.32);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:'Manrope',sans-serif;
+            background:var(--cream);
+            color:var(--espresso);
+            -webkit-font-smoothing:antialiased;
+            min-height:100vh;
+        }
+        img{display:block;max-width:100%;}
+        h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;line-height:1.1;}
+        button{font-family:inherit;cursor:pointer;border:none;background:none;}
+        a{color:inherit;text-decoration:none;}
+
+        /* ============ PAGE SHELL ============ */
+        .shell{
+            min-height:100vh;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+        }
+
+        /* ============ LEFT VISUAL PANEL ============ */
+        .visual-panel{
+            position:relative;
+            overflow:hidden;
+            background:var(--espresso);
+        }
+        .visual-panel img{
+            position:absolute;
+            inset:0;
+            width:100%;height:100%;
+            object-fit:cover;
+            opacity:0.82;
+        }
+        .visual-scrim{
+            position:absolute;inset:0;
+            background:linear-gradient(180deg, rgba(58,40,34,0.15) 0%, rgba(58,40,34,0.35) 55%, rgba(58,40,34,0.86) 100%);
+        }
+        .visual-content{
+            position:relative;
+            z-index:2;
+            height:100%;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            padding:48px;
+            color:var(--cream-warm);
+        }
+        .visual-logo{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-family:'Fraunces',serif;
+            font-size:1.4rem;
+            font-weight:600;
+        }
+        .visual-logo .logo-mark{
+            width:36px;height:36px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+            flex:none;
+        }
+        .visual-logo .amp{font-style:italic;color:var(--gold-light);font-weight:500;}
+
+        .visual-quote{max-width:420px;}
+        .visual-quote .eyebrow{
+            text-transform:uppercase;
+            letter-spacing:0.18em;
+            font-size:0.7rem;
+            font-weight:800;
+            color:var(--gold-light);
+            display:block;
+            margin-bottom:16px;
+        }
+        .visual-quote h2{
+            font-size:clamp(1.7rem,2.6vw,2.3rem);
+            font-style:italic;
+            font-weight:500;
+            margin-bottom:18px;
+        }
+        .visual-quote p{
+            font-size:0.92rem;
+            color:rgba(255,253,251,0.75);
+            line-height:1.6;
+            margin-bottom:22px;
+        }
+        .perk-list{list-style:none;}
+        .perk-list li{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-size:0.88rem;
+            font-weight:600;
+            margin-bottom:12px;
+            color:rgba(255,253,251,0.92);
+        }
+        .perk-list li .tick{
+            width:20px;height:20px;
+            border-radius:50%;
+            background:rgba(199,154,75,0.9);
+            display:flex;align-items:center;justify-content:center;
+            flex:none;
+        }
+
+        /* ============ RIGHT FORM PANEL ============ */
+        .form-panel{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:40px;
+            background:var(--cream);
+            overflow-y:auto;
+        }
+        .form-wrap{
+            width:100%;
+            max-width:440px;
+            padding:24px 0;
+        }
+
+        .mobile-logo{
+            display:none;
+            align-items:center;
+            gap:10px;
+            font-family:'Fraunces',serif;
+            font-size:1.3rem;
+            font-weight:600;
+            margin-bottom:32px;
+            justify-content:center;
+        }
+        .mobile-logo .logo-mark{
+            width:34px;height:34px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+        }
+        .mobile-logo .amp{font-style:italic;color:var(--gold);font-weight:500;}
+
+        .form-head{margin-bottom:30px;}
+        .form-head .eyebrow{
+            text-transform:uppercase;
+            letter-spacing:0.16em;
+            font-size:0.7rem;
+            font-weight:800;
+            color:var(--terracotta);
+            display:block;
+            margin-bottom:12px;
+        }
+        .form-head h1{font-size:clamp(1.9rem,3.2vw,2.3rem);margin-bottom:10px;}
+        .form-head p{color:var(--espresso-soft);font-size:0.95rem;line-height:1.6;}
+        .form-head p a{font-weight:800;color:var(--terracotta-deep);border-bottom:1.5px solid var(--terracotta-deep);}
+        .form-head p a:hover{color:var(--gold); border-color:var(--gold);}
+
+        .social-btn{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            padding:13px 10px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            background:var(--cream-warm);
+            font-weight:700;
+            font-size:0.86rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .social-btn:hover{
+            border-color:var(--gold);
+            transform:translateY(-2px);
+            box-shadow:var(--shadow-sm);
+        }
+
+        .divider{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            margin-bottom:24px;
+            color:var(--espresso-soft);
+            font-size:0.78rem;
+            font-weight:700;
+        }
+        .divider::before, .divider::after{
+            content:'';
+            flex:1;
+            height:1px;
+            background:var(--line);
+        }
+
+        /* ---- form fields ---- */
+        .field-group{margin-bottom:18px;}
+        .field-group label{
+            display:block;
+            font-size:0.76rem;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.06em;
+            color:var(--espresso-soft);
+            margin-bottom:9px;
+        }
+        .input-wrap{position:relative;}
+        .input-wrap input{
+            width:100%;
+            padding:15px 16px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            background:var(--cream-warm);
+            font-family:'Manrope',sans-serif;
+            font-size:0.95rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .input-wrap input::placeholder{color:#B8A99F;}
+        .input-wrap input:focus{
+            outline:none;
+            border-color:var(--gold);
+            box-shadow:0 0 0 4px rgba(199,154,75,0.15);
+        }
+        .input-wrap.error input{border-color:var(--error);}
+        .input-wrap.error input:focus{box-shadow:0 0 0 4px rgba(179,69,46,0.12);}
+        .input-wrap.success input{border-color:var(--success);}
+
+        .status-icon{
+            position:absolute;
+            right:16px;top:50%;
+            transform:translateY(-50%);
+            display:none;
+            align-items:center;
+        }
+        .input-wrap.success .status-icon.icon-success{display:flex;}
+        .input-wrap.error .status-icon.icon-error{display:flex;}
+
+        .toggle-pass{
+            position:absolute;
+            right:14px;top:50%;
+            transform:translateY(-50%);
+            color:var(--espresso-soft);
+            font-size:0.78rem;
+            font-weight:800;
+            letter-spacing:0.02em;
+            padding:4px;
+        }
+        .toggle-pass:hover{color:var(--terracotta-deep);}
+
+        .field-msg{
+            font-size:0.76rem;
+            margin-top:7px;
+            color:var(--error);
+            display:none;
+            align-items:center;
+            gap:5px;
+        }
+        .field-msg.show{display:flex;}
+        .field-msg.ok{color:var(--success);}
+
+        /* ---- password strength meter ---- */
+        .strength-wrap{
+            margin-top:10px;
+            display:none;
+        }
+        .strength-wrap.show{display:block;}
+        .strength-bars{
+            display:flex;
+            gap:6px;
+            margin-bottom:6px;
+        }
+        .strength-bars span{
+            flex:1;
+            height:5px;
+            border-radius:4px;
+            background:var(--line);
+            transition:background .25s ease;
+        }
+        .strength-label{
+            font-size:0.74rem;
+            font-weight:700;
+            color:var(--espresso-soft);
+        }
+        .strength-wrap[data-level="1"] .strength-bars span:nth-child(1){background:var(--error);}
+        .strength-wrap[data-level="1"] .strength-label{color:var(--error);}
+        .strength-wrap[data-level="2"] .strength-bars span:nth-child(-n+2){background:var(--warn);}
+        .strength-wrap[data-level="2"] .strength-label{color:var(--warn);}
+        .strength-wrap[data-level="3"] .strength-bars span:nth-child(-n+3){background:var(--gold);}
+        .strength-wrap[data-level="3"] .strength-label{color:var(--terracotta-deep);}
+        .strength-wrap[data-level="4"] .strength-bars span{background:var(--success);}
+        .strength-wrap[data-level="4"] .strength-label{color:var(--success);}
+
+
+        .submit-btn{
+            width:100%;
+            padding:17px;
+            border-radius:14px;
+            background:var(--espresso);
+            color:var(--cream-warm);
+            font-weight:800;
+            font-size:1rem;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            position:relative;
+            overflow:hidden;
+            transition:transform .2s ease, background .3s ease;
+            margin-bottom:22px;
+        }
+        .submit-btn:hover{background:var(--gold); color:var(--espresso);}
+        .submit-btn:active{transform:scale(0.98);}
+        .submit-btn.loading .btn-label{opacity:0;}
+        .submit-btn.success{background:var(--success); color:#fff;}
+        .spinner{
+            position:absolute;
+            width:20px;height:20px;
+            border-radius:50%;
+            border:2.5px solid rgba(255,255,255,0.35);
+            border-top-color:#fff;
+            opacity:0;
+            animation:spin .7s linear infinite;
+        }
+        .submit-btn.loading .spinner{opacity:1;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        .ripple{
+            position:absolute;
+            border-radius:50%;
+            background:rgba(255,255,255,0.5);
+            transform:scale(0);
+            animation:ripple .6s ease-out;
+            pointer-events:none;
+        }
+        @keyframes ripple{to{transform:scale(3);opacity:0;}}
+
+        .signin-line{
+            text-align:center;
+            font-size:0.9rem;
+            color:var(--espresso-soft);
+        }
+        .signin-line a{
+            font-weight:800;
+            color:var(--terracotta-deep);
+            border-bottom:1.5px solid var(--terracotta-deep);
+        }
+        .signin-line a:hover{color:var(--gold); border-color:var(--gold);}
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width:900px){
+            .shell{grid-template-columns:1fr;}
+            .visual-panel{display:none;}
+            .form-panel{min-height:100vh; padding:50px 24px; align-items:flex-start;}
+            .mobile-logo{display:flex;}
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+    <!-- ================= LEFT VISUAL PANEL ================= -->
+    <div class="visual-panel">
+        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80" alt="Basket of freshly baked croissants">
+        <div class="visual-scrim"></div>
+        <div class="visual-content">
+            <div class="visual-logo">
+        <span class="logo-mark">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+        </span>
+                Sugar<span class="amp">&amp;</span>Flour
+            </div>
+            <div class="visual-quote">
+                <span class="eyebrow">Join Us</span>
+                <h2>Create an account and skip to the good part.</h2>
+                <p>Sign up once to unlock faster checkout, get more discounts and a few sweet perks.</p>
+                <ul class="perk-list">
+                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Save your favorite orders</li>
+                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Get more discounts on items</li>
+                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Get early access to seasonal menus</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= RIGHT FORM PANEL ================= -->
+    <div class="form-panel">
+        <div class="form-wrap">
+
+            <div class="mobile-logo">
+        <span class="logo-mark">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+        </span>
+                Sugar<span class="amp">&amp;</span>Flour
+            </div>
+
+            <div class="form-head">
+                <span class="eyebrow">Create Account</span>
+                <h1>Let's get you set up.</h1>
+            </div>
+
+            <div class="divider">sign up with email</div>
+
+            <form id="signupForm" novalidate>
+
+                <div class="field-group">
+                    <label for="fullname">Full Name</label>
+                    <div class="input-wrap" id="nameWrap">
+                        <input type="text" id="fullname" placeholder="Sasindu Kavishka" autocomplete="name">
+                        <span class="status-icon icon-success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#4C7A4A"/><path d="M4.5 8.2L6.8 10.5L11.5 5.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    </div>
+                    <div class="field-msg" id="nameMsg">Please enter your full name.</div>
+                </div>
+
+                <div class="field-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrap" id="emailWrap">
+                        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+                        <span class="status-icon icon-success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#4C7A4A"/><path d="M4.5 8.2L6.8 10.5L11.5 5.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    </div>
+                    <div class="field-msg" id="emailMsg">Please enter a valid email address.</div>
+                </div>
+
+                <div class="field-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap" id="passwordWrap">
+                        <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
+                        <button type="button" class="toggle-pass" id="togglePass1">SHOW</button>
+                    </div>
+                    <div class="strength-wrap" id="strengthWrap" data-level="0">
+                        <div class="strength-bars"><span></span><span></span><span></span><span></span></div>
+                        <span class="strength-label" id="strengthLabel">Use 8+ characters with a number &amp; symbol</span>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-wrap" id="confirmWrap">
+                        <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password">
+                        <button type="button" class="toggle-pass" id="togglePass2">SHOW</button>
+                    </div>
+                    <div class="field-msg" id="confirmMsg">Passwords don't match.</div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-label">Create Account</span>
+                    <span class="spinner"></span>
+                </button>
+            </form>
+
+            <p class="signin-line">Already have an account? <a href="login.html">Sign in</a></p>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* ---- password visibility toggles ---- */
+    function wireToggle(btnId, inputId){
+        const btn = document.getElementById(btnId);
+        const input = document.getElementById(inputId);
+        btn.addEventListener('click', () => {
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.textContent = show ? 'HIDE' : 'SHOW';
+        });
+    }
+    wireToggle('togglePass1', 'password');
+    wireToggle('togglePass2', 'confirmPassword');
+
+    /* ---- terms checkbox ---- */
+    const termsToggle = document.getElementById('termsToggle');
+    const termsMsg = document.getElementById('termsMsg');
+    termsToggle.addEventListener('click', () => {
+        termsToggle.classList.toggle('checked');
+        if(termsToggle.classList.contains('checked')) termsMsg.classList.remove('show');
+    });
+
+    /* ---- field refs ---- */
+    const nameInput = document.getElementById('fullname');
+    const nameWrap = document.getElementById('nameWrap');
+    const nameMsg = document.getElementById('nameMsg');
+
+    const emailInput = document.getElementById('email');
+    const emailWrap = document.getElementById('emailWrap');
+    const emailMsg = document.getElementById('emailMsg');
+
+    const passwordInput = document.getElementById('password');
+    const passwordWrap = document.getElementById('passwordWrap');
+    const strengthWrap = document.getElementById('strengthWrap');
+    const strengthLabel = document.getElementById('strengthLabel');
+
+    const confirmInput = document.getElementById('confirmPassword');
+    const confirmWrap = document.getElementById('confirmWrap');
+    const confirmMsg = document.getElementById('confirmMsg');
+
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    function validateName(){
+        const val = nameInput.value.trim();
+        if(val === ''){ nameWrap.classList.remove('error','success'); nameMsg.classList.remove('show'); return false; }
+        const ok = val.length >= 2;
+        nameWrap.classList.toggle('error', !ok);
+        nameWrap.classList.toggle('success', ok);
+        nameMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+
+    function validateEmail(){
+        const val = emailInput.value.trim();
+        if(val === ''){ emailWrap.classList.remove('error','success'); emailMsg.classList.remove('show'); return false; }
+        const ok = validEmail(val);
+        emailWrap.classList.toggle('error', !ok);
+        emailWrap.classList.toggle('success', ok);
+        emailMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+
+    function passwordScore(v){
+        let score = 0;
+        if(v.length >= 8) score++;
+        if(/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+        if(/[0-9]/.test(v)) score++;
+        if(/[^A-Za-z0-9]/.test(v)) score++;
+        return score;
+    }
+
+    const strengthLabels = ['Too short','Weak — add numbers or symbols','Getting there — add a symbol','Good password strength','Great, strong password!'];
+
+    function validatePasswordStrength(){
+        const val = passwordInput.value;
+        if(val === ''){
+            strengthWrap.classList.remove('show');
+            passwordWrap.classList.remove('error','success');
+            return false;
+        }
+        strengthWrap.classList.add('show');
+        const score = passwordScore(val);
+        const level = val.length < 6 ? 1 : Math.max(1, score);
+        strengthWrap.dataset.level = level;
+        strengthLabel.textContent = val.length < 6 ? strengthLabels[0] : strengthLabels[level];
+        const ok = val.length >= 6;
+        passwordWrap.classList.toggle('error', !ok);
+        passwordWrap.classList.toggle('success', ok && level >= 3);
+        return ok;
+    }
+
+    function validateConfirm(){
+        const val = confirmInput.value;
+        if(val === ''){ confirmWrap.classList.remove('error','success'); confirmMsg.classList.remove('show'); return false; }
+        const ok = val === passwordInput.value && val.length > 0;
+        confirmWrap.classList.toggle('error', !ok);
+        confirmWrap.classList.toggle('success', ok);
+        confirmMsg.classList.toggle('show', !ok);
+        return ok;
+    }
+
+    nameInput.addEventListener('blur', validateName);
+    nameInput.addEventListener('input', () => { if(nameWrap.classList.contains('error')) validateName(); });
+
+    emailInput.addEventListener('blur', validateEmail);
+    emailInput.addEventListener('input', () => { if(emailWrap.classList.contains('error')) validateEmail(); });
+
+    passwordInput.addEventListener('input', () => {
+        validatePasswordStrength();
+        if(confirmInput.value !== '') validateConfirm();
+    });
+    passwordInput.addEventListener('blur', validatePasswordStrength);
+
+    confirmInput.addEventListener('blur', validateConfirm);
+    confirmInput.addEventListener('input', () => { if(confirmWrap.classList.contains('error') || confirmInput.value) validateConfirm(); });
+
+    /* ---- submit flow ---- */
+    const form = document.getElementById('signupForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnLabel = submitBtn.querySelector('.btn-label');
+
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+
+        const rect = submitBtn.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size+'px';
+        const clickX = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+        const clickY = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+        ripple.style.left = clickX+'px';
+        ripple.style.top = clickY+'px';
+        submitBtn.appendChild(ripple);
+        setTimeout(()=>ripple.remove(), 650);
+
+        const nameOk = validateName();
+        const emailOk = validateEmail();
+        const passOk = validatePasswordStrength();
+        const confirmOk = validateConfirm();
+
+        if(nameInput.value.trim() === ''){ nameWrap.classList.add('error'); nameMsg.classList.add('show'); }
+        if(emailInput.value.trim() === ''){ emailWrap.classList.add('error'); emailMsg.classList.add('show'); }
+        if(passwordInput.value === ''){ passwordWrap.classList.add('error'); }
+        if(confirmInput.value === ''){ confirmWrap.classList.add('error'); confirmMsg.classList.add('show'); }
+
+        const termsOk = termsToggle.classList.contains('checked');
+        termsMsg.classList.toggle('show', !termsOk);
+
+        if(!nameOk || !emailOk || !passOk || !confirmOk || !termsOk) return;
+
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        setTimeout(() => {
+            submitBtn.classList.remove('loading');
+            submitBtn.classList.add('success');
+            btnLabel.textContent = '✓ Account Created';
+            btnLabel.style.opacity = 1;
+            setTimeout(() => {
+                submitBtn.classList.remove('success');
+                submitBtn.disabled = false;
+                btnLabel.textContent = 'Create Account';
+            }, 1800);
+        }, 1400);
+    });
+</script>
+
+</body>
+</html>
