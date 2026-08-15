@@ -304,6 +304,11 @@
         .badge-outofstock{background:#F6E2DC; color:var(--error);}
         .badge-active{background:var(--success-bg); color:var(--success);}
         .badge-inactive{background:var(--muted-bg); color:var(--espresso-soft);}
+        .badge-invited{background:var(--warn-bg); color:#93691F;}
+        .badge-suspended{background:#F6E2DC; color:var(--error);}
+        .badge-owner{background:var(--gold-light); color:#7A5A1E;}
+        .badge-manager{background:var(--blush); color:var(--terracotta-deep);}
+        .badge-staff{background:var(--muted-bg); color:var(--espresso-soft);}
 
         .row-actions{display:flex; gap:8px; justify-content:flex-end;}
         .icon-btn{
@@ -512,7 +517,9 @@
                 justify-content:center;
                 color:var(--cream-warm);
             }
-            .search-wrap{display:none;}
+            .topbar{flex-wrap:wrap;}
+            .topbar-actions{width:100%; margin-top:14px;}
+            .search-wrap{display:block; flex:1; width:auto;}
             .stat-grid{grid-template-columns:1fr 1fr;}
         }
         @media (max-width:640px){
@@ -565,6 +572,11 @@
             Suppliers
             <span class="nav-count" id="navCountSuppliers">0</span>
         </li>
+        <li class="nav-item" data-section="admins">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8"/></svg></span>
+            Admins
+            <span class="nav-count" id="navCountAdmins">0</span>
+        </li>
     </ul>
     <div class="sidebar-foot">
         <span class="admin-avatar">A</span>
@@ -590,7 +602,7 @@
                 <p id="topbarSub">Welcome back — here's what's happening today.</p>
             </div>
         </div>
-        <div style="display:flex; gap:12px; align-items:center;">
+        <div class="topbar-actions" style="display:flex; gap:12px; align-items:center;">
             <div class="search-wrap">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 <input type="text" id="searchInput" placeholder="Search...">
@@ -675,6 +687,16 @@
             </div>
         </section>
 
+        <!-- ================= ADMINS ================= -->
+        <section class="section-panel" id="panel-admins">
+            <div class="table-card">
+                <table>
+                    <thead><tr><th>Admin</th><th>Role</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
+                    <tbody id="adminsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
     </div>
 </div>
 
@@ -740,9 +762,16 @@
         {id:5, name:'Ceylon Bean Roasters', category:'Beverages', contact:'Dinuka Wickrama', phone:'+94 77 890 3345', email:'dinuka@ceylonbean.lk', lastOrder:'2026-08-09', status:'Active'},
     ];
 
+    let admins = [
+        {id:1, name:'Amaya Ranasinghe', email:'amaya@sugarandflour.lk', role:'Owner', status:'Active', lastActive:'Today'},
+        {id:2, name:'Kavindu Silva', email:'kavindu@sugarandflour.lk', role:'Manager', status:'Active', lastActive:'Yesterday'},
+        {id:3, name:'Ishara Fernando', email:'ishara@sugarandflour.lk', role:'Staff', status:'Invited', lastActive:'—'},
+    ];
+
     let nextOrderNum = 1043;
     let nextItemId = 7;
     let nextSupplierId = 6;
+    let nextAdminId = 4;
 
     /* ============================================================
        NAVIGATION
@@ -752,6 +781,7 @@
         orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:'New Order'},
         items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item'},
         suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier'},
+        admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Admin'},
     };
     let currentSection = 'overview';
 
@@ -794,7 +824,10 @@
     function money(n){ return 'Rs. ' + n.toLocaleString(); }
     function statusBadgeClass(status){
         return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',Cancelled:'badge-cancelled',
-            Active:'badge-active',Inactive:'badge-inactive'}[status] || 'badge-pending';
+            Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',Suspended:'badge-suspended'}[status] || 'badge-pending';
+    }
+    function roleBadgeClass(role){
+        return {Owner:'badge-owner', Manager:'badge-manager', Staff:'badge-staff'}[role] || 'badge-staff';
     }
     function stockInfo(stock){
         if(stock === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
@@ -915,10 +948,36 @@
   `).join('') || `<tr class="empty-row"><td colspan="6">No suppliers match your search.</td></tr>`;
     }
 
+    /* ============================================================
+       RENDER: ADMINS
+       ============================================================ */
+    function renderAdmins(filter=''){
+        const f = filter.toLowerCase();
+        const rows = admins.filter(a => !f || a.name.toLowerCase().includes(f) || a.email.toLowerCase().includes(f) || a.role.toLowerCase().includes(f));
+        document.getElementById('adminsBody').innerHTML = rows.map(a => `
+    <tr>
+      <td class="cell-main">
+        <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${a.name.charAt(0)}</span>
+        <div><div class="cell-title">${a.name}</div><div class="cell-sub">${a.email}</div></div>
+      </td>
+      <td><span class="badge-pill ${roleBadgeClass(a.role)}">${a.role}</span></td>
+      <td><span class="badge-pill ${statusBadgeClass(a.status)}">${a.status}</span></td>
+      <td>${a.lastActive}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="admin" data-id="${a.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="icon-btn danger" data-delete="admin" data-id="${a.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="5">No admins match your search.</td></tr>`;
+    }
+
     function updateNavCounts(){
         document.getElementById('navCountOrders').textContent = orders.length;
         document.getElementById('navCountItems').textContent = items.length;
         document.getElementById('navCountSuppliers').textContent = suppliers.length;
+        document.getElementById('navCountAdmins').textContent = admins.length;
     }
 
     function renderAll(){
@@ -927,12 +986,14 @@
         if(currentSection==='orders') renderOrders(searchInput.value);
         if(currentSection==='items') renderItems(searchInput.value);
         if(currentSection==='suppliers') renderSuppliers(searchInput.value);
+        if(currentSection==='admins') renderAdmins(searchInput.value);
     }
 
     searchInput.addEventListener('input', () => {
         if(currentSection==='orders') renderOrders(searchInput.value);
         if(currentSection==='items') renderItems(searchInput.value);
         if(currentSection==='suppliers') renderSuppliers(searchInput.value);
+        if(currentSection==='admins') renderAdmins(searchInput.value);
     });
 
     /* ============================================================
@@ -1018,6 +1079,26 @@
   `;
     }
 
+    function adminFormHTML(a){
+        a = a || {name:'', email:'', role:'Staff', status:'Active'};
+        return `
+    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.name}" placeholder="Admin name"></div>
+    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.email}" placeholder="name@sugarandflour.lk"></div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Role</label>
+        <select id="f_role">
+          ${['Owner','Manager','Staff'].map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group"><label>Status</label>
+        <select id="f_status">
+          ${['Active','Invited','Suspended'].map(v=>`<option ${a.status===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+    }
+
     function wireBadgeChips(){
         const chips = document.getElementById('badgeChips');
         if(!chips) return;
@@ -1048,6 +1129,11 @@
             modalTitle.textContent = isEdit ? 'Edit Supplier' : 'New Supplier';
             modalBody.innerHTML = supplierFormHTML(record);
         }
+        if(type === 'admin'){
+            const record = isEdit ? admins.find(a=>a.id===id) : null;
+            modalTitle.textContent = isEdit ? 'Edit Admin' : 'New Admin';
+            modalBody.innerHTML = adminFormHTML(record);
+        }
         saveLabel.textContent = isEdit ? 'Save Changes' : 'Create';
         openModal();
     }
@@ -1056,6 +1142,7 @@
         if(currentSection==='orders') openForm('order', null);
         if(currentSection==='items') openForm('item', null);
         if(currentSection==='suppliers') openForm('supplier', null);
+        if(currentSection==='admins') openForm('admin', null);
     });
 
     /* delegated edit buttons */
@@ -1132,6 +1219,23 @@
             }
         }
 
+        if(type === 'admin'){
+            const data = {
+                name: document.getElementById('f_name').value.trim() || 'Unnamed Admin',
+                email: document.getElementById('f_email').value.trim() || '—',
+                role: document.getElementById('f_role').value,
+                status: document.getElementById('f_status').value,
+            };
+            if(isEdit){
+                const idx = admins.findIndex(a=>a.id===id);
+                admins[idx] = {...admins[idx], ...data};
+                showToast('Admin updated');
+            } else {
+                admins.unshift({id:nextAdminId++, lastActive:'Just now', ...data});
+                showToast('Admin invited');
+            }
+        }
+
         closeModal();
         renderAll();
     });
@@ -1159,6 +1263,7 @@
         if(type==='order') name = orders.find(o=>o.id===id)?.id;
         if(type==='item') name = items.find(i=>i.id===id)?.name;
         if(type==='supplier') name = suppliers.find(s=>s.id===id)?.name;
+        if(type==='admin') name = admins.find(a=>a.id===id)?.name;
         confirmText.innerHTML = `This will permanently delete <strong>${name}</strong>. This action can't be undone.`;
         openConfirm();
     });
@@ -1168,6 +1273,7 @@
         if(type==='order'){ orders = orders.filter(o=>o.id!==id); showToast('Order deleted'); }
         if(type==='item'){ items = items.filter(i=>i.id!==id); showToast('Item deleted'); }
         if(type==='supplier'){ suppliers = suppliers.filter(s=>s.id!==id); showToast('Supplier deleted'); }
+        if(type==='admin'){ admins = admins.filter(a=>a.id!==id); showToast('Admin removed'); }
         closeConfirm();
         renderAll();
     });

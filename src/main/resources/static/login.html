@@ -113,17 +113,6 @@
             color:rgba(255,253,251,0.75);
             line-height:1.6;
         }
-        .visual-dots{
-            display:flex;
-            gap:8px;
-            margin-top:26px;
-        }
-        .visual-dots span{
-            width:7px;height:7px;
-            border-radius:50%;
-            background:rgba(255,253,251,0.35);
-        }
-        .visual-dots span.active{background:var(--gold-light); width:22px; border-radius:6px;}
 
         /* ============ RIGHT FORM PANEL ============ */
         .form-panel{
@@ -345,9 +334,6 @@
                 <span class="eyebrow">Welcome Back</span>
                 <h2>"Every box from Sugar &amp; Flour feels like a little celebration."</h2>
                 <p>Sign in to reorder your favorites, track deliveries, and save your go-to pickup times.</p>
-                <div class="visual-dots">
-                    <span class="active"></span><span></span><span></span>
-                </div>
             </div>
         </div>
     </div>
@@ -403,102 +389,155 @@
 
 </div>
 
+<!-- ***** jQuery **** -->
+<script src="../lib/jquery-4.0.0.min.js"></script>
+
 <script>
-    /* ---- password visibility toggle ---- */
-    const togglePass = document.getElementById('togglePass');
-    const passwordInput = document.getElementById('password');
-    togglePass.addEventListener('click', () => {
-        const show = passwordInput.type === 'password';
-        passwordInput.type = show ? 'text' : 'password';
-        togglePass.textContent = show ? 'HIDE' : 'SHOW';
-    });
+    $(document).ready(function() {
+        // DOM elements
+        const $togglePass = $('#togglePass');
+        const $passwordInput = $('#password');
+        const $emailInput = $('#email');
+        const $emailWrap = $('#emailWrap');
+        const $emailMsg = $('#emailMsg');
+        const $passwordWrap = $('#passwordWrap');
+        const $passwordMsg = $('#passwordMsg');
+        const $form = $('#loginForm');
+        const $submitBtn = $('#submitBtn');
+        const $btnLabel = $submitBtn.find('.btn-label');
 
+        /* ---- password visibility toggle ---- */
+        $togglePass.on('click', function() {
+            const isPassword = $passwordInput.attr('type') === 'password';
+            $passwordInput.attr('type', isPassword ? 'text' : 'password');
+            $togglePass.text(isPassword ? 'HIDE' : 'SHOW');
+        });
 
-    /* ---- validation helpers ---- */
-    const emailInput = document.getElementById('email');
-    const emailWrap = document.getElementById('emailWrap');
-    const emailMsg = document.getElementById('emailMsg');
-    const passwordWrap = document.getElementById('passwordWrap');
-    const passwordMsg = document.getElementById('passwordMsg');
-
-    function validEmail(v){
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-    }
-
-    function validateEmail(){
-        const val = emailInput.value.trim();
-        if(val === ''){
-            emailWrap.classList.remove('error','success');
-            emailMsg.classList.remove('show');
-            return false;
+        /* ---- validation helpers ---- */
+        function validEmail(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         }
-        const ok = validEmail(val);
-        emailWrap.classList.toggle('error', !ok);
-        emailWrap.classList.toggle('success', ok);
-        emailMsg.classList.toggle('show', !ok);
-        return ok;
-    }
 
-    function validatePassword(){
-        const val = passwordInput.value;
-        if(val === ''){
-            passwordWrap.classList.remove('error','success');
-            passwordMsg.classList.remove('show');
-            return false;
+        function validateEmail() {
+            const val = $emailInput.val().trim();
+            if (val === '') {
+                $emailWrap.removeClass('error success');
+                $emailMsg.removeClass('show');
+                return false;
+            }
+            const ok = validEmail(val);
+            $emailWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $emailMsg.toggleClass('show', !ok);
+            return ok;
         }
-        const ok = val.length >= 6;
-        passwordWrap.classList.toggle('error', !ok);
-        passwordWrap.classList.toggle('success', ok);
-        passwordMsg.classList.toggle('show', !ok);
-        return ok;
-    }
 
-    emailInput.addEventListener('blur', validateEmail);
-    emailInput.addEventListener('input', () => { if(emailWrap.classList.contains('error')) validateEmail(); });
-    passwordInput.addEventListener('blur', validatePassword);
-    passwordInput.addEventListener('input', () => { if(passwordWrap.classList.contains('error')) validatePassword(); });
+        function validatePassword() {
+            const val = $passwordInput.val();
+            if (val === '') {
+                $passwordWrap.removeClass('error success');
+                $passwordMsg.removeClass('show');
+                return false;
+            }
+            const ok = val.length >= 6;
+            $passwordWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $passwordMsg.toggleClass('show', !ok);
+            return ok;
+        }
 
-    /* ---- submit flow ---- */
-    const form = document.getElementById('loginForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnLabel = submitBtn.querySelector('.btn-label');
+        $emailInput.on('blur', validateEmail);
+        $emailInput.on('input', function() {
+            if ($emailWrap.hasClass('error')) validateEmail();
+        });
 
-    form.addEventListener('submit', function(e){
-        e.preventDefault();
+        $passwordInput.on('blur', validatePassword);
+        $passwordInput.on('input', function() {
+            if ($passwordWrap.hasClass('error')) validatePassword();
+        });
 
-        const rect = submitBtn.getBoundingClientRect();
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple';
-        const size = Math.max(rect.width, rect.height);
-        ripple.style.width = ripple.style.height = size+'px';
-        const clickX = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
-        const clickY = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
-        ripple.style.left = clickX+'px';
-        ripple.style.top = clickY+'px';
-        submitBtn.appendChild(ripple);
-        setTimeout(()=>ripple.remove(), 650);
+        /* ---- submit flow ---- */
+        $form.on('submit', function(e) {
+            e.preventDefault();
 
-        const emailOk = validateEmail();
-        const passOk = validatePassword();
-        if(emailInput.value.trim() === ''){ emailWrap.classList.add('error'); emailMsg.classList.add('show'); }
-        if(passwordInput.value === ''){ passwordWrap.classList.add('error'); passwordMsg.classList.add('show'); }
+            // Ripple Effect
+            const offset = $submitBtn.offset();
+            const width = $submitBtn.outerWidth();
+            const height = $submitBtn.outerHeight();
+            const size = Math.max(width, height);
 
-        if(!emailOk || !passOk) return;
+            const pageX = e.pageX || (offset.left + width / 2);
+            const pageY = e.pageY || (offset.top + height / 2);
 
-        submitBtn.classList.add('loading');
-        submitBtn.disabled = true;
+            const clickX = pageX - offset.left - size / 2;
+            const clickY = pageY - offset.top - size / 2;
 
-        setTimeout(() => {
-            submitBtn.classList.remove('loading');
-            submitBtn.classList.add('success');
-            btnLabel.textContent = '✓ Signed In';
-            btnLabel.style.opacity = 1;
+            const $ripple = $('<span>', {
+                class: 'ripple',
+                css: {
+                    width: size + 'px',
+                    height: size + 'px',
+                    left: clickX + 'px',
+                    top: clickY + 'px'
+                }
+            });
+
+            $submitBtn.append($ripple);
+            setTimeout(() => $ripple.remove(), 650);
+
+            // Validation execution
+            const emailOk = validateEmail();
+            const passOk = validatePassword();
+
+            if ($emailInput.val().trim() === '') {
+                $emailWrap.addClass('error');
+                $emailMsg.addClass('show');
+            }
+            if ($passwordInput.val() === '') {
+                $passwordWrap.addClass('error');
+                $passwordMsg.addClass('show');
+            }
+
+            if (!emailOk || !passOk) return;
+
+            // Loading state
+            $submitBtn.addClass('loading').prop('disabled', true);
+
+            const obj = JSON.stringify({
+                "userEmail":$emailInput.val().trim(),
+                "password":$passwordInput.val().trim(),
+                "userRoles":"Admin"
+            });
+
             setTimeout(() => {
-                submitBtn.classList.remove('success');
-                submitBtn.disabled = false;
-                btnLabel.textContent = 'Sign In';
-            }, 1800);
-        }, 1400);
+
+                $.ajax({
+                    url:"http://localhost:8080/v1/test/login",
+                    type:'POST',
+                    contentType:'application/json',
+                    data:obj,
+                    success: function(response){
+                        alert(response.message);
+
+                        if(response.status === 200){
+
+                            localStorage.setItem("JWT", response.body.token);
+                            localStorage.setItem("UserID", response.body.userId);
+                            localStorage.setItem("UserName", response.body.userName);
+
+                            $submitBtn.removeClass('loading').addClass('success');
+                            $btnLabel.text('✓ Signed In').css('opacity', 1);
+
+                            setTimeout(()=>{
+                                window.location.href = 'adminDashboard.html';
+                            }, 500);
+                        }
+                        else{
+                            $submitBtn.removeClass('loading').prop('disabled', false);
+                            $btnLabel.text('Sign In');
+                        }
+                    }
+                });
+            }, 500);
+        });
     });
 </script>
 

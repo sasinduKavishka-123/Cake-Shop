@@ -2,11 +2,9 @@ package lk.ijse.CakeShop.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@AllArgsConstructor
 public class CustomException extends RuntimeException{
 
     private int status;

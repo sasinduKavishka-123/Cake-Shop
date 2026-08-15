@@ -628,14 +628,15 @@
             $submitBtn.addClass('loading').prop('disabled', true);
             $btnLabel.css('opacity', 0);
 
+            const obj = JSON.stringify({
+                "userId":0,
+                "userName":$nameInput.val().trim(),
+                "userEmail":$emailInput.val().trim(),
+                "password":$passwordInput.val(),
+                "userRoles":"Admin"
+            });
+
             setTimeout(() => {
-                const obj = JSON.stringify({
-                    "userId":0,
-                    "userName":$nameInput.val().trim(),
-                    "userEmail":$emailInput.val().trim(),
-                    "password":$passwordInput.val(),
-                    "userRole":"Admin"
-                })
 
                 $.ajax({
                     url:"http://localhost:8080/v1/test/saveUser",
@@ -643,23 +644,25 @@
                     contentType:"application/json",
                     data:obj,
                     success:function (response){
-                        if(response.status == 200){
+                        console.log("Success");
+                        if(response.status === 200){
                             alert(response.message);
+
+                            $submitBtn.removeClass('loading').addClass('success');
+                            $btnLabel.text('✓ Account Created').css('opacity', 1);
+                            setTimeout(() => {
+                                window.location.href = "login.html";
+                            }, 500);
+                        }else{
+                            alert(response.message);
+                            $submitBtn.removeClass('loading').prop('disabled', false);
+                            $btnLabel.text('Create Account').css('opacity', 1);
                         }
 
-                        $submitBtn.removeClass('loading').addClass('success');
-                        $btnLabel.text('✓ Account Created').css('opacity', 1);
-
-                        setTimeout(() => {
-                            window.location.href = "login.html";
-                        }, 500);
                     },
                     error: function(response){
-                        if(response.status == 403){
-                            alert("Sorry Email Already Exist.");
-                        }else{
-                            alert("UNEXPECTED_ERROR");
-                        }
+                        console.log("Error");
+                        alert(response.message);
                         setTimeout(() => {
                             $submitBtn.removeClass('loading').prop('disabled', false);
                             $btnLabel.text('Create Account').css('opacity', 1);

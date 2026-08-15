@@ -14,12 +14,13 @@ public class AppExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = {Exception.class})
     public CommonResponse handleServerException(Exception ex, WebRequest webRequest){
         ex.printStackTrace();
-        return new CommonResponse(500, "UNEXPECTED_ERROR");
+        return new CommonResponse(500,"UNEXPECTED_ERROR");
     }
 
     @ExceptionHandler(value = {CustomException.class})
-    public ResponseEntity<CommonResponse> handleCustomException(CustomException ex, WebRequest webRequest){
+    public ResponseEntity<CommonResponse> handleCustomException(CustomException ex , WebRequest webRequest){
         ex.printStackTrace();
+
         return ResponseEntity.ok(new CommonResponse(ex.getStatus(), ex.getMessage()));
     }
 

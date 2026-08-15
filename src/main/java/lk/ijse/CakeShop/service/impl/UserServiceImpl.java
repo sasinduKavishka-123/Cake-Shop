@@ -1,6 +1,5 @@
 package lk.ijse.CakeShop.service.impl;
 
-import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.entity.User;
 import lk.ijse.CakeShop.enumerations.UserStatus;
@@ -11,48 +10,59 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 @AllArgsConstructor
+
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
     @Override
     public void saveUser(UserDTO userDTO) {
-            log.info("Execute method saveUser()");
-            try{
-                int count = getUserCountByEmail(userDTO.getUserEmail());
-                if(count > 0){
-                    throw new CustomException(403,"Sorry Email Already Exist");
-                }
+        log.info("Execute method saveUser()");
+        Optional<UserDTO> optionalUserDTO = userRepository.getUserByDetails(userDTO.getUserName(), userDTO.getUserEmail());
 
-                User user = new User();
-                user.setUserName(userDTO.getUserName());
-                user.setUserEmail(userDTO.getUserEmail());
-                user.setUserRoles(userDTO.getUserRoles());
-                user.setPassword(userDTO.getPassword());
-                user.setUserStatus(UserStatus.ACTIVE);
+        if(optionalUserDTO.isPresent()){
 
-                userRepository.save(user);
+            UserDTO responseDTO = optionalUserDTO.get();
+
+            if (userDTO.getUserName().equals(responseDTO.getUserName())) {
+                throw new CustomException(401, "USERNAME_ALREADY_EXIST");
             }
-            catch (Exception e){
-                log.error("Error in method saveUser()");
-                throw new RuntimeException(e);
+            if (userDTO.getUserEmail().equals(responseDTO.getUserEmail())) {
+                throw new CustomException(402, "EMAIL_ALREADY_EXIST");
             }
+        }
+
+        User user = new User();
+        user.setUserName(userDTO.getUserName());
+        user.setUserEmail(userDTO.getUserEmail());
+        user.setUserRoles(userDTO.getUserRoles());
+        user.setPassword(userDTO.getPassword());
+        user.setUserStatus(UserStatus.ACTIVE);
+
+        userRepository.save(user);
 
     }
 
     @Override
-    public int getUserCountByEmail(String email) {
-        log.info("Execute method getUserByEmail()");
-        try{
-            return userRepository.getUserCountByEmail(email);
+    public UserDTO findUser(String email, String password, String userRole) {
+        log.info("Execute method findUser()");
+
+        Optional<User> optionalUser = userRepository.findUser(email, password, userRole);
+        if (optionalUser.isEmpty()) {
+            throw new CustomException(404, "USER NOT FOUND");
         }
-        catch (Exception e){
-            log.error("Error in method getUserByEmail()");
-            throw new RuntimeException(e);
-        }
+
+        User u = optionalUser.get();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(u.getUserId());
+        userDTO.setUserName(u.getUserName());
+
+        return userDTO;
     }
 
 }

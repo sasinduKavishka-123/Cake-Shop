@@ -7,5 +7,5 @@ public interface UserService {
 
     void saveUser(UserDTO userDTO);
 
-    int getUserCountByEmail(String email);
+    UserDTO findUser(String email, String password, String userRole);
 }
