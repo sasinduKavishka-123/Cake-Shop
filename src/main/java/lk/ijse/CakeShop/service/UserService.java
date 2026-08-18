@@ -16,4 +16,5 @@ public interface UserService {
     int getUserCountByRole(String userRole);
 
     UserDTO findUserById(long id);
+
 }

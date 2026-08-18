@@ -356,7 +356,7 @@
             top:50%;left:50%;
             transform:translate(-50%,-46%) scale(0.96);
             width:min(560px,92vw);
-            max-height:88vh;
+            max-height:92vh;
             overflow-y:auto;
             background:var(--cream-warm);
             border-radius:26px;
@@ -365,6 +365,8 @@
             opacity:0;
             pointer-events:none;
             transition:opacity .3s ease, transform .3s ease;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
         .modal-head{
@@ -419,6 +421,92 @@
             border-color:var(--gold);
             box-shadow:0 0 0 4px rgba(199,154,75,0.15);
         }
+        .input-wrap{position:relative;}
+        .input-wrap input{
+            width:100%;
+            padding:15px 16px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            background:var(--cream-warm);
+            font-family:'Manrope',sans-serif;
+            font-size:0.95rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .input-wrap input::placeholder{color:#B8A99F;}
+        .input-wrap input:focus{
+            outline:none;
+            border-color:var(--gold);
+            box-shadow:0 0 0 4px rgba(199,154,75,0.15);
+        }
+        .input-wrap.error input{border-color:var(--error);}
+        .input-wrap.error input:focus{box-shadow:0 0 0 4px rgba(179,69,46,0.12);}
+        .input-wrap.success input{border-color:var(--success);}
+
+        .status-icon{
+            position:absolute;
+            right:16px;top:50%;
+            transform:translateY(-50%);
+            display:none;
+            align-items:center;
+        }
+        .input-wrap.success .status-icon.icon-success{display:flex;}
+        .input-wrap.error .status-icon.icon-error{display:flex;}
+
+        .toggle-pass{
+            position:absolute;
+            right:14px;top:50%;
+            transform:translateY(-50%);
+            color:var(--espresso-soft);
+            font-size:0.78rem;
+            font-weight:800;
+            letter-spacing:0.02em;
+            padding:4px;
+        }
+        .toggle-pass:hover{color:var(--terracotta-deep);}
+
+        .field-msg{
+            font-size:0.76rem;
+            margin-top:7px;
+            color:var(--error);
+            display:none;
+            align-items:center;
+            gap:5px;
+        }
+        .field-msg.show{display:flex;}
+        .field-msg.ok{color:var(--success);}
+
+        /* ---- password strength meter ---- */
+        .strength-wrap{
+            margin-top:10px;
+            display:none;
+        }
+        .strength-wrap.show{display:block;}
+        .strength-bars{
+            display:flex;
+            gap:6px;
+            margin-bottom:6px;
+        }
+        .strength-bars span{
+            flex:1;
+            height:5px;
+            border-radius:4px;
+            background:var(--line);
+            transition:background .25s ease;
+        }
+        .strength-label{
+            font-size:0.74rem;
+            font-weight:700;
+            color:var(--espresso-soft);
+        }
+        .strength-wrap[data-level="1"] .strength-bars span:nth-child(1){background:var(--error);}
+        .strength-wrap[data-level="1"] .strength-label{color:var(--error);}
+        .strength-wrap[data-level="2"] .strength-bars span:nth-child(-n+2){background:var(--warn);}
+        .strength-wrap[data-level="2"] .strength-label{color:var(--warn);}
+        .strength-wrap[data-level="3"] .strength-bars span:nth-child(-n+3){background:var(--gold);}
+        .strength-wrap[data-level="3"] .strength-label{color:var(--terracotta-deep);}
+        .strength-wrap[data-level="4"] .strength-bars span{background:var(--success);}
+        .strength-wrap[data-level="4"] .strength-label{color:var(--success);}
         .check-row{display:flex; flex-wrap:wrap; gap:10px;}
         .check-chip{
             padding:9px 16px;
@@ -850,7 +938,7 @@
     function money(n){ return 'Rs. ' + n.toLocaleString(); }
     function statusBadgeClass(status){
         return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',Cancelled:'badge-cancelled',
-            Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',Suspended:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
+            ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',SUSPENDED:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
     }
     function roleBadgeClass(role){
         return {Admin:'badge-admin', Manager:'badge-manager', Staff:'badge-staff'}[role] || 'badge-staff';
@@ -864,6 +952,73 @@
         $('#toastMsg').text(msg);
         $('#toast').addClass('show');
         setTimeout(()=> $('#toast').removeClass('show'), 2200);
+    }
+
+    /* ============================================================
+      VALIDATION CHECKERS
+      ============================================================ */
+    function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+    function validateName(name) {
+        const val = name.trim();
+        if (val === '' || val.length <= 2) {return false;}
+        return true;
+    }
+
+    /* ============================================================
+       PASSWORD FUNCTIONS
+       ============================================================ */
+    /* ---- password visibility toggles ---- */
+    function wireToggle(btnId, inputId) {
+        $('#' + btnId).on('click', function() {
+            const $input = $('#' + inputId);
+            const show = $input.attr('type') === 'password';
+            $input.attr('type', show ? 'text' : 'password');
+            $(this).text(show ? 'HIDE' : 'SHOW');
+        });
+    }
+    wireToggle('togglePass1', 'password');
+    wireToggle('togglePass2', 'confirmPassword');
+
+    function passwordScore(v) {
+        let score = 0;
+        if (v.length >= 8) score++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+        if (/[0-9]/.test(v)) score++;
+        if (/[^A-Za-z0-9]/.test(v)) score++;
+        return score;
+    }
+
+    const strengthLabels = ['Too short', 'Weak — add numbers or symbols', 'Getting there — add a symbol', 'Good password strength', 'Great, strong password!'];
+
+    function validatePasswordStrength() {
+        const val = $('#password').val();
+        if (val === '') {
+            $('#strengthWrap').removeClass('show');
+            $('#passwordWrap').removeClass('error success');
+            return false;
+        }
+        $('#strengthWrap').addClass('show');
+        const score = passwordScore(val);
+        const level = val.length < 6 ? 1 : Math.max(1, score);
+        $('#strengthWrap').attr('data-level', level);
+        $('#strengthLabel').text(val.length < 6 ? strengthLabels[0] : strengthLabels[level]);
+        const ok = val.length >= 6;
+        $('#passwordWrap').toggleClass('error', !ok).toggleClass('success', ok && level >= 3);
+        return ok;
+    }
+
+    function validateConfirm() {
+        const val = $('#confirmPassword').val();
+        if (val === '') {
+            $('#confirmWrap').removeClass('error success');
+            $('#confirmMsg').removeClass('show');
+            return false;
+        }
+        const ok = val === $('#password').val() && val.length > 0;
+        $('#confirmWrap').toggleClass('error', !ok).toggleClass('success', ok);
+        $('#confirmMsg').toggleClass('show', !ok);
+        return ok;
     }
 
     /* ============================================================
@@ -1187,25 +1342,51 @@
   `;
     }
 
-    function adminFormHTML(a){
-        a = a || {name:'', email:'', role:'Staff', status:'Active'};
+    function adminFormHTML(a, isEdit){
+        if(!a){
+            a = {userName: '', userEmail: '', userRoles: 'Staff', userStatus: 'Active'};
+        }
 
-        return `
-    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.userName}" placeholder="Admin name"></div>
-    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.userEmail}" placeholder="name@sugarandflour.lk"></div>
-    <div class="field-row-2">
-      <div class="field-group"><label>Role</label>
-        <select id="f_role">
-          ${['Admin','Manager','Staff'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field-group"><label>Status</label>
-        <select id="f_status">
-          ${['Active','Invited','Suspended'].map(v=>`<option ${a.userStatus===v?'selected':''}>${v}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-  `;
+        let html =
+            `<div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.userName}" placeholder="Admin name"></div>
+             <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.userEmail}" placeholder="name@sugarandflour.lk"></div>
+             <div class="field-row-2">
+               <div class="field-group"><label>Role</label>
+                 <select id="f_role">
+                   ${['Admin','Staff'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
+                 </select>
+               </div>
+               <div class="field-group"><label>Status</label>
+                 <select id="f_status">
+                   ${['ACTIVE','SUSPENDED'].map(v=>`<option ${a.userStatus===v?'selected':''}>${v}</option>`).join('')}
+                 </select>
+               </div>
+             </div>`;
+
+        if(!isEdit){
+            html +=
+                `<div class="field-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap" id="passwordWrap">
+                        <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
+                        <button type="button" class="toggle-pass" id="togglePass1">SHOW</button>
+                    </div>
+                    <div class="strength-wrap" id="strengthWrap" data-level="0">
+                        <div class="strength-bars"><span></span><span></span><span></span><span></span></div>
+                        <span class="strength-label" id="strengthLabel">Use 8+ characters with a number &amp; symbol</span>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-wrap" id="confirmWrap">
+                        <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password">
+                        <button type="button" class="toggle-pass" id="togglePass2">SHOW</button>
+                    </div>
+                    <div class="field-msg" id="confirmMsg">Passwords don't match.</div>
+                </div>`;
+        }
+        return html;
     }
 
     function customerFormHTML(c){
@@ -1261,7 +1442,7 @@
                     },
                     success: function (response){
                         if(response.status === 200){
-                            $modalBody.html(adminFormHTML(response.body));
+                            $modalBody.html(adminFormHTML(response.body, isEdit));
                         }
                         else{
                             alert(response.message);
@@ -1271,9 +1452,24 @@
                         alert("UNEXPECTED ERROR");
                     }
                 })
+            }else{
+                $modalBody.html(adminFormHTML(null, isEdit));
+                // for pass word inputs ------------
+                wireToggle('togglePass1', 'password');
+                wireToggle('togglePass2', 'confirmPassword');
+
+                $('#password').on('input', function() {
+                    validatePasswordStrength();
+                    if ($('#confirmPassword').val() !== '') validateConfirm();
+                });
+                $('#password').on('blur', validatePasswordStrength);
+
+                $('#confirmPassword').on('blur', validateConfirm);
+                $('#confirmPassword').on('input', function() {
+                    if ($('#confirmWrap').hasClass('error') || $('#confirmPassword').val()) validateConfirm();
+                });
             }
-            //const record = isEdit ? admins.find(a=>a.id===id) : null;
-            $modalBody.html(adminFormHTML(null));
+
         }
         if(type === 'customer'){
             const record = isEdit ? customers.find(c=>c.id===id) : null;
@@ -1364,20 +1560,53 @@
         }
 
         if(type === 'admin'){
-            const data = {
-                name: $('#f_name').val().trim() || 'Unnamed Admin',
-                email: $('#f_email').val().trim() || '—',
-                role: $('#f_role').val(),
-                status: $('#f_status').val(),
-            };
-            if(isEdit){
-                const idx = admins.findIndex(a=>a.id===id);
-                admins[idx] = {...admins[idx], ...data};
-                showToast('Admin updated');
-            } else {
-                admins.unshift({id:nextAdminId++, lastActive:'Just now', ...data});
-                showToast('Admin invited');
+            let name = $('#f_name').val().trim();
+            let email = $('#f_email').val().trim();
+
+            if(!validateName(name)){ alert("INVALID NAME"); return; }
+            if(!validEmail(email)){ alert("INVALID EMAIL"); return; }
+
+            if(!isEdit){
+                const passOk = validatePasswordStrength();
+                const confirmOk = validateConfirm();
+                if(!passOk){alert("INVALID PASSWORD"); return;}
+                if(!confirmOk){ alert("PASSWORD CONFIRMATION ERROR"); return;}
             }
+
+            const obj = {
+                userId: 0,
+                userName: name,
+                userEmail: email,
+                password: '',
+                userRoles: $('#f_role').val(),
+                userStatus: $('#f_status').val().toUpperCase(),
+            };
+
+            if(isEdit){ obj.userId = id; }
+            else{ obj.password = $('#password').val()}
+
+            $.ajax({
+                url:'http://localhost:8080/v1/test/saveUser',
+                type: 'POST',
+                contentType:'application/json',
+                data: JSON.stringify(obj),
+                success: function (response){
+                    if(response.status === 200){
+                        if(isEdit){
+                            showToast('Admin updated');
+                        }else{
+                            showToast('Admin saved');
+                        }
+                        closeModal();
+                        renderAll();
+                    }else{
+                        alert(response.message);
+                    }
+                },
+                error: function (){
+                    alert("UNEXPECTED ERROR");
+                }
+            });
         }
 
         if(type === 'customer'){
@@ -1397,8 +1626,8 @@
             }
         }
 
-        closeModal();
-        renderAll();
+        // closeModal();
+        // renderAll();
     });
 
     /* ============================================================

@@ -25,27 +25,39 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveUser(UserDTO userDTO) {
         log.info("Execute method saveUser()");
-        Optional<UserDTO> optionalUserDTO = userRepository.getUserByDetails(userDTO.getUserName(), userDTO.getUserEmail());
 
-        if(optionalUserDTO.isPresent()){
-            log.error("Error in method saveUser()");
-            UserDTO responseDTO = optionalUserDTO.get();
+        if(userDTO.getUserId() == 0){
+            Optional<UserDTO> optionalUserDTO = userRepository.getUserByDetails(userDTO.getUserName(), userDTO.getUserEmail());
 
-            if (userDTO.getUserName().equals(responseDTO.getUserName())) {
-                throw new CustomException(401, "USERNAME_ALREADY_EXIST");
-            }
-            if (userDTO.getUserEmail().equals(responseDTO.getUserEmail())) {
-                throw new CustomException(402, "EMAIL_ALREADY_EXIST");
+            if(optionalUserDTO.isPresent()){
+                log.error("Error in method saveUser()");
+                UserDTO responseDTO = optionalUserDTO.get();
+
+                if (userDTO.getUserName().equals(responseDTO.getUserName())) {
+                    throw new CustomException(401, "USERNAME_ALREADY_EXIST");
+                }
+                if (userDTO.getUserEmail().equals(responseDTO.getUserEmail())) {
+                    throw new CustomException(402, "EMAIL_ALREADY_EXIST");
+                }
             }
         }
 
         User user = new User();
+        if(userDTO.getUserId() != 0){
+            Optional<User> optionalUser = userRepository.findById(userDTO.getUserId());
+            if(optionalUser.isEmpty()){
+                throw new CustomException(404, "USER_NO_FOUND");
+            }
+            user = optionalUser.get();
+        }
         user.setUserName(userDTO.getUserName());
         user.setUserEmail(userDTO.getUserEmail());
         user.setUserRoles(userDTO.getUserRoles());
-        user.setPassword(userDTO.getPassword());
-        user.setUserStatus(UserStatus.ACTIVE);
-
+        user.setUserStatus(userDTO.getUserStatus());
+        if(userDTO.getUserId() == 0){
+            user.setPassword(userDTO.getPassword());
+        }
+        System.out.println(user.getUserStatus());
         userRepository.save(user);
 
     }
@@ -109,7 +121,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> optionalUser = userRepository.findById(id);
         if(optionalUser.isEmpty()){
             log.error("Error in method findUserById()");
-            throw new CustomException(404, "USER ROLE NOT FOUND");
+            throw new CustomException(404, "USER NOT FOUND");
         }
 
         User u = optionalUser.get();
