@@ -16,7 +16,7 @@
             --terracotta: #C97B5F;
             --terracotta-deep:#B4644B;
             --espresso: #3A2822;
-            --espresso-soft: #6B5248;
+            --espresso-soft: #6e0912;
             --gold: #C79A4B;
             --gold-light:#EFDDB8;
             --line: rgba(58,40,34,0.10);
@@ -527,13 +527,16 @@
                             $btnLabel.text('✓ Signed In').css('opacity', 1);
 
                             setTimeout(()=>{
-                                window.location.href = 'adminDashboard.html';
+                                window.location.href = 'dashboard.html';
                             }, 500);
                         }
                         else{
                             $submitBtn.removeClass('loading').prop('disabled', false);
                             $btnLabel.text('Sign In');
                         }
+                    },
+                    error: function (){
+                        alert("SERVER DOES NOT RESPONDED");
                     }
                 });
             }, 500);

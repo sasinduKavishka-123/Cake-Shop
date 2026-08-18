@@ -306,9 +306,10 @@
         .badge-inactive{background:var(--muted-bg); color:var(--espresso-soft);}
         .badge-invited{background:var(--warn-bg); color:#93691F;}
         .badge-suspended{background:#F6E2DC; color:var(--error);}
-        .badge-owner{background:var(--gold-light); color:#7A5A1E;}
+        .badge-admin{background:var(--gold-light); color:#7A5A1E;}
         .badge-manager{background:var(--blush); color:var(--terracotta-deep);}
         .badge-staff{background:var(--muted-bg); color:var(--espresso-soft);}
+        .badge-blocked{background:#F6E2DC; color:var(--error);}
 
         .row-actions{display:flex; gap:8px; justify-content:flex-end;}
         .icon-btn{
@@ -577,6 +578,11 @@
             Admins
             <span class="nav-count" id="navCountAdmins">0</span>
         </li>
+        <li class="nav-item" data-section="customers">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="7.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 12.3c2.6.3 4.5 2.2 4.8 5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+            Customers
+            <span class="nav-count" id="navCountCustomers">0</span>
+        </li>
     </ul>
     <div class="sidebar-foot">
         <span class="admin-avatar">A</span>
@@ -691,8 +697,18 @@
         <section class="section-panel" id="panel-admins">
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Admin</th><th>Role</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
+                    <thead><tr><th>Admin</th><th>Role</th><th>Status</th><th></th></tr></thead>
                     <tbody id="adminsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= CUSTOMERS ================= -->
+        <section class="section-panel" id="panel-customers">
+            <div class="table-card">
+                <table>
+                    <thead><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Status</th><th></th></tr></thead>
+                    <tbody id="customersBody"></tbody>
                 </table>
             </div>
         </section>
@@ -732,6 +748,7 @@
 
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     /* ============================================================
        MOCK DATA
@@ -768,10 +785,18 @@
         {id:3, name:'Ishara Fernando', email:'ishara@sugarandflour.lk', role:'Staff', status:'Invited', lastActive:'—'},
     ];
 
+    let customers = [
+        {id:1, name:'Nadeesha Perera', email:'nadeesha.p@gmail.com', phone:'+94 77 512 3344', orders:14, spent:28400, status:'Active', joined:'2025-11-02'},
+        {id:2, name:'Kavindu Rathnayake', email:'kavindu.r@gmail.com', phone:'+94 71 220 9987', orders:6, spent:9800, status:'Active', joined:'2026-01-15'},
+        {id:3, name:'Ishara Wickramasinghe', email:'ishara.w@gmail.com', phone:'+94 76 884 1122', orders:22, spent:41200, status:'Active', joined:'2025-08-20'},
+        {id:4, name:'Tharindu Jayasuriya', email:'tharindu.j@gmail.com', phone:'+94 70 663 5521', orders:2, spent:2700, status:'Blocked', joined:'2026-03-05'},
+    ];
+
     let nextOrderNum = 1043;
     let nextItemId = 7;
     let nextSupplierId = 6;
     let nextAdminId = 4;
+    let nextCustomerId = 5;
 
     /* ============================================================
        NAVIGATION
@@ -782,41 +807,42 @@
         items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item'},
         suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier'},
         admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Admin'},
+        customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:'New Customer'},
     };
     let currentSection = 'overview';
 
-    const navItems = document.querySelectorAll('.nav-item');
-    const topAddBtn = document.getElementById('topAddBtn');
-    const addBtnLabel = document.getElementById('addBtnLabel');
-    const searchInput = document.getElementById('searchInput');
+    const $navItems = $('.nav-item');
+    const $topAddBtn = $('#topAddBtn');
+    const $addBtnLabel = $('#addBtnLabel');
+    const $searchInput = $('#searchInput');
 
     function goToSection(name){
         currentSection = name;
-        navItems.forEach(n => n.classList.toggle('active', n.dataset.section === name));
-        document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-'+name).classList.add('active');
-        document.getElementById('topbarTitle').textContent = sections[name].title;
-        document.getElementById('topbarSub').textContent = sections[name].sub;
+        $navItems.each(function(){ $(this).toggleClass('active', $(this).data('section') === name); });
+        $('.section-panel').removeClass('active');
+        $('#panel-'+name).addClass('active');
+        $('#topbarTitle').text(sections[name].title);
+        $('#topbarSub').text(sections[name].sub);
         const cfg = sections[name];
-        topAddBtn.style.display = cfg.addLabel ? 'flex' : 'none';
-        addBtnLabel.textContent = cfg.addLabel || '';
-        searchInput.value = '';
+        $topAddBtn.css('display', cfg.addLabel ? 'flex' : 'none');
+        $addBtnLabel.text(cfg.addLabel || '');
+        $searchInput.val('');
         closeSidebar();
         renderAll();
     }
 
-    navItems.forEach(item => item.addEventListener('click', () => goToSection(item.dataset.section)));
-    document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); goToSection(el.dataset.goto); }));
+    $navItems.on('click', function(){ goToSection($(this).data('section')); });
+    $('[data-goto]').on('click', function(e){ e.preventDefault(); goToSection($(this).data('goto')); });
 
     /* ============================================================
        SIDEBAR (mobile)
        ============================================================ */
-    const sidebar = document.getElementById('sidebar');
-    const sidebarScrim = document.getElementById('sidebarScrim');
-    document.getElementById('hamburgerBtn').addEventListener('click', () => { sidebar.classList.add('open'); sidebarScrim.classList.add('show'); });
-    document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
-    sidebarScrim.addEventListener('click', () => { closeSidebar(); closeModal(); closeConfirm(); });
-    function closeSidebar(){ sidebar.classList.remove('open'); sidebarScrim.classList.remove('show'); }
+    const $sidebar = $('#sidebar');
+    const $sidebarScrim = $('#sidebarScrim');
+    $('#hamburgerBtn').on('click', function(){ $sidebar.addClass('open'); $sidebarScrim.addClass('show'); });
+    $('#sidebarClose').on('click', closeSidebar);
+    $sidebarScrim.on('click', function(){ closeSidebar(); closeModal(); closeConfirm(); });
+    function closeSidebar(){ $sidebar.removeClass('open'); $sidebarScrim.removeClass('show'); }
 
     /* ============================================================
        HELPERS
@@ -824,10 +850,10 @@
     function money(n){ return 'Rs. ' + n.toLocaleString(); }
     function statusBadgeClass(status){
         return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',Cancelled:'badge-cancelled',
-            Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',Suspended:'badge-suspended'}[status] || 'badge-pending';
+            Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',Suspended:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
     }
     function roleBadgeClass(role){
-        return {Owner:'badge-owner', Manager:'badge-manager', Staff:'badge-staff'}[role] || 'badge-staff';
+        return {Admin:'badge-admin', Manager:'badge-manager', Staff:'badge-staff'}[role] || 'badge-staff';
     }
     function stockInfo(stock){
         if(stock === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
@@ -835,25 +861,24 @@
         return {label:'In Stock', cls:'badge-instock'};
     }
     function showToast(msg){
-        const toast = document.getElementById('toast');
-        document.getElementById('toastMsg').textContent = msg;
-        toast.classList.add('show');
-        setTimeout(()=>toast.classList.remove('show'), 2200);
+        $('#toastMsg').text(msg);
+        $('#toast').addClass('show');
+        setTimeout(()=> $('#toast').removeClass('show'), 2200);
     }
 
     /* ============================================================
        RENDER: OVERVIEW
        ============================================================ */
     function renderOverview(){
-        document.getElementById('statOrders').textContent = orders.length;
+        $('#statOrders').text(orders.length);
         const revenue = orders.filter(o=>o.status!=='Cancelled').reduce((s,o)=>s+o.total,0);
-        document.getElementById('statRevenue').textContent = money(revenue);
+        $('#statRevenue').text(money(revenue));
         const low = items.filter(i=>i.stock<=8).length;
-        document.getElementById('statLowStock').textContent = low;
+        $('#statLowStock').text(low);
         const activeSup = suppliers.filter(s=>s.status==='Active').length;
-        document.getElementById('statSuppliers').textContent = activeSup;
+        $('#statSuppliers').text(activeSup);
 
-        document.getElementById('recentOrdersBody').innerHTML = orders.slice(0,4).map(o => `
+        $('#recentOrdersBody').html(orders.slice(0,4).map(o => `
     <tr>
       <td class="cell-title">${o.id}</td>
       <td>${o.customer}</td>
@@ -861,10 +886,10 @@
       <td><span class="badge-pill ${statusBadgeClass(o.status)}">${o.status}</span></td>
       <td>${o.date}</td>
     </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`;
+  `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`);
 
         const lowItems = items.filter(i=>i.stock<=8);
-        document.getElementById('lowStockBody').innerHTML = lowItems.map(i => {
+        $('#lowStockBody').html(lowItems.map(i => {
             const info = stockInfo(i.stock);
             return `
     <tr>
@@ -873,7 +898,7 @@
       <td>${i.stock} units</td>
       <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
     </tr>`;
-        }).join('') || `<tr class="empty-row"><td colspan="4">All items well stocked 🎉</td></tr>`;
+        }).join('') || `<tr class="empty-row"><td colspan="4">All items well stocked 🎉</td></tr>`);
     }
 
     /* ============================================================
@@ -882,7 +907,7 @@
     function renderOrders(filter=''){
         const f = filter.toLowerCase();
         const rows = orders.filter(o => !f || o.id.toLowerCase().includes(f) || o.customer.toLowerCase().includes(f));
-        document.getElementById('ordersBody').innerHTML = rows.map(o => `
+        $('#ordersBody').html(rows.map(o => `
     <tr>
       <td class="cell-title">${o.id}</td>
       <td>${o.customer}</td>
@@ -897,7 +922,7 @@
         </div>
       </td>
     </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`;
+  `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
     }
 
     /* ============================================================
@@ -906,7 +931,7 @@
     function renderItems(filter=''){
         const f = filter.toLowerCase();
         const rows = items.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
-        document.getElementById('itemsBody').innerHTML = rows.map(i => {
+        $('#itemsBody').html(rows.map(i => {
             const info = stockInfo(i.stock);
             return `
     <tr>
@@ -922,7 +947,7 @@
         </div>
       </td>
     </tr>`;
-        }).join('') || `<tr class="empty-row"><td colspan="6">No items match your search.</td></tr>`;
+        }).join('') || `<tr class="empty-row"><td colspan="6">No items match your search.</td></tr>`);
     }
 
     /* ============================================================
@@ -931,7 +956,7 @@
     function renderSuppliers(filter=''){
         const f = filter.toLowerCase();
         const rows = suppliers.filter(s => !f || s.name.toLowerCase().includes(f) || s.category.toLowerCase().includes(f));
-        document.getElementById('suppliersBody').innerHTML = rows.map(s => `
+        $('#suppliersBody').html(rows.map(s => `
     <tr>
       <td class="cell-title">${s.name}</td>
       <td>${s.category}</td>
@@ -945,7 +970,7 @@
         </div>
       </td>
     </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="6">No suppliers match your search.</td></tr>`;
+  `).join('') || `<tr class="empty-row"><td colspan="6">No suppliers match your search.</td></tr>`);
     }
 
     /* ============================================================
@@ -953,65 +978,148 @@
        ============================================================ */
     function renderAdmins(filter=''){
         const f = filter.toLowerCase();
-        const rows = admins.filter(a => !f || a.name.toLowerCase().includes(f) || a.email.toLowerCase().includes(f) || a.role.toLowerCase().includes(f));
-        document.getElementById('adminsBody').innerHTML = rows.map(a => `
+
+        const obj = {
+            user_name:f,
+            user_email:f
+        }
+
+        $.ajax({
+            url: "http://localhost:8080/v1/test/getUsers",
+            type: 'GET',
+            contentType: 'application/json',
+            data: obj,
+            headers: {
+                'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    let html = "";
+                    for(const r of response.body){
+                        html +=
+                            `<tr>
+                                <td class="cell-main">
+                                  <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${r.userName.charAt(0)}</span>
+                                  <div><div class="cell-title">${r.userName}</div><div class="cell-sub">${r.userEmail}</div></div>
+                                </td>
+                                <td><span class="badge-pill ${roleBadgeClass(r.userRoles)}">${r.userRoles}</span></td>
+                                <td><span class="badge-pill ${statusBadgeClass(r.userStatus)}">${r.userStatus}</span></td>
+                                <td>
+                                  <div class="row-actions">
+                                    <button class="icon-btn" data-edit="admin" data-id="${r.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                                    <button class="icon-btn danger" data-delete="admin" data-id="${r.userId}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                                  </div>
+                                </td>
+                            </tr>`;
+                    }
+                    if(response.body.length === 0){
+                        html += `<tr class="empty-row"><td colspan="5">No admins match your search.</td></tr>`;
+                    }
+                    $('#adminsBody').html(html);
+                    $(window).on('load', function (){
+                        alert(response.message);
+                    })
+                }
+                else{
+                    alert(response.message);
+                }
+            },
+            error: function (){
+                alert("SERVER DOES NOT RESPONDED");
+            }
+        });
+    }
+
+    /* ============================================================
+       RENDER: CUSTOMERS
+       ============================================================ */
+    function renderCustomers(filter=''){
+        const f = filter.toLowerCase();
+        const rows = customers.filter(c => !f || c.name.toLowerCase().includes(f) || c.email.toLowerCase().includes(f) || c.phone.toLowerCase().includes(f));
+        $('#customersBody').html(rows.map(c => `
     <tr>
       <td class="cell-main">
-        <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${a.name.charAt(0)}</span>
-        <div><div class="cell-title">${a.name}</div><div class="cell-sub">${a.email}</div></div>
+        <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${c.name.charAt(0)}</span>
+        <div><div class="cell-title">${c.name}</div><div class="cell-sub">${c.email}</div></div>
       </td>
-      <td><span class="badge-pill ${roleBadgeClass(a.role)}">${a.role}</span></td>
-      <td><span class="badge-pill ${statusBadgeClass(a.status)}">${a.status}</span></td>
-      <td>${a.lastActive}</td>
+      <td>${c.phone}</td>
+      <td>${c.orders} orders</td>
+      <td class="cell-title">${money(c.spent)}</td>
+      <td><span class="badge-pill ${statusBadgeClass(c.status)}">${c.status}</span></td>
       <td>
         <div class="row-actions">
-          <button class="icon-btn" data-edit="admin" data-id="${a.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="admin" data-id="${a.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+          <button class="icon-btn" data-edit="customer" data-id="${c.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="icon-btn danger" data-delete="customer" data-id="${c.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
         </div>
       </td>
     </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No admins match your search.</td></tr>`;
+  `).join('') || `<tr class="empty-row"><td colspan="6">No customers match your search.</td></tr>`);
     }
 
     function updateNavCounts(){
-        document.getElementById('navCountOrders').textContent = orders.length;
-        document.getElementById('navCountItems').textContent = items.length;
-        document.getElementById('navCountSuppliers').textContent = suppliers.length;
-        document.getElementById('navCountAdmins').textContent = admins.length;
+        $('#navCountOrders').text(orders.length);
+        $('#navCountItems').text(items.length);
+        $('#navCountSuppliers').text(suppliers.length);
+        updateUserCount("Admin");
+        $('#navCountCustomers').text(customers.length);
+    }
+
+    function updateUserCount(user_role){
+        const obj = {user_role:user_role}
+        $.ajax({
+            url:"http://localhost:8080/v1/test/getUsersCount",
+            type:'GET',
+            data:obj,
+            headers:{
+                'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+            },
+            success:function (response){
+                if(response.status === 200){
+                    document.getElementById('navCountAdmins').textContent = response.body;
+                }
+                else{
+                    alert(response.message);
+                }
+            }
+        });
     }
 
     function renderAll(){
         updateNavCounts();
+        const q = $searchInput.val();
         if(currentSection==='overview') renderOverview();
-        if(currentSection==='orders') renderOrders(searchInput.value);
-        if(currentSection==='items') renderItems(searchInput.value);
-        if(currentSection==='suppliers') renderSuppliers(searchInput.value);
-        if(currentSection==='admins') renderAdmins(searchInput.value);
+        if(currentSection==='orders') renderOrders(q);
+        if(currentSection==='items') renderItems(q);
+        if(currentSection==='suppliers') renderSuppliers(q);
+        if(currentSection==='admins') renderAdmins(q);
+        if(currentSection==='customers') renderCustomers(q);
     }
 
-    searchInput.addEventListener('input', () => {
-        if(currentSection==='orders') renderOrders(searchInput.value);
-        if(currentSection==='items') renderItems(searchInput.value);
-        if(currentSection==='suppliers') renderSuppliers(searchInput.value);
-        if(currentSection==='admins') renderAdmins(searchInput.value);
+    $searchInput.on('input', function(){
+        const q = $(this).val();
+        if(currentSection==='orders') renderOrders(q);
+        if(currentSection==='items') renderItems(q);
+        if(currentSection==='suppliers') renderSuppliers(q);
+        if(currentSection==='admins') renderAdmins(q);
+        if(currentSection==='customers') renderCustomers(q);
     });
 
     /* ============================================================
        MODAL: FORM (Add / Edit)
        ============================================================ */
-    const formModal = document.getElementById('formModal');
-    const modalScrim = document.getElementById('modalScrim');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
-    const modalSave = document.getElementById('modalSave');
-    const saveLabel = document.getElementById('saveLabel');
+    const $formModal = $('#formModal');
+    const $modalScrim = $('#modalScrim');
+    const $modalTitle = $('#modalTitle');
+    const $modalBody = $('#modalBody');
+    const $modalSave = $('#modalSave');
+    const $saveLabel = $('#saveLabel');
 
     let editContext = null; // {type, id or null}
 
-    function openModal(){ formModal.classList.add('show'); modalScrim.classList.add('show'); }
-    function closeModal(){ formModal.classList.remove('show'); if(!confirmModal.classList.contains('show')) modalScrim.classList.remove('show'); }
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    function openModal(){ $formModal.addClass('show'); $modalScrim.addClass('show'); }
+    function closeModal(){ $formModal.removeClass('show'); if(!$confirmModal.hasClass('show')) $modalScrim.removeClass('show'); }
+    $('#modalClose').on('click', closeModal);
+    $('#modalCancel').on('click', closeModal);
 
     function orderFormHTML(o){
         o = o || {customer:'', items:'', total:'', status:'Pending', date:new Date().toISOString().split('T')[0]};
@@ -1087,7 +1195,7 @@
     <div class="field-row-2">
       <div class="field-group"><label>Role</label>
         <select id="f_role">
-          ${['Owner','Manager','Staff'].map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}
+          ${['Admin','Manager','Staff'].map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}
         </select>
       </div>
       <div class="field-group"><label>Status</label>
@@ -1099,15 +1207,27 @@
   `;
     }
 
-    function wireBadgeChips(){
-        const chips = document.getElementById('badgeChips');
-        if(!chips) return;
-        chips.addEventListener('click', e => {
-            const chip = e.target.closest('.check-chip');
-            if(!chip) return;
-            chip.classList.toggle('active');
-        });
+    function customerFormHTML(c){
+        c = c || {name:'', email:'', phone:'', status:'Active'};
+        return `
+    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${c.name}" placeholder="Customer name"></div>
+    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${c.email}" placeholder="name@example.com"></div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${c.phone}" placeholder="+94 77 000 0000"></div>
+      <div class="field-group"><label>Status</label>
+        <select id="f_status">
+          ${['Active','Blocked'].map(v=>`<option ${c.status===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
     }
+
+    /* dietary badge chips are rendered fresh each time the item modal opens,
+       so bind once via delegation instead of re-wiring per open */
+    $(document).on('click', '#badgeChips .check-chip', function(){
+        $(this).toggleClass('active');
+    });
 
     function openForm(type, id){
         editContext = {type, id};
@@ -1115,59 +1235,61 @@
 
         if(type === 'order'){
             const record = isEdit ? orders.find(o=>o.id===id) : null;
-            modalTitle.textContent = isEdit ? 'Edit Order' : 'New Order';
-            modalBody.innerHTML = orderFormHTML(record);
+            $modalTitle.text(isEdit ? 'Edit Order' : 'New Order');
+            $modalBody.html(orderFormHTML(record));
         }
         if(type === 'item'){
             const record = isEdit ? items.find(i=>i.id===id) : null;
-            modalTitle.textContent = isEdit ? 'Edit Menu Item' : 'New Menu Item';
-            modalBody.innerHTML = itemFormHTML(record);
-            wireBadgeChips();
+            $modalTitle.text(isEdit ? 'Edit Menu Item' : 'New Menu Item');
+            $modalBody.html(itemFormHTML(record));
         }
         if(type === 'supplier'){
             const record = isEdit ? suppliers.find(s=>s.id===id) : null;
-            modalTitle.textContent = isEdit ? 'Edit Supplier' : 'New Supplier';
-            modalBody.innerHTML = supplierFormHTML(record);
+            $modalTitle.text(isEdit ? 'Edit Supplier' : 'New Supplier');
+            $modalBody.html(supplierFormHTML(record));
         }
         if(type === 'admin'){
             const record = isEdit ? admins.find(a=>a.id===id) : null;
-            modalTitle.textContent = isEdit ? 'Edit Admin' : 'New Admin';
-            modalBody.innerHTML = adminFormHTML(record);
+            $modalTitle.text(isEdit ? 'Edit Admin' : 'New Admin');
+            $modalBody.html(adminFormHTML(record));
         }
-        saveLabel.textContent = isEdit ? 'Save Changes' : 'Create';
+        if(type === 'customer'){
+            const record = isEdit ? customers.find(c=>c.id===id) : null;
+            $modalTitle.text(isEdit ? 'Edit Customer' : 'New Customer');
+            $modalBody.html(customerFormHTML(record));
+        }
+        $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
         openModal();
     }
 
-    topAddBtn.addEventListener('click', () => {
+    $topAddBtn.on('click', function(){
         if(currentSection==='orders') openForm('order', null);
         if(currentSection==='items') openForm('item', null);
         if(currentSection==='suppliers') openForm('supplier', null);
         if(currentSection==='admins') openForm('admin', null);
+        if(currentSection==='customers') openForm('customer', null);
     });
 
-    /* delegated edit buttons */
-    document.addEventListener('click', e => {
-        const editBtn = e.target.closest('[data-edit]');
-        if(editBtn){
-            const type = editBtn.dataset.edit;
-            let id = editBtn.dataset.id;
-            if(type !== 'order') id = Number(id);
-            openForm(type, id);
-        }
+    /* delegated edit buttons — bound once on document since rows are re-rendered */
+    $(document).on('click', '[data-edit]', function(){
+        const type = $(this).data('edit');
+        let id = $(this).attr('data-id');
+        if(type !== 'order') id = Number(id);
+        openForm(type, id);
     });
 
     /* save handler */
-    modalSave.addEventListener('click', () => {
+    $modalSave.on('click', function(){
         const {type, id} = editContext;
         const isEdit = id !== null && id !== undefined;
 
         if(type === 'order'){
             const data = {
-                customer: document.getElementById('f_customer').value.trim() || 'Guest Customer',
-                items: document.getElementById('f_items').value.trim() || '—',
-                total: Number(document.getElementById('f_total').value) || 0,
-                date: document.getElementById('f_date').value || new Date().toISOString().split('T')[0],
-                status: document.getElementById('f_status').value,
+                customer: $('#f_customer').val().trim() || 'Guest Customer',
+                items: $('#f_items').val().trim() || '—',
+                total: Number($('#f_total').val()) || 0,
+                date: $('#f_date').val() || new Date().toISOString().split('T')[0],
+                status: $('#f_status').val(),
             };
             if(isEdit){
                 const idx = orders.findIndex(o=>o.id===id);
@@ -1181,13 +1303,13 @@
         }
 
         if(type === 'item'){
-            const badges = Array.from(document.querySelectorAll('#badgeChips .check-chip.active')).map(c=>c.dataset.badge);
+            const badges = $('#badgeChips .check-chip.active').map(function(){ return $(this).data('badge'); }).get();
             const data = {
-                name: document.getElementById('f_name').value.trim() || 'Untitled Item',
-                category: document.getElementById('f_category').value,
-                price: Number(document.getElementById('f_price').value) || 0,
-                stock: Number(document.getElementById('f_stock').value) || 0,
-                img: document.getElementById('f_img').value.trim() || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
+                name: $('#f_name').val().trim() || 'Untitled Item',
+                category: $('#f_category').val(),
+                price: Number($('#f_price').val()) || 0,
+                stock: Number($('#f_stock').val()) || 0,
+                img: $('#f_img').val().trim() || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
                 badges,
             };
             if(isEdit){
@@ -1202,12 +1324,12 @@
 
         if(type === 'supplier'){
             const data = {
-                name: document.getElementById('f_name').value.trim() || 'Unnamed Supplier',
-                category: document.getElementById('f_category').value,
-                status: document.getElementById('f_status').value,
-                contact: document.getElementById('f_contact').value.trim() || '—',
-                phone: document.getElementById('f_phone').value.trim() || '—',
-                email: document.getElementById('f_email').value.trim() || '—',
+                name: $('#f_name').val().trim() || 'Unnamed Supplier',
+                category: $('#f_category').val(),
+                status: $('#f_status').val(),
+                contact: $('#f_contact').val().trim() || '—',
+                phone: $('#f_phone').val().trim() || '—',
+                email: $('#f_email').val().trim() || '—',
             };
             if(isEdit){
                 const idx = suppliers.findIndex(s=>s.id===id);
@@ -1221,10 +1343,10 @@
 
         if(type === 'admin'){
             const data = {
-                name: document.getElementById('f_name').value.trim() || 'Unnamed Admin',
-                email: document.getElementById('f_email').value.trim() || '—',
-                role: document.getElementById('f_role').value,
-                status: document.getElementById('f_status').value,
+                name: $('#f_name').val().trim() || 'Unnamed Admin',
+                email: $('#f_email').val().trim() || '—',
+                role: $('#f_role').val(),
+                status: $('#f_status').val(),
             };
             if(isEdit){
                 const idx = admins.findIndex(a=>a.id===id);
@@ -1236,6 +1358,23 @@
             }
         }
 
+        if(type === 'customer'){
+            const data = {
+                name: $('#f_name').val().trim() || 'Unnamed Customer',
+                email: $('#f_email').val().trim() || '—',
+                phone: $('#f_phone').val().trim() || '—',
+                status: $('#f_status').val(),
+            };
+            if(isEdit){
+                const idx = customers.findIndex(c=>c.id===id);
+                customers[idx] = {...customers[idx], ...data};
+                showToast('Customer updated');
+            } else {
+                customers.unshift({id:nextCustomerId++, orders:0, spent:0, joined:new Date().toISOString().split('T')[0], ...data});
+                showToast('Customer added');
+            }
+        }
+
         closeModal();
         renderAll();
     });
@@ -1243,19 +1382,17 @@
     /* ============================================================
        MODAL: CONFIRM DELETE
        ============================================================ */
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmText = document.getElementById('confirmText');
+    const $confirmModal = $('#confirmModal');
+    const $confirmText = $('#confirmText');
     let deleteContext = null;
 
-    function openConfirm(){ confirmModal.classList.add('show'); modalScrim.classList.add('show'); }
-    function closeConfirm(){ confirmModal.classList.remove('show'); if(!formModal.classList.contains('show')) modalScrim.classList.remove('show'); }
-    document.getElementById('confirmCancel').addEventListener('click', closeConfirm);
+    function openConfirm(){ $confirmModal.addClass('show'); $modalScrim.addClass('show'); }
+    function closeConfirm(){ $confirmModal.removeClass('show'); if(!$formModal.hasClass('show')) $modalScrim.removeClass('show'); }
+    $('#confirmCancel').on('click', closeConfirm);
 
-    document.addEventListener('click', e => {
-        const delBtn = e.target.closest('[data-delete]');
-        if(!delBtn) return;
-        const type = delBtn.dataset.delete;
-        let id = delBtn.dataset.id;
+    $(document).on('click', '[data-delete]', function(){
+        const type = $(this).data('delete');
+        let id = $(this).attr('data-id');
         if(type !== 'order') id = Number(id);
         deleteContext = {type, id};
 
@@ -1264,22 +1401,24 @@
         if(type==='item') name = items.find(i=>i.id===id)?.name;
         if(type==='supplier') name = suppliers.find(s=>s.id===id)?.name;
         if(type==='admin') name = admins.find(a=>a.id===id)?.name;
-        confirmText.innerHTML = `This will permanently delete <strong>${name}</strong>. This action can't be undone.`;
+        if(type==='customer') name = customers.find(c=>c.id===id)?.name;
+        $confirmText.html(`This will permanently delete <strong>${name}</strong>. This action can't be undone.`);
         openConfirm();
     });
 
-    document.getElementById('confirmDelete').addEventListener('click', () => {
+    $('#confirmDelete').on('click', function(){
         const {type, id} = deleteContext;
         if(type==='order'){ orders = orders.filter(o=>o.id!==id); showToast('Order deleted'); }
         if(type==='item'){ items = items.filter(i=>i.id!==id); showToast('Item deleted'); }
         if(type==='supplier'){ suppliers = suppliers.filter(s=>s.id!==id); showToast('Supplier deleted'); }
         if(type==='admin'){ admins = admins.filter(a=>a.id!==id); showToast('Admin removed'); }
+        if(type==='customer'){ customers = customers.filter(c=>c.id!==id); showToast('Customer removed'); }
         closeConfirm();
         renderAll();
     });
 
-    modalScrim.addEventListener('click', () => { closeModal(); closeConfirm(); });
-    document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closeConfirm(); closeSidebar(); } });
+    $modalScrim.on('click', function(){ closeModal(); closeConfirm(); });
+    $(document).on('keydown', function(e){ if(e.key==='Escape'){ closeModal(); closeConfirm(); closeSidebar(); } });
 
     /* ============================================================
        INIT

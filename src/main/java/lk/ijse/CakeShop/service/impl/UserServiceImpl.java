@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +28,7 @@ public class UserServiceImpl implements UserService {
         Optional<UserDTO> optionalUserDTO = userRepository.getUserByDetails(userDTO.getUserName(), userDTO.getUserEmail());
 
         if(optionalUserDTO.isPresent()){
-
+            log.error("Error in method saveUser()");
             UserDTO responseDTO = optionalUserDTO.get();
 
             if (userDTO.getUserName().equals(responseDTO.getUserName())) {
@@ -54,6 +56,7 @@ public class UserServiceImpl implements UserService {
 
         Optional<User> optionalUser = userRepository.findUser(email, password, userRole);
         if (optionalUser.isEmpty()) {
+            log.error("Error in method findUser()");
             throw new CustomException(404, "USER NOT FOUND");
         }
 
@@ -63,6 +66,41 @@ public class UserServiceImpl implements UserService {
         userDTO.setUserName(u.getUserName());
 
         return userDTO;
+    }
+
+    @Override
+    public List<UserDTO> getUsers(String name, String email) {
+        log.info("Execute method getUsers()");
+
+//        if(name.isEmpty() || email.isEmpty()){
+//            log.error("Error in method getUsers()");
+//            throw new CustomException(404, "USER ROLE NOT FOUND");
+//        }
+
+        List<User> users = userRepository.getUsers(name, email);
+        List<UserDTO> userDTOS = new ArrayList<>();
+        for(User u : users){
+            UserDTO dto = new UserDTO();
+            dto.setUserId(u.getUserId());
+            dto.setUserName(u.getUserName());
+            dto.setUserEmail(u.getUserEmail());
+            dto.setUserRoles(u.getUserRoles());
+            dto.setUserStatus(u.getUserStatus());
+
+            userDTOS.add(dto);
+        }
+        return userDTOS;
+    }
+
+    @Override
+    public int getUserCountByRole(String userRole) {
+        log.info("Execute method getUserCountByRole()");
+
+        if(userRole.isEmpty()){
+            log.error("Error in method getUserCountByRole()");
+            throw new CustomException(404, "USER ROLE NOT FOUND");
+        }
+        return userRepository.getUserCountByRole(userRole);
     }
 
 }

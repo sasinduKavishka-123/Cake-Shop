@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(value = "v1/test")
 @AllArgsConstructor
@@ -37,4 +39,20 @@ public class UserController {
         return new CommonResponse(200, userDetailDTO, "LOGIN_SUCCESSFUL");
     }
 
+    @GetMapping(value = "/getUsers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getUsers(
+            @RequestParam (value = "user_name") String userName,
+            @RequestParam (value = "user_email") String userEmail
+    ){
+        List<UserDTO> userDTOList = userService.getUsers(userName, userEmail);
+        return new CommonResponse(200, userDTOList, "SUCCESSFUL");
+    }
+
+    @GetMapping(value = "/getUsersCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getUserCount(
+            @RequestParam (value = "user_role") String userRole
+    ){
+        int userCount = userService.getUserCountByRole(userRole);
+        return new CommonResponse(200, userCount, "SUCCESSFUL");
+    }
 }
