@@ -103,4 +103,24 @@ public class UserServiceImpl implements UserService {
         return userRepository.getUserCountByRole(userRole);
     }
 
+    @Override
+    public UserDTO findUserById(long id) {
+        log.info("Execute method findUserById()");
+        Optional<User> optionalUser = userRepository.findById(id);
+        if(optionalUser.isEmpty()){
+            log.error("Error in method findUserById()");
+            throw new CustomException(404, "USER ROLE NOT FOUND");
+        }
+
+        User u = optionalUser.get();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(u.getUserId());
+        userDTO.setUserName(u.getUserName());
+        userDTO.setUserEmail(u.getUserEmail());
+        userDTO.setUserStatus(u.getUserStatus());
+        userDTO.setUserRoles(u.getUserRoles());
+
+        return userDTO;
+    }
+
 }

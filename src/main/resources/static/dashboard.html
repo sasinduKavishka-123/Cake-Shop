@@ -1189,18 +1189,19 @@
 
     function adminFormHTML(a){
         a = a || {name:'', email:'', role:'Staff', status:'Active'};
+
         return `
-    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.name}" placeholder="Admin name"></div>
-    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.email}" placeholder="name@sugarandflour.lk"></div>
+    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.userName}" placeholder="Admin name"></div>
+    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.userEmail}" placeholder="name@sugarandflour.lk"></div>
     <div class="field-row-2">
       <div class="field-group"><label>Role</label>
         <select id="f_role">
-          ${['Admin','Manager','Staff'].map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}
+          ${['Admin','Manager','Staff'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
         </select>
       </div>
       <div class="field-group"><label>Status</label>
         <select id="f_status">
-          ${['Active','Invited','Suspended'].map(v=>`<option ${a.status===v?'selected':''}>${v}</option>`).join('')}
+          ${['Active','Invited','Suspended'].map(v=>`<option ${a.userStatus===v?'selected':''}>${v}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -1249,9 +1250,30 @@
             $modalBody.html(supplierFormHTML(record));
         }
         if(type === 'admin'){
-            const record = isEdit ? admins.find(a=>a.id===id) : null;
             $modalTitle.text(isEdit ? 'Edit Admin' : 'New Admin');
-            $modalBody.html(adminFormHTML(record));
+            if(isEdit){
+                $.ajax({
+                    url:'http://localhost:8080/v1/test/findUserById/' + id,
+                    type:'GET',
+                    contentType: 'application/json',
+                    headers:{
+                        'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+                    },
+                    success: function (response){
+                        if(response.status === 200){
+                            $modalBody.html(adminFormHTML(response.body));
+                        }
+                        else{
+                            alert(response.message);
+                        }
+                    },
+                    error: function (){
+                        alert("UNEXPECTED ERROR");
+                    }
+                })
+            }
+            //const record = isEdit ? admins.find(a=>a.id===id) : null;
+            $modalBody.html(adminFormHTML(null));
         }
         if(type === 'customer'){
             const record = isEdit ? customers.find(c=>c.id===id) : null;

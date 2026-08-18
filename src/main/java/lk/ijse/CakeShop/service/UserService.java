@@ -14,4 +14,6 @@ public interface UserService {
     List<UserDTO> getUsers(String name, String email);
 
     int getUserCountByRole(String userRole);
+
+    UserDTO findUserById(long id);
 }

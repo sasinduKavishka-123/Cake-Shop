@@ -55,4 +55,10 @@ public class UserController {
         int userCount = userService.getUserCountByRole(userRole);
         return new CommonResponse(200, userCount, "SUCCESSFUL");
     }
+
+    @GetMapping(value = "/findUserById/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getUserById(@PathVariable long userId){
+        UserDTO responseDTO = userService.findUserById(userId);
+        return new CommonResponse(200, responseDTO, "SUCCESSFUL");
+    }
 }
