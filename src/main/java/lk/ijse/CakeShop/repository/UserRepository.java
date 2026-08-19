@@ -22,8 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<UserDTO> getUserByDetails(String username, String email);
 
     @Query(value = "SELECT u FROM User u " +
-            "WHERE (u.userEmail=?1 AND u.password=?2 AND u.userRoles=?3)")
-    Optional<User> findUser(String email, String password, String userRole);
+            "WHERE (u.userEmail=?1 AND u.userRoles=?2 AND u.userStatus='ACTIVE')")
+    Optional<User> findUser(String email, String userRole);
 
     @Query(value = "SELECT u FROM User u " +
             "WHERE (?1 IS NULL OR u.userName LIKE %?1%) OR " +

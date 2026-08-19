@@ -352,7 +352,7 @@
             <div class="form-head">
                 <span class="eyebrow">Customer Sign In</span>
                 <h1>Welcome back.</h1>
-                <p>New here? <a href="signup.html">Create an account</a> to start ordering.</p>
+                <p>New here? <a href="customerSignup.html">Create an account</a> to start ordering.</p>
             </div>
 
             <div class="divider">sign in with email</div>
@@ -382,7 +382,7 @@
                 </button>
             </form>
 
-            <p class="signup-line">Don't have an account? <a href="signup.html">Sign up free</a></p>
+            <p class="signup-line">Don't have an account? <a href="customerSignup.html">Sign up free</a></p>
 
         </div>
     </div>
@@ -504,7 +504,7 @@
             const obj = JSON.stringify({
                 "userEmail":$emailInput.val().trim(),
                 "password":$passwordInput.val().trim(),
-                "userRoles":"Admin"
+                "userRoles":"Customer"
             });
 
             setTimeout(() => {
@@ -522,12 +522,13 @@
                             localStorage.setItem("JWT", response.body.token);
                             localStorage.setItem("UserID", response.body.userId);
                             localStorage.setItem("UserName", response.body.userName);
+                            localStorage.setItem("UserRole", response.body.userRoles);
 
                             $submitBtn.removeClass('loading').addClass('success');
                             $btnLabel.text('✓ Signed In').css('opacity', 1);
 
                             setTimeout(()=>{
-                                window.location.href = 'dashboard.html';
+                                window.location.href = 'home.html';
                             }, 500);
                         }
                         else{

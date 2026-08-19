@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — Sugar &amp; Flour</title>
+    <title>Sign In — Sugar &amp; Flour</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,13 +16,12 @@
             --terracotta: #C97B5F;
             --terracotta-deep:#B4644B;
             --espresso: #3A2822;
-            --espresso-soft: #6B5248;
+            --espresso-soft: #6e0912;
             --gold: #C79A4B;
             --gold-light:#EFDDB8;
             --line: rgba(58,40,34,0.10);
             --error:#B3452E;
             --success:#4C7A4A;
-            --warn:#C79A4B;
             --shadow-sm: 0 8px 20px -12px rgba(58,40,34,0.22);
             --shadow-lg: 0 30px 60px -24px rgba(58,40,34,0.32);
         }
@@ -91,7 +90,9 @@
         }
         .visual-logo .amp{font-style:italic;color:var(--gold-light);font-weight:500;}
 
-        .visual-quote{max-width:420px;}
+        .visual-quote{
+            max-width:420px;
+        }
         .visual-quote .eyebrow{
             text-transform:uppercase;
             letter-spacing:0.18em;
@@ -111,24 +112,6 @@
             font-size:0.92rem;
             color:rgba(255,253,251,0.75);
             line-height:1.6;
-            margin-bottom:22px;
-        }
-        .perk-list{list-style:none;}
-        .perk-list li{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            font-size:0.88rem;
-            font-weight:600;
-            margin-bottom:12px;
-            color:rgba(255,253,251,0.92);
-        }
-        .perk-list li .tick{
-            width:20px;height:20px;
-            border-radius:50%;
-            background:rgba(199,154,75,0.9);
-            display:flex;align-items:center;justify-content:center;
-            flex:none;
         }
 
         /* ============ RIGHT FORM PANEL ============ */
@@ -138,12 +121,10 @@
             justify-content:center;
             padding:40px;
             background:var(--cream);
-            overflow-y:auto;
         }
         .form-wrap{
             width:100%;
-            max-width:440px;
-            padding:24px 0;
+            max-width:420px;
         }
 
         .mobile-logo{
@@ -153,7 +134,7 @@
             font-family:'Fraunces',serif;
             font-size:1.3rem;
             font-weight:600;
-            margin-bottom:32px;
+            margin-bottom:36px;
             justify-content:center;
         }
         .mobile-logo .logo-mark{
@@ -164,7 +145,7 @@
         }
         .mobile-logo .amp{font-style:italic;color:var(--gold);font-weight:500;}
 
-        .form-head{margin-bottom:30px;}
+        .form-head{margin-bottom:34px;}
         .form-head .eyebrow{
             text-transform:uppercase;
             letter-spacing:0.16em;
@@ -183,7 +164,7 @@
             display:flex;
             align-items:center;
             gap:14px;
-            margin-bottom:24px;
+            margin-bottom:26px;
             color:var(--espresso-soft);
             font-size:0.78rem;
             font-weight:700;
@@ -196,7 +177,7 @@
         }
 
         /* ---- form fields ---- */
-        .field-group{margin-bottom:18px;}
+        .field-group{margin-bottom:20px;}
         .field-group label{
             display:block;
             font-size:0.76rem;
@@ -206,7 +187,9 @@
             color:var(--espresso-soft);
             margin-bottom:9px;
         }
-        .input-wrap{position:relative;}
+        .input-wrap{
+            position:relative;
+        }
         .input-wrap input{
             width:100%;
             padding:15px 16px;
@@ -228,16 +211,14 @@
         .input-wrap.error input:focus{box-shadow:0 0 0 4px rgba(179,69,46,0.12);}
         .input-wrap.success input{border-color:var(--success);}
 
-        .status-icon{
+        .input-icon{
             position:absolute;
-            right:16px;top:50%;
+            right:14px;top:50%;
             transform:translateY(-50%);
-            display:none;
+            color:var(--espresso-soft);
+            display:flex;
             align-items:center;
         }
-        .input-wrap.success .status-icon.icon-success{display:flex;}
-        .input-wrap.error .status-icon.icon-error{display:flex;}
-
         .toggle-pass{
             position:absolute;
             right:14px;top:50%;
@@ -259,39 +240,13 @@
             gap:5px;
         }
         .field-msg.show{display:flex;}
-        .field-msg.ok{color:var(--success);}
-
-        /* ---- password strength meter ---- */
-        .strength-wrap{
-            margin-top:10px;
-            display:none;
+        .forgot-link{
+            font-size:0.86rem;
+            font-weight:800;
+            color:var(--terracotta-deep);
+            border-bottom:1.5px solid transparent;
         }
-        .strength-wrap.show{display:block;}
-        .strength-bars{
-            display:flex;
-            gap:6px;
-            margin-bottom:6px;
-        }
-        .strength-bars span{
-            flex:1;
-            height:5px;
-            border-radius:4px;
-            background:var(--line);
-            transition:background .25s ease;
-        }
-        .strength-label{
-            font-size:0.74rem;
-            font-weight:700;
-            color:var(--espresso-soft);
-        }
-        .strength-wrap[data-level="1"] .strength-bars span:nth-child(1){background:var(--error);}
-        .strength-wrap[data-level="1"] .strength-label{color:var(--error);}
-        .strength-wrap[data-level="2"] .strength-bars span:nth-child(-n+2){background:var(--warn);}
-        .strength-wrap[data-level="2"] .strength-label{color:var(--warn);}
-        .strength-wrap[data-level="3"] .strength-bars span:nth-child(-n+3){background:var(--gold);}
-        .strength-wrap[data-level="3"] .strength-label{color:var(--terracotta-deep);}
-        .strength-wrap[data-level="4"] .strength-bars span{background:var(--success);}
-        .strength-wrap[data-level="4"] .strength-label{color:var(--success);}
+        .forgot-link:hover{color:var(--gold); border-color:var(--gold);}
 
         .submit-btn{
             width:100%;
@@ -308,7 +263,7 @@
             position:relative;
             overflow:hidden;
             transition:transform .2s ease, background .3s ease;
-            margin-bottom:22px;
+            margin:42px 0 22px 0;
         }
         .submit-btn:hover{background:var(--gold); color:var(--espresso);}
         .submit-btn:active{transform:scale(0.98);}
@@ -336,27 +291,27 @@
         }
         @keyframes ripple{to{transform:scale(3);opacity:0;}}
 
-        .signin-line{
+        .signup-line{
             text-align:center;
             font-size:0.9rem;
             color:var(--espresso-soft);
         }
-        .signin-line a{
+        .signup-line a{
             font-weight:800;
             color:var(--terracotta-deep);
             border-bottom:1.5px solid var(--terracotta-deep);
         }
-        .signin-line a:hover{color:var(--gold); border-color:var(--gold);}
+        .signup-line a:hover{color:var(--gold); border-color:var(--gold);}
 
         /* ============ RESPONSIVE ============ */
         @media (max-width:900px){
             .shell{grid-template-columns:1fr;}
             .visual-panel{display:none;}
-            .form-panel{min-height:100vh; padding:50px 24px; align-items:flex-start;}
+            .form-panel{min-height:100vh; padding:60px 24px;}
             .mobile-logo{display:flex;}
         }
         @media (max-width:420px){
-            .form-panel{padding:38px 18px;}
+            .form-panel{padding:44px 18px;}
         }
     </style>
 </head>
@@ -366,7 +321,7 @@
 
     <!-- ================= LEFT VISUAL PANEL ================= -->
     <div class="visual-panel">
-        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80" alt="Basket of freshly baked croissants">
+        <img src="https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?auto=format&fit=crop&w=1200&q=80" alt="Baker preparing fresh pastries">
         <div class="visual-scrim"></div>
         <div class="visual-content">
             <div class="visual-logo">
@@ -376,17 +331,8 @@
                 Sugar<span class="amp">&amp;</span>Flour
             </div>
             <div class="visual-quote">
-                <span class="eyebrow">Join Us</span>
-                <h2>Create an account and skip to the good part.</h2>
-                <p>Sign up once to unlock faster checkout, order tracking, and a few sweet perks.</p>
-                <ul class="perk-list">
-                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Save your favorite orders</li>
-                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Track pickup &amp; delivery in real time</li>
-                    <li><span class="tick"><svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.2 8L11 1" stroke="#3A2822" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Get early access to seasonal menus</li>
-                </ul>
-                <div class="visual-dots">
-                    <span></span><span class="active"></span><span></span>
-                </div>
+                <span class="eyebrow">Welcome Back</span>
+                <h2>"Every box from Sugar &amp; Flour feels like a little celebration."</h2>
             </div>
         </div>
     </div>
@@ -403,29 +349,18 @@
             </div>
 
             <div class="form-head">
-                <span class="eyebrow">Create Account</span>
-                <h1>Let's get you set up.</h1>
-                <p>Already have an account? <a href="login.html">Sign in</a> instead.</p>
+                <span class="eyebrow">Staff Sign In</span>
+                <h1>Welcome back.</h1>
             </div>
 
-            <div class="divider">sign up with email</div>
+            <div class="divider">sign in with email</div>
 
-            <form id="signupForm" novalidate>
-
-                <div class="field-group">
-                    <label for="fullname">Full Name</label>
-                    <div class="input-wrap" id="nameWrap">
-                        <input type="text" id="fullname" placeholder="Amaya Ranasinghe" autocomplete="name">
-                        <span class="status-icon icon-success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#4C7A4A"/><path d="M4.5 8.2L6.8 10.5L11.5 5.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                    </div>
-                    <div class="field-msg" id="nameMsg">Please enter your full name.</div>
-                </div>
+            <form id="loginForm" novalidate>
 
                 <div class="field-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrap" id="emailWrap">
                         <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
-                        <span class="status-icon icon-success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#4C7A4A"/><path d="M4.5 8.2L6.8 10.5L11.5 5.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     </div>
                     <div class="field-msg" id="emailMsg">Please enter a valid email address.</div>
                 </div>
@@ -433,32 +368,17 @@
                 <div class="field-group">
                     <label for="password">Password</label>
                     <div class="input-wrap" id="passwordWrap">
-                        <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
-                        <button type="button" class="toggle-pass" id="togglePass1">SHOW</button>
+                        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+                        <button type="button" class="toggle-pass" id="togglePass">SHOW</button>
                     </div>
-                    <div class="strength-wrap" id="strengthWrap" data-level="0">
-                        <div class="strength-bars"><span></span><span></span><span></span><span></span></div>
-                        <span class="strength-label" id="strengthLabel">Use 8+ characters with a number &amp; symbol</span>
-                    </div>
-                </div>
-
-                <div class="field-group">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <div class="input-wrap" id="confirmWrap">
-                        <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password">
-                        <button type="button" class="toggle-pass" id="togglePass2">SHOW</button>
-                    </div>
-                    <div class="field-msg" id="confirmMsg">Passwords don't match.</div>
+                    <div class="field-msg" id="passwordMsg">Password must be at least 6 characters.</div>
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
-                    <span class="btn-label">Create Account</span>
+                    <span class="btn-label">Sign In</span>
                     <span class="spinner"></span>
                 </button>
             </form>
-
-            <p class="signin-line">Already have an account? <a href="login.html">Sign in</a></p>
-
         </div>
     </div>
 
@@ -469,49 +389,28 @@
 
 <script>
     $(document).ready(function() {
-        /* ---- password visibility toggles ---- */
-        function wireToggle(btnId, inputId) {
-            $('#' + btnId).on('click', function() {
-                const $input = $('#' + inputId);
-                const show = $input.attr('type') === 'password';
-                $input.attr('type', show ? 'text' : 'password');
-                $(this).text(show ? 'HIDE' : 'SHOW');
-            });
-        }
-        wireToggle('togglePass1', 'password');
-        wireToggle('togglePass2', 'confirmPassword');
-
-        /* ---- field refs ---- */
-        const $nameInput = $('#fullname');
-        const $nameWrap = $('#nameWrap');
-        const $nameMsg = $('#nameMsg');
-
+        // DOM elements
+        const $togglePass = $('#togglePass');
+        const $passwordInput = $('#password');
         const $emailInput = $('#email');
         const $emailWrap = $('#emailWrap');
         const $emailMsg = $('#emailMsg');
-
-        const $passwordInput = $('#password');
         const $passwordWrap = $('#passwordWrap');
-        const $strengthWrap = $('#strengthWrap');
-        const $strengthLabel = $('#strengthLabel');
+        const $passwordMsg = $('#passwordMsg');
+        const $form = $('#loginForm');
+        const $submitBtn = $('#submitBtn');
+        const $btnLabel = $submitBtn.find('.btn-label');
 
-        const $confirmInput = $('#confirmPassword');
-        const $confirmWrap = $('#confirmWrap');
-        const $confirmMsg = $('#confirmMsg');
+        /* ---- password visibility toggle ---- */
+        $togglePass.on('click', function() {
+            const isPassword = $passwordInput.attr('type') === 'password';
+            $passwordInput.attr('type', isPassword ? 'text' : 'password');
+            $togglePass.text(isPassword ? 'HIDE' : 'SHOW');
+        });
 
-        function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-        function validateName() {
-            const val = $nameInput.val().trim();
-            if (val === '') {
-                $nameWrap.removeClass('error success');
-                $nameMsg.removeClass('show');
-                return false;
-            }
-            const ok = val.length >= 2;
-            $nameWrap.toggleClass('error', !ok).toggleClass('success', ok);
-            $nameMsg.toggleClass('show', !ok);
-            return ok;
+        /* ---- validation helpers ---- */
+        function validEmail(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         }
 
         function validateEmail() {
@@ -527,152 +426,116 @@
             return ok;
         }
 
-        function passwordScore(v) {
-            let score = 0;
-            if (v.length >= 8) score++;
-            if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
-            if (/[0-9]/.test(v)) score++;
-            if (/[^A-Za-z0-9]/.test(v)) score++;
-            return score;
-        }
-
-        const strengthLabels = ['Too short', 'Weak — add numbers or symbols', 'Getting there — add a symbol', 'Good password strength', 'Great, strong password!'];
-
-        function validatePasswordStrength() {
+        function validatePassword() {
             const val = $passwordInput.val();
             if (val === '') {
-                $strengthWrap.removeClass('show');
                 $passwordWrap.removeClass('error success');
+                $passwordMsg.removeClass('show');
                 return false;
             }
-            $strengthWrap.addClass('show');
-            const score = passwordScore(val);
-            const level = val.length < 6 ? 1 : Math.max(1, score);
-            $strengthWrap.attr('data-level', level);
-            $strengthLabel.text(val.length < 6 ? strengthLabels[0] : strengthLabels[level]);
             const ok = val.length >= 6;
-            $passwordWrap.toggleClass('error', !ok).toggleClass('success', ok && level >= 3);
+            $passwordWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $passwordMsg.toggleClass('show', !ok);
             return ok;
         }
-
-        function validateConfirm() {
-            const val = $confirmInput.val();
-            if (val === '') {
-                $confirmWrap.removeClass('error success');
-                $confirmMsg.removeClass('show');
-                return false;
-            }
-            const ok = val === $passwordInput.val() && val.length > 0;
-            $confirmWrap.toggleClass('error', !ok).toggleClass('success', ok);
-            $confirmMsg.toggleClass('show', !ok);
-            return ok;
-        }
-
-        /* ---- input event listeners ---- */
-        $nameInput.on('blur', validateName);
-        $nameInput.on('input', function() {
-            if ($nameWrap.hasClass('error')) validateName();
-        });
 
         $emailInput.on('blur', validateEmail);
         $emailInput.on('input', function() {
             if ($emailWrap.hasClass('error')) validateEmail();
         });
 
+        $passwordInput.on('blur', validatePassword);
         $passwordInput.on('input', function() {
-            validatePasswordStrength();
-            if ($confirmInput.val() !== '') validateConfirm();
-        });
-        $passwordInput.on('blur', validatePasswordStrength);
-
-        $confirmInput.on('blur', validateConfirm);
-        $confirmInput.on('input', function() {
-            if ($confirmWrap.hasClass('error') || $confirmInput.val()) validateConfirm();
+            if ($passwordWrap.hasClass('error')) validatePassword();
         });
 
         /* ---- submit flow ---- */
-        const $form = $('#signupForm');
-        const $submitBtn = $('#submitBtn');
-        const $btnLabel = $submitBtn.find('.btn-label');
-
         $form.on('submit', function(e) {
             e.preventDefault();
 
-            const rect = $submitBtn[0].getBoundingClientRect();
-            const $ripple = $('<span class="ripple"></span>');
-            const size = Math.max(rect.width, rect.height);
-            const clickX = (e.clientX || rect.left + rect.width / 2) - rect.left - size / 2;
-            const clickY = (e.clientY || rect.top + rect.height / 2) - rect.top - size / 2;
+            // Ripple Effect
+            const offset = $submitBtn.offset();
+            const width = $submitBtn.outerWidth();
+            const height = $submitBtn.outerHeight();
+            const size = Math.max(width, height);
 
-            $ripple.css({
-                width: size + 'px',
-                height: size + 'px',
-                left: clickX + 'px',
-                top: clickY + 'px'
+            const pageX = e.pageX || (offset.left + width / 2);
+            const pageY = e.pageY || (offset.top + height / 2);
+
+            const clickX = pageX - offset.left - size / 2;
+            const clickY = pageY - offset.top - size / 2;
+
+            const $ripple = $('<span>', {
+                class: 'ripple',
+                css: {
+                    width: size + 'px',
+                    height: size + 'px',
+                    left: clickX + 'px',
+                    top: clickY + 'px'
+                }
             });
+
             $submitBtn.append($ripple);
             setTimeout(() => $ripple.remove(), 650);
 
-            const nameOk = validateName();
+            // Validation execution
             const emailOk = validateEmail();
-            const passOk = validatePasswordStrength();
-            const confirmOk = validateConfirm();
+            const passOk = validatePassword();
 
-            if ($nameInput.val().trim() === '') { $nameWrap.addClass('error'); $nameMsg.addClass('show'); }
-            if ($emailInput.val().trim() === '') { $emailWrap.addClass('error'); $emailMsg.addClass('show'); }
-            if ($passwordInput.val() === '') { $passwordWrap.addClass('error'); }
-            if ($confirmInput.val() === '') { $confirmWrap.addClass('error'); $confirmMsg.addClass('show'); }
+            if ($emailInput.val().trim() === '') {
+                $emailWrap.addClass('error');
+                $emailMsg.addClass('show');
+            }
+            if ($passwordInput.val() === '') {
+                $passwordWrap.addClass('error');
+                $passwordMsg.addClass('show');
+            }
 
-            if (!nameOk || !emailOk || !passOk || !confirmOk) return;
+            if (!emailOk || !passOk) return;
 
+            // Loading state
             $submitBtn.addClass('loading').prop('disabled', true);
-            $btnLabel.css('opacity', 0);
 
             const obj = JSON.stringify({
-                "userId":0,
-                "userName":$nameInput.val().trim(),
                 "userEmail":$emailInput.val().trim(),
-                "password":$passwordInput.val(),
-                "userRoles":"Admin",
-                "userStatus":"ACTIVE"
-
+                "password":$passwordInput.val().trim(),
+                "userRoles":"Admin"
             });
 
             setTimeout(() => {
 
                 $.ajax({
-                    url:"http://localhost:8080/v1/test/saveUser",
-                    type:"POST",
-                    contentType:"application/json",
+                    url:"http://localhost:8080/v1/test/login",
+                    type:'POST',
+                    contentType:'application/json',
                     data:obj,
-                    success:function (response){
-                        console.log("Success");
+                    success: function(response){
+                        alert(response.message);
+
                         if(response.status === 200){
-                            alert(response.message);
+
+                            localStorage.setItem("JWT", response.body.token);
+                            localStorage.setItem("UserID", response.body.userId);
+                            localStorage.setItem("UserName", response.body.userName);
+                            localStorage.setItem("UserRole", response.body.userRoles);
 
                             $submitBtn.removeClass('loading').addClass('success');
-                            $btnLabel.text('✓ Account Created').css('opacity', 1);
-                            setTimeout(() => {
-                                window.location.href = "login.html";
+                            $btnLabel.text('✓ Signed In').css('opacity', 1);
+
+                            setTimeout(()=>{
+                                window.location.href = 'dashboard.html';
                             }, 500);
-                        }else{
-                            alert(response.message);
-                            $submitBtn.removeClass('loading').prop('disabled', false);
-                            $btnLabel.text('Create Account').css('opacity', 1);
                         }
-
-                    },
-                    error: function(response){
-                        console.log("Error");
-                        alert(response.message);
-                        setTimeout(() => {
+                        else{
                             $submitBtn.removeClass('loading').prop('disabled', false);
-                            $btnLabel.text('Create Account').css('opacity', 1);
-                        }, 500);
+                            $btnLabel.text('Sign In');
+                        }
+                    },
+                    error: function (){
+                        alert("SERVER DOES NOT RESPONDED");
                     }
-                })
+                });
             }, 500);
-
         });
     });
 </script>

@@ -8,6 +8,7 @@ import lk.ijse.CakeShop.repository.UserRepository;
 import lk.ijse.CakeShop.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -55,27 +56,34 @@ public class UserServiceImpl implements UserService {
         user.setUserRoles(userDTO.getUserRoles());
         user.setUserStatus(userDTO.getUserStatus());
         if(userDTO.getUserId() == 0){
-            user.setPassword(userDTO.getPassword());
+            String hashedPassword = BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt(12));
+            user.setPassword(hashedPassword);
         }
         System.out.println(user.getUserStatus());
         userRepository.save(user);
-
     }
 
     @Override
     public UserDTO findUser(String email, String password, String userRole) {
         log.info("Execute method findUser()");
 
-        Optional<User> optionalUser = userRepository.findUser(email, password, userRole);
+        Optional<User> optionalUser = userRepository.findUser(email, userRole);
         if (optionalUser.isEmpty()) {
             log.error("Error in method findUser()");
             throw new CustomException(404, "USER NOT FOUND");
         }
 
         User u = optionalUser.get();
+
+        if(!BCrypt.checkpw(password, u.getPassword())){
+            log.error("Error in method findUser()");
+            throw new CustomException(404, "PASSWORD MISMATCH");
+        }
+
         UserDTO userDTO = new UserDTO();
         userDTO.setUserId(u.getUserId());
         userDTO.setUserName(u.getUserName());
+        userDTO.setUserRoles(userRole);
 
         return userDTO;
     }
