@@ -889,7 +889,7 @@
         items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item', showSearch:true},
         suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier', showSearch:true},
         admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
-        customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:'New Customer', showSearch:true},
+        customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:null, showSearch:true},
     };
     let currentSection = 'overview';
 
@@ -1262,8 +1262,7 @@
                                 <td><span class="badge-pill ${statusBadgeClass(c.userStatus)}">${c.userStatus}</span></td>
                                 <td>
                                   <div class="row-actions">
-                                    <button class="icon-btn" data-edit="customer" data-id="${c.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                                    <button class="icon-btn danger" data-delete="customer" data-id="${c.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                                    <button class="icon-btn" data-edit="customer" data-id="${c.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                                   </div>
                                 </td>
                             </tr>`;
@@ -1492,19 +1491,20 @@
     }
 
     function customerFormHTML(c){
-        c = c || {name:'', email:'', phone:'', status:'Active'};
+        if(!c){
+            c = {userName: '', userEmail: '', userContact:'', userRoles: 'Customer', userStatus: 'Active'};
+        }
         return `
-    <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${c.name}" placeholder="Customer name"></div>
-    <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${c.email}" placeholder="name@example.com"></div>
-    <div class="field-row-2">
-      <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${c.phone}" placeholder="+94 77 000 0000"></div>
-      <div class="field-group"><label>Status</label>
-        <select id="f_status">
-          ${['Active','Blocked'].map(v=>`<option ${c.status===v?'selected':''}>${v}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-  `;
+                <div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${c.userName}" placeholder="Customer name"></div>
+                <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${c.userEmail}" placeholder="name@example.com"></div>
+                <div class="field-row-2">
+                  <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${c.userContact}" placeholder="+94 77 000 0000"></div>
+                  <div class="field-group"><label>Status</label>
+                    <select id="f_status">
+                      ${['ACTIVE','SUSPENDED'].map(v=>`<option ${c.userStatus===v?'selected':''}>${v}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>`;
     }
 
     /* dietary badge chips are rendered fresh each time the item modal opens,
@@ -1574,9 +1574,28 @@
 
         }
         if(type === 'customer'){
-            const record = isEdit ? customers.find(c=>c.id===id) : null;
+            // const record = isEdit ? customers.find(c=>c.id===id) : null;
             $modalTitle.text(isEdit ? 'Edit Customer' : 'New Customer');
-            $modalBody.html(customerFormHTML(record));
+            // $modalBody.html(customerFormHTML(record));
+            $.ajax({
+                url:'http://localhost:8080/v1/test/findUserById/' + id,
+                type:'GET',
+                contentType: 'application/json',
+                headers:{
+                    'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+                },
+                success: function (response){
+                    if(response.status === 200){
+                        $modalBody.html(customerFormHTML(response.body));
+                    }
+                    else{
+                        alert(response.message);
+                    }
+                },
+                error: function (){
+                    alert("UNEXPECTED ERROR");
+                }
+            })
         }
         $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
         openModal();
@@ -1725,20 +1744,54 @@
         }
 
         if(type === 'customer'){
-            const data = {
-                name: $('#f_name').val().trim() || 'Unnamed Customer',
-                email: $('#f_email').val().trim() || '—',
-                phone: $('#f_phone').val().trim() || '—',
-                status: $('#f_status').val(),
+            let name = $('#f_name').val().trim();
+            let email = $('#f_email').val().trim();
+            let contact = $('#f_phone').val().trim();
+
+            if(!validateName(name)){ alert("INVALID NAME"); $modalSave.prop('disabled', false); return; }
+            if(!validEmail(email)){ alert("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
+            if(!validatePhoneNumber(contact)){ alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+
+            contact = formatPhoneNumber(contact);
+            if(!contact){alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+
+            const obj = {
+                userId: id,
+                userName: name,
+                userEmail: email,
+                userContact: contact,
+                password: '',
+                userRoles: 'Customer',
+                userStatus: $('#f_status').val().toUpperCase(),
             };
-            if(isEdit){
-                const idx = customers.findIndex(c=>c.id===id);
-                customers[idx] = {...customers[idx], ...data};
-                showToast('Customer updated');
-            } else {
-                customers.unshift({id:nextCustomerId++, orders:0, spent:0, joined:new Date().toISOString().split('T')[0], ...data});
-                showToast('Customer added');
-            }
+
+            $.ajax({
+                url:'http://localhost:8080/v1/test/saveCustomer',
+                type: 'POST',
+                contentType:'application/json',
+                headers:{
+                    'Authorization':'Bearer '+localStorage.getItem("JWT")
+                },
+                data: JSON.stringify(obj),
+                success: function (response){
+                    if(response.status === 200){
+                        if(isEdit){
+                            showToast('Customer Updated');
+                        }else{
+                            showToast('Customer Saved');
+                        }
+                        closeModal();
+                        renderAll();
+                    }else{
+                        alert(response.message);
+                        $modalSave.prop('disabled', false);
+                    }
+                },
+                error: function (e){
+                    alert("UNEXPECTED ERROR");
+                    $modalSave.prop('disabled', false);
+                }
+            });
         }
         // closeModal();
         // renderAll();
