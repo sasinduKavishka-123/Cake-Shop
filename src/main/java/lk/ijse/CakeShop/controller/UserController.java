@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.controller;
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.UserDetailDTO;
+import lk.ijse.CakeShop.enumerations.UserStatus;
 import lk.ijse.CakeShop.security.JwtUtil;
 import lk.ijse.CakeShop.service.UserService;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,15 @@ public class UserController {
     public CommonResponse saveCustomer(@RequestBody UserDTO userDTO) {
         userService.saveUser(userDTO);
         return new CommonResponse(200, "UserSaved!");
+    }
+
+    @PatchMapping(value = "/updateUserStatus", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updateUserStatus(
+            @RequestParam (value = "user_id") Long userId,
+            @RequestParam (value = "user_status") UserStatus userStatus
+    ){
+        userService.updateUserStatus(userId, userStatus);
+        return new CommonResponse(200, "USER UPDATED!");
     }
 
     @PostMapping(value = "/saveStaff", produces = MediaType.APPLICATION_JSON_VALUE)

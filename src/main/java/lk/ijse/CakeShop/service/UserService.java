@@ -2,6 +2,7 @@ package lk.ijse.CakeShop.service;
 
 
 import lk.ijse.CakeShop.dto.UserDTO;
+import lk.ijse.CakeShop.enumerations.UserStatus;
 
 import java.util.List;
 
@@ -16,5 +17,7 @@ public interface UserService {
     int getUserCountByRole(String userRole, boolean isStaff);
 
     UserDTO findUserById(long id);
+
+    void updateUserStatus(long id, UserStatus userStatus);
 
 }

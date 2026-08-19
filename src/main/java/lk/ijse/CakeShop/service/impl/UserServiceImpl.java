@@ -152,4 +152,24 @@ public class UserServiceImpl implements UserService {
         return userDTO;
     }
 
+    @Override
+    public void updateUserStatus(long id, UserStatus userStatus) {
+        log.info("Execute method updateUserStatus()");
+        if(id<1){
+            log.error("Error in method updateUserStatus()");
+            throw new CustomException(401, "INVALID USER ID");
+        }
+
+        Optional<User> optionalUser = userRepository.findById(id);
+
+        if(optionalUser.isEmpty()){
+            log.error("Error in method updateUserStatus()");
+            throw new CustomException(404, "USER NOT FOUND");
+        }
+
+        User user = optionalUser.get();
+        user.setUserStatus(userStatus);
+        userRepository.save(user);
+    }
+
 }

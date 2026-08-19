@@ -1181,7 +1181,6 @@
         $.ajax({
             url: "http://localhost:8080/v1/test/getUsers",
             type: 'GET',
-            contentType: 'application/json',
             data: obj,
             headers: {
                 'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
@@ -1242,7 +1241,6 @@
         $.ajax({
             url: "http://localhost:8080/v1/test/getUsers",
             type: 'GET',
-            contentType: 'application/json',
             data: obj,
             headers: {
                 'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
@@ -1574,9 +1572,7 @@
 
         }
         if(type === 'customer'){
-            // const record = isEdit ? customers.find(c=>c.id===id) : null;
             $modalTitle.text(isEdit ? 'Edit Customer' : 'New Customer');
-            // $modalBody.html(customerFormHTML(record));
             $.ajax({
                 url:'http://localhost:8080/v1/test/findUserById/' + id,
                 type:'GET',
@@ -1744,35 +1740,20 @@
         }
 
         if(type === 'customer'){
-            let name = $('#f_name').val().trim();
-            let email = $('#f_email').val().trim();
-            let contact = $('#f_phone').val().trim();
-
-            if(!validateName(name)){ alert("INVALID NAME"); $modalSave.prop('disabled', false); return; }
-            if(!validEmail(email)){ alert("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
-            if(!validatePhoneNumber(contact)){ alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
-
-            contact = formatPhoneNumber(contact);
-            if(!contact){alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
             const obj = {
-                userId: id,
-                userName: name,
-                userEmail: email,
-                userContact: contact,
-                password: '',
-                userRoles: 'Customer',
-                userStatus: $('#f_status').val().toUpperCase(),
+                user_id: id,
+                user_status: $('#f_status').val()
             };
 
             $.ajax({
-                url:'http://localhost:8080/v1/test/saveCustomer',
-                type: 'POST',
-                contentType:'application/json',
+                url:'http://localhost:8080/v1/test/updateUserStatus',
+                type: 'PATCH',
+                // contentType:'application/json',
+                data: obj,
                 headers:{
                     'Authorization':'Bearer '+localStorage.getItem("JWT")
                 },
-                data: JSON.stringify(obj),
                 success: function (response){
                     if(response.status === 200){
                         if(isEdit){
