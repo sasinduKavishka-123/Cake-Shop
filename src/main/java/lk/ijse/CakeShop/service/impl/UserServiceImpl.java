@@ -83,21 +83,23 @@ public class UserServiceImpl implements UserService {
         UserDTO userDTO = new UserDTO();
         userDTO.setUserId(u.getUserId());
         userDTO.setUserName(u.getUserName());
-        userDTO.setUserRoles(userRole);
+        userDTO.setUserRoles(u.getUserRoles());
 
         return userDTO;
     }
 
     @Override
-    public List<UserDTO> getUsers(String name, String email) {
+    public List<UserDTO> getUsers(String name, String email, boolean isStaff) {
         log.info("Execute method getUsers()");
 
-//        if(name.isEmpty() || email.isEmpty()){
-//            log.error("Error in method getUsers()");
-//            throw new CustomException(404, "USER ROLE NOT FOUND");
-//        }
+        List<User> users = new ArrayList<>();
 
-        List<User> users = userRepository.getUsers(name, email);
+        if(isStaff){
+            users = userRepository.getStaff(name, email);
+        }else{
+            users = userRepository.getCustomers(name, email);
+        }
+
         List<UserDTO> userDTOS = new ArrayList<>();
         for(User u : users){
             UserDTO dto = new UserDTO();
@@ -113,14 +115,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int getUserCountByRole(String userRole) {
+    public int getUserCountByRole(String userRole, boolean isStaff) {
         log.info("Execute method getUserCountByRole()");
 
         if(userRole.isEmpty()){
             log.error("Error in method getUserCountByRole()");
             throw new CustomException(404, "USER ROLE NOT FOUND");
         }
-        return userRepository.getUserCountByRole(userRole);
+        if(isStaff){
+            return userRepository.getStaffCount(userRole);
+        }else{
+            return userRepository.getCustomerCount(userRole);
+        }
     }
 
     @Override

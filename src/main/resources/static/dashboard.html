@@ -175,6 +175,7 @@
             flex:none;
             width:260px;
         }
+        .search-wrap.sw-hidden{display:none !important;}
         .topbar .search-wrap input{
             width:100%;
             padding:11px 14px 11px 38px;
@@ -785,7 +786,7 @@
         <section class="section-panel" id="panel-admins">
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Admin</th><th>Role</th><th>Status</th><th></th></tr></thead>
+                    <thead><tr><th>Id</th><th>Admin</th><th>Role</th><th>Status</th><th></th></tr></thead>
                     <tbody id="adminsBody"></tbody>
                 </table>
             </div>
@@ -890,12 +891,12 @@
        NAVIGATION
        ============================================================ */
     const sections = {
-        overview: {title:'Overview', sub:"Welcome back — here's what's happening today.", addLabel:null},
-        orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:'New Order'},
-        items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item'},
-        suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier'},
-        admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Admin'},
-        customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:'New Customer'},
+        overview: {title:'Overview', sub:"Welcome back — here's what's happening today.", addLabel:null, showSearch:false},
+        orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:'New Order', showSearch:true},
+        items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item', showSearch:true},
+        suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier', showSearch:true},
+        admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
+        customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:'New Customer', showSearch:true},
     };
     let currentSection = 'overview';
 
@@ -911,10 +912,12 @@
         $('#panel-'+name).addClass('active');
         $('#topbarTitle').text(sections[name].title);
         $('#topbarSub').text(sections[name].sub);
+
         const cfg = sections[name];
         $topAddBtn.css('display', cfg.addLabel ? 'flex' : 'none');
         $addBtnLabel.text(cfg.addLabel || '');
         $searchInput.val('');
+        $('.search-wrap').toggleClass('sw-hidden', !cfg.showSearch);
         closeSidebar();
         renderAll();
     }
@@ -941,7 +944,7 @@
             ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',SUSPENDED:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
     }
     function roleBadgeClass(role){
-        return {Admin:'badge-admin', Manager:'badge-manager', Staff:'badge-staff'}[role] || 'badge-staff';
+        return {Admin:'badge-admin', Manager:'badge-manager', Driver:'badge-staff'}[role] || 'badge-staff';
     }
     function stockInfo(stock){
         if(stock === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
@@ -1141,7 +1144,8 @@
 
         const obj = {
             user_name:f,
-            user_email:f
+            user_email:f,
+            is_staff: true
         }
 
         $.ajax({
@@ -1158,6 +1162,7 @@
                     for(const r of response.body){
                         html +=
                             `<tr>
+                                <td>${r.userId}</td>
                                 <td class="cell-main">
                                   <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${r.userName.charAt(0)}</span>
                                   <div><div class="cell-title">${r.userName}</div><div class="cell-sub">${r.userEmail}</div></div>
@@ -1222,14 +1227,14 @@
         $('#navCountOrders').text(orders.length);
         $('#navCountItems').text(items.length);
         $('#navCountSuppliers').text(suppliers.length);
-        updateUserCount("Admin");
+        updateStaffCount();
         $('#navCountCustomers').text(customers.length);
     }
 
-    function updateUserCount(user_role){
-        const obj = {user_role:user_role}
+    function updateStaffCount(){
+        const obj = {user_role:"Customer", is_staff:true}
         $.ajax({
-            url:"http://localhost:8080/v1/test/getUsersCount",
+            url:"http://localhost:8080/v1/test/getStaffCount",
             type:'GET',
             data:obj,
             headers:{
@@ -1279,7 +1284,7 @@
     let editContext = null; // {type, id or null}
 
     function openModal(){ $formModal.addClass('show'); $modalScrim.addClass('show'); }
-    function closeModal(){ $formModal.removeClass('show'); if(!$confirmModal.hasClass('show')) $modalScrim.removeClass('show'); }
+    function closeModal(){ $formModal.removeClass('show'); if(!$confirmModal.hasClass('show')) $modalScrim.removeClass('show'); $modalSave.prop('disabled', false);}
     $('#modalClose').on('click', closeModal);
     $('#modalCancel').on('click', closeModal);
 
@@ -1351,7 +1356,7 @@
 
     function adminFormHTML(a, isEdit){
         if(!a){
-            a = {userName: '', userEmail: '', userRoles: 'Staff', userStatus: 'Active'};
+            a = {userName: '', userEmail: '', userRoles: 'Driver', userStatus: 'Active'};
         }
 
         let html =
@@ -1360,7 +1365,7 @@
              <div class="field-row-2">
                <div class="field-group"><label>Role</label>
                  <select id="f_role">
-                   ${['Admin','Staff'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
+                   ${['Admin','Driver'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
                  </select>
                </div>
                <div class="field-group"><label>Status</label>
@@ -1505,6 +1510,8 @@
 
     /* save handler */
     $modalSave.on('click', function(){
+        $modalSave.prop('disabled', true);
+
         const {type, id} = editContext;
         const isEdit = id !== null && id !== undefined;
 
@@ -1632,7 +1639,6 @@
                 showToast('Customer added');
             }
         }
-
         // closeModal();
         // renderAll();
     });
@@ -1681,7 +1687,7 @@
     /* ============================================================
        INIT
        ============================================================ */
-    renderAll();
+    goToSection('overview');
 </script>
 
 </body>

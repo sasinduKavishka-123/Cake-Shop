@@ -42,17 +42,19 @@ public class UserController {
     @GetMapping(value = "/getUsers", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getUsers(
             @RequestParam (value = "user_name") String userName,
-            @RequestParam (value = "user_email") String userEmail
+            @RequestParam (value = "user_email") String userEmail,
+            @RequestParam (value = "is_staff") boolean isStaff
     ){
-        List<UserDTO> userDTOList = userService.getUsers(userName, userEmail);
+        List<UserDTO> userDTOList = userService.getUsers(userName, userEmail, isStaff);
         return new CommonResponse(200, userDTOList, "SUCCESSFUL");
     }
 
-    @GetMapping(value = "/getUsersCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/getStaffCount", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getUserCount(
-            @RequestParam (value = "user_role") String userRole
+            @RequestParam (value = "user_role") String userRole,
+            @RequestParam (value = "is_staff") boolean isStaff
     ){
-        int userCount = userService.getUserCountByRole(userRole);
+        int userCount = userService.getUserCountByRole(userRole, isStaff);
         return new CommonResponse(200, userCount, "SUCCESSFUL");
     }
 

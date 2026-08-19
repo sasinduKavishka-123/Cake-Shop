@@ -517,7 +517,6 @@
                             localStorage.setItem("JWT", response.body.token);
                             localStorage.setItem("UserID", response.body.userId);
                             localStorage.setItem("UserName", response.body.userName);
-                            localStorage.setItem("UserRole", response.body.userRoles);
 
                             $submitBtn.removeClass('loading').addClass('success');
                             $btnLabel.text('✓ Signed In').css('opacity', 1);

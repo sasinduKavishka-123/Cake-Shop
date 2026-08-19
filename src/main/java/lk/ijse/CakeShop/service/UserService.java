@@ -11,9 +11,9 @@ public interface UserService {
 
     UserDTO findUser(String email, String password, String userRole);
 
-    List<UserDTO> getUsers(String name, String email);
+    List<UserDTO> getUsers(String name, String email, boolean isStaff);
 
-    int getUserCountByRole(String userRole);
+    int getUserCountByRole(String userRole, boolean isStaff);
 
     UserDTO findUserById(long id);
 
