@@ -1696,9 +1696,12 @@
             else{ obj.password = $('#password').val()}
 
             $.ajax({
-                url:'http://localhost:8080/v1/test/saveUser',
+                url:'http://localhost:8080/v1/test/saveStaff',
                 type: 'POST',
                 contentType:'application/json',
+                headers:{
+                    'Authorization':'Bearer '+localStorage.getItem("JWT")
+                },
                 data: JSON.stringify(obj),
                 success: function (response){
                     if(response.status === 200){
@@ -1714,7 +1717,7 @@
                         $modalSave.prop('disabled', false);
                     }
                 },
-                error: function (){
+                error: function (e){
                     alert("UNEXPECTED ERROR");
                     $modalSave.prop('disabled', false);
                 }

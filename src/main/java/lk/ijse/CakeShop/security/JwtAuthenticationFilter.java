@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,8 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException ex) {
             handleJwtException(response, 401, "Token expired");
-//        } catch (SignatureException ex) {
-//            handleJwtException(response, 401, "Invalid token signature");
+        } catch (SignatureException ex) {
+            handleJwtException(response, 401, "Invalid token signature");
         } catch (MalformedJwtException ex) {
             handleJwtException(response, 401, "Invalid token format");
         } catch (Exception ex) {

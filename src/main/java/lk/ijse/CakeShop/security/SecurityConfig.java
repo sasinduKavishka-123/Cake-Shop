@@ -34,8 +34,9 @@ public class SecurityConfig {
                 .cors((cors -> cors.configurationSource(corsConfigurationSource())))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/v1/test/saveUser").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/test/saveCustomer").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/test/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/test/saveStaff").hasAnyRole("Admin")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

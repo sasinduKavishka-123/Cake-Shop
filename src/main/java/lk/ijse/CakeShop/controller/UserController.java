@@ -19,8 +19,14 @@ public class UserController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    @PostMapping(value = "/saveUser", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse saveUser(@RequestBody UserDTO userDTO) {
+    @PostMapping(value = "/saveCustomer", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse saveCustomer(@RequestBody UserDTO userDTO) {
+        userService.saveUser(userDTO);
+        return new CommonResponse(200, "UserSaved!");
+    }
+
+    @PostMapping(value = "/saveStaff", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse saveStaff(@RequestBody UserDTO userDTO) {
         userService.saveUser(userDTO);
         return new CommonResponse(200, "UserSaved!");
     }
