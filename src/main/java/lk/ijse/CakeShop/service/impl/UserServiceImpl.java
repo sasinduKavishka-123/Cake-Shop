@@ -53,6 +53,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setUserName(userDTO.getUserName());
         user.setUserEmail(userDTO.getUserEmail());
+        user.setUserContact(userDTO.getUserContact());
         user.setUserRoles(userDTO.getUserRoles());
         user.setUserStatus(userDTO.getUserStatus());
         if(userDTO.getUserId() == 0){
@@ -106,6 +107,7 @@ public class UserServiceImpl implements UserService {
             dto.setUserId(u.getUserId());
             dto.setUserName(u.getUserName());
             dto.setUserEmail(u.getUserEmail());
+            dto.setUserContact(u.getUserContact());
             dto.setUserRoles(u.getUserRoles());
             dto.setUserStatus(u.getUserStatus());
 
@@ -143,6 +145,7 @@ public class UserServiceImpl implements UserService {
         userDTO.setUserId(u.getUserId());
         userDTO.setUserName(u.getUserName());
         userDTO.setUserEmail(u.getUserEmail());
+        userDTO.setUserContact(u.getUserContact());
         userDTO.setUserStatus(u.getUserStatus());
         userDTO.setUserRoles(u.getUserRoles());
 

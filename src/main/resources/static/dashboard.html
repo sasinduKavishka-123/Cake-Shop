@@ -786,7 +786,7 @@
         <section class="section-panel" id="panel-admins">
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Id</th><th>Admin</th><th>Role</th><th>Status</th><th></th></tr></thead>
+                    <thead><tr><th>Staff</th><th>Staff Id</th><th>Contact</th><th>Role</th><th>Status</th><th></th></tr></thead>
                     <tbody id="adminsBody"></tbody>
                 </table>
             </div>
@@ -796,7 +796,7 @@
         <section class="section-panel" id="panel-customers">
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Status</th><th></th></tr></thead>
+                    <thead><tr><th>Customer</th><th>Customer ID</th><th>Phone</th><th>Status</th><th></th></tr></thead>
                     <tbody id="customersBody"></tbody>
                 </table>
             </div>
@@ -868,12 +868,6 @@
         {id:5, name:'Ceylon Bean Roasters', category:'Beverages', contact:'Dinuka Wickrama', phone:'+94 77 890 3345', email:'dinuka@ceylonbean.lk', lastOrder:'2026-08-09', status:'Active'},
     ];
 
-    let admins = [
-        {id:1, name:'Amaya Ranasinghe', email:'amaya@sugarandflour.lk', role:'Owner', status:'Active', lastActive:'Today'},
-        {id:2, name:'Kavindu Silva', email:'kavindu@sugarandflour.lk', role:'Manager', status:'Active', lastActive:'Yesterday'},
-        {id:3, name:'Ishara Fernando', email:'ishara@sugarandflour.lk', role:'Staff', status:'Invited', lastActive:'—'},
-    ];
-
     let customers = [
         {id:1, name:'Nadeesha Perera', email:'nadeesha.p@gmail.com', phone:'+94 77 512 3344', orders:14, spent:28400, status:'Active', joined:'2025-11-02'},
         {id:2, name:'Kavindu Rathnayake', email:'kavindu.r@gmail.com', phone:'+94 71 220 9987', orders:6, spent:9800, status:'Active', joined:'2026-01-15'},
@@ -884,7 +878,6 @@
     let nextOrderNum = 1043;
     let nextItemId = 7;
     let nextSupplierId = 6;
-    let nextAdminId = 4;
     let nextCustomerId = 5;
 
     /* ============================================================
@@ -971,6 +964,43 @@
         const val = name.trim();
         if (val === '' || val.length <= 2) {return false;}
         return true;
+    }
+
+    function validatePhoneNumber(phoneNumber) {
+        // Remove whitespace, hyphens, and parentheses
+        const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+
+        // Strictly enforces length:
+        // - Mobile: 07X XXX XXXX (10 digits) OR +947X XXX XXXX (11 digits after +)
+        // - Landline: 0XX XXX XXXX (10 digits) OR +94XX XXX XXXX
+        const slRegex = /^(?:(?:\+|00)?94|0)?(?:7[0-2,4-8]\d{7}|(?:11|21|23|24|25|26|27|31|32|33|34|35|36|37|38|41|45|47|51|52|54|55|57|63|65|66|67|81|91)\d{7})$/;
+
+        return slRegex.test(cleaned);
+    }
+
+    function formatPhoneNumber(phoneNumber) {
+        const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+
+        if(phoneNumber.length === 9){
+            return '+94'+phoneNumber;
+        }
+
+        // Standardize local 07XXXXXXXX or 0XX-XXXXXXX to +94...
+        if (/^0\d{9}$/.test(cleaned)) {
+            return '+94' + cleaned.substring(1);
+        }
+
+        // Standardize 947XXXXXXXX
+        if (/^94\d{9}$/.test(cleaned)) {
+            return '+' + cleaned;
+        }
+
+        // Standardize +947XXXXXXXX or 00947XXXXXXXX
+        if (/^(?:\+|00)94\d{9}$/.test(cleaned)) {
+            return '+' + cleaned.replace(/^(?:\+|00)/, '');
+        }
+
+        return null; // Invalid number
     }
 
     /* ============================================================
@@ -1162,11 +1192,12 @@
                     for(const r of response.body){
                         html +=
                             `<tr>
-                                <td>${r.userId}</td>
                                 <td class="cell-main">
                                   <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${r.userName.charAt(0)}</span>
                                   <div><div class="cell-title">${r.userName}</div><div class="cell-sub">${r.userEmail}</div></div>
                                 </td>
+                                <td>${r.userId}</td>
+                                <td>${r.userContact}</td>
                                 <td><span class="badge-pill ${roleBadgeClass(r.userRoles)}">${r.userRoles}</span></td>
                                 <td><span class="badge-pill ${statusBadgeClass(r.userStatus)}">${r.userStatus}</span></td>
                                 <td>
@@ -1202,33 +1233,70 @@
        ============================================================ */
     function renderCustomers(filter=''){
         const f = filter.toLowerCase();
-        const rows = customers.filter(c => !f || c.name.toLowerCase().includes(f) || c.email.toLowerCase().includes(f) || c.phone.toLowerCase().includes(f));
-        $('#customersBody').html(rows.map(c => `
-    <tr>
-      <td class="cell-main">
-        <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${c.name.charAt(0)}</span>
-        <div><div class="cell-title">${c.name}</div><div class="cell-sub">${c.email}</div></div>
-      </td>
-      <td>${c.phone}</td>
-      <td>${c.orders} orders</td>
-      <td class="cell-title">${money(c.spent)}</td>
-      <td><span class="badge-pill ${statusBadgeClass(c.status)}">${c.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="customer" data-id="${c.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="customer" data-id="${c.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="6">No customers match your search.</td></tr>`);
+        const obj = {
+            user_name:f,
+            user_email:f,
+            is_staff: false
+        }
+
+        $.ajax({
+            url: "http://localhost:8080/v1/test/getUsers",
+            type: 'GET',
+            contentType: 'application/json',
+            data: obj,
+            headers: {
+                'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    let html = "";
+                    for(const c of response.body){
+                        html +=
+                            `<tr>
+                                <td class="cell-main">
+                                  <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${c.userName.charAt(0)}</span>
+                                  <div><div class="cell-title">${c.userName}</div><div class="cell-sub">${c.userEmail}</div></div>
+                                </td>
+                                <td>${c.userId}</td>
+                                <td>${c.userContact}</td>
+                                <td><span class="badge-pill ${statusBadgeClass(c.userStatus)}">${c.userStatus}</span></td>
+                                <td>
+                                  <div class="row-actions">
+                                    <button class="icon-btn" data-edit="customer" data-id="${c.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                                    <button class="icon-btn danger" data-delete="customer" data-id="${c.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                                  </div>
+                                </td>
+                            </tr>`;
+                    }
+                    if(response.body.length === 0){
+                        html += `<tr class="empty-row"><td colspan="5">No customers match your search.</td></tr>`;
+                    }
+                    $('#customersBody').html(html);
+                    $(window).on('load', function (){
+                        alert(response.message);
+                    })
+                }
+                else{
+                    alert(response.message);
+                    $('#customersBody').html(`<tr class="empty-row"><td colspan="5">No customers match your search.</td></tr>`);
+                }
+            },
+            error: function (){
+                alert("SERVER DOES NOT RESPONDED");
+                $('#customersBody').html(`<tr class="empty-row"><td colspan="5">No customers match your search.</td></tr>`);
+            }
+        });
     }
 
+    /* ============================================================
+       UPDATE COUNTS
+       ============================================================ */
     function updateNavCounts(){
         $('#navCountOrders').text(orders.length);
         $('#navCountItems').text(items.length);
         $('#navCountSuppliers').text(suppliers.length);
         updateStaffCount();
-        $('#navCountCustomers').text(customers.length);
+        updateCustomerCount();
     }
 
     function updateStaffCount(){
@@ -1242,7 +1310,28 @@
             },
             success:function (response){
                 if(response.status === 200){
-                    document.getElementById('navCountAdmins').textContent = response.body;
+                    $('#navCountAdmins').text(response.body);
+                    // document.getElementById('navCountAdmins').textContent = response.body;
+                }
+                else{
+                    alert(response.message);
+                }
+            }
+        });
+    }
+
+    function updateCustomerCount(){
+        const obj = {user_role:"Customer", is_staff:false}
+        $.ajax({
+            url:"http://localhost:8080/v1/test/getStaffCount",
+            type:'GET',
+            data:obj,
+            headers:{
+                'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+            },
+            success:function (response){
+                if(response.status === 200){
+                    $('#navCountCustomers').text(response.body);
                 }
                 else{
                     alert(response.message);
@@ -1356,12 +1445,13 @@
 
     function adminFormHTML(a, isEdit){
         if(!a){
-            a = {userName: '', userEmail: '', userRoles: 'Driver', userStatus: 'Active'};
+            a = {userName: '', userEmail: '', userContact:'', userRoles: 'Driver', userStatus: 'Active'};
         }
 
         let html =
             `<div class="field-group"><label>Full Name</label><input type="text" id="f_name" value="${a.userName}" placeholder="Admin name"></div>
              <div class="field-group"><label>Email Address</label><input type="email" id="f_email" value="${a.userEmail}" placeholder="name@sugarandflour.lk"></div>
+             <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${a.userContact}" placeholder="077 123 4567"></div>
              <div class="field-row-2">
                <div class="field-group"><label>Role</label>
                  <select id="f_role">
@@ -1576,21 +1666,27 @@
         if(type === 'admin'){
             let name = $('#f_name').val().trim();
             let email = $('#f_email').val().trim();
+            let contact = $('#f_phone').val().trim();
 
-            if(!validateName(name)){ alert("INVALID NAME"); return; }
-            if(!validEmail(email)){ alert("INVALID EMAIL"); return; }
+            if(!validateName(name)){ alert("INVALID NAME"); $modalSave.prop('disabled', false); return; }
+            if(!validEmail(email)){ alert("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
+            if(!validatePhoneNumber(contact)){ alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+
+            contact = formatPhoneNumber(contact);
+            if(!contact){alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
             if(!isEdit){
                 const passOk = validatePasswordStrength();
                 const confirmOk = validateConfirm();
-                if(!passOk){alert("INVALID PASSWORD"); return;}
-                if(!confirmOk){ alert("PASSWORD CONFIRMATION ERROR"); return;}
+                if(!passOk){alert("INVALID PASSWORD"); $modalSave.prop('disabled', false); return;}
+                if(!confirmOk){ alert("PASSWORD CONFIRMATION ERROR"); $modalSave.prop('disabled', false); return;}
             }
 
             const obj = {
                 userId: 0,
                 userName: name,
                 userEmail: email,
+                userContact: contact,
                 password: '',
                 userRoles: $('#f_role').val(),
                 userStatus: $('#f_status').val().toUpperCase(),
@@ -1607,18 +1703,20 @@
                 success: function (response){
                     if(response.status === 200){
                         if(isEdit){
-                            showToast('Admin updated');
+                            showToast('Staff Updated');
                         }else{
-                            showToast('Admin saved');
+                            showToast('Staff Saved');
                         }
                         closeModal();
                         renderAll();
                     }else{
                         alert(response.message);
+                        $modalSave.prop('disabled', false);
                     }
                 },
                 error: function (){
                     alert("UNEXPECTED ERROR");
+                    $modalSave.prop('disabled', false);
                 }
             });
         }

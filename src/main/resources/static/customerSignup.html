@@ -431,6 +431,14 @@
                 </div>
 
                 <div class="field-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-wrap" id="phoneWrap">
+                        <input type="tel" id="phone" placeholder="+94 77 123 4567" autocomplete="tel">
+                    </div>
+                    <div class="field-msg" id="phoneMsg">Please enter a valid phone number.</div>
+                </div>
+
+                <div class="field-group">
                     <label for="password">Password</label>
                     <div class="input-wrap" id="passwordWrap">
                         <input type="password" id="password" placeholder="Create a password" autocomplete="new-password">
@@ -490,6 +498,10 @@
         const $emailWrap = $('#emailWrap');
         const $emailMsg = $('#emailMsg');
 
+        const $phoneInput = $('#phone');
+        const $phoneWrap = $('#phoneWrap');
+        const $phoneMsg = $('#phoneMsg');
+
         const $passwordInput = $('#password');
         const $passwordWrap = $('#passwordWrap');
         const $strengthWrap = $('#strengthWrap');
@@ -512,6 +524,52 @@
             $nameWrap.toggleClass('error', !ok).toggleClass('success', ok);
             $nameMsg.toggleClass('show', !ok);
             return ok;
+        }
+
+        function validatePhoneNumber() {
+            // Remove whitespace, hyphens, and parentheses
+            const cleaned = $phoneInput.val().trim().replace(/[\s\-\(\)]/g, '');
+
+            if(cleaned === ''){
+                $phoneWrap.removeClass('error success');
+                $phoneMsg.removeClass('show');
+                return false;
+            }
+            // Strictly enforces length:
+            // - Mobile: 07X XXX XXXX (10 digits) OR +947X XXX XXXX (11 digits after +)
+            // - Landline: 0XX XXX XXXX (10 digits) OR +94XX XXX XXXX
+            const slRegex = /^(?:(?:\+|00)?94|0)?(?:7[0-2,4-8]\d{7}|(?:11|21|23|24|25|26|27|31|32|33|34|35|36|37|38|41|45|47|51|52|54|55|57|63|65|66|67|81|91)\d{7})$/;
+
+            let ok = slRegex.test(cleaned);
+
+            $phoneWrap.toggleClass('error', !ok).toggleClass('success', ok);
+            $phoneMsg.toggleClass('show', !ok);
+            return ok;
+        }
+
+        function formatPhoneNumber(phoneNumber) {
+            const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+
+            if(phoneNumber.length === 9){
+                return '+94'+phoneNumber;
+            }
+
+            // Standardize local 07XXXXXXXX or 0XX-XXXXXXX to +94...
+            if (/^0\d{9}$/.test(cleaned)) {
+                return '+94' + cleaned.substring(1);
+            }
+
+            // Standardize 947XXXXXXXX
+            if (/^94\d{9}$/.test(cleaned)) {
+                return '+' + cleaned;
+            }
+
+            // Standardize +947XXXXXXXX or 00947XXXXXXXX
+            if (/^(?:\+|00)94\d{9}$/.test(cleaned)) {
+                return '+' + cleaned.replace(/^(?:\+|00)/, '');
+            }
+
+            return null; // Invalid number
         }
 
         function validateEmail() {
@@ -615,15 +673,17 @@
 
             const nameOk = validateName();
             const emailOk = validateEmail();
+            const phoneOk = validatePhoneNumber();
             const passOk = validatePasswordStrength();
             const confirmOk = validateConfirm();
 
             if ($nameInput.val().trim() === '') { $nameWrap.addClass('error'); $nameMsg.addClass('show'); }
             if ($emailInput.val().trim() === '') { $emailWrap.addClass('error'); $emailMsg.addClass('show'); }
+            if ($phoneInput.val() === '') { $phoneWrap.addClass('error'); $phoneMsg.addClass('show'); }
             if ($passwordInput.val() === '') { $passwordWrap.addClass('error'); }
             if ($confirmInput.val() === '') { $confirmWrap.addClass('error'); $confirmMsg.addClass('show'); }
 
-            if (!nameOk || !emailOk || !passOk || !confirmOk) return;
+            if (!nameOk || !emailOk || !phoneOk || !passOk || !confirmOk) return;
 
             $submitBtn.addClass('loading').prop('disabled', true);
             $btnLabel.css('opacity', 0);
@@ -632,10 +692,10 @@
                 "userId":0,
                 "userName":$nameInput.val().trim(),
                 "userEmail":$emailInput.val().trim(),
+                "userContact":formatPhoneNumber($phoneInput.val().trim()),
                 "password":$passwordInput.val(),
                 "userRoles":"Customer",
                 "userStatus":"ACTIVE"
-
             });
 
             setTimeout(() => {
@@ -646,7 +706,6 @@
                     contentType:"application/json",
                     data:obj,
                     success:function (response){
-                        console.log("Success");
                         if(response.status === 200){
                             alert(response.message);
 
@@ -660,10 +719,8 @@
                             $submitBtn.removeClass('loading').prop('disabled', false);
                             $btnLabel.text('Create Account').css('opacity', 1);
                         }
-
                     },
                     error: function(response){
-                        console.log("Error");
                         alert(response.message);
                         setTimeout(() => {
                             $submitBtn.removeClass('loading').prop('disabled', false);
@@ -672,7 +729,6 @@
                     }
                 })
             }, 500);
-
         });
     });
 </script>
