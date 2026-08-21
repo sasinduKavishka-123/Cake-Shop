@@ -243,6 +243,13 @@
         .panel-title h3{font-size:1.15rem;}
         .panel-title a{font-size:0.82rem;font-weight:800;color:var(--terracotta-deep);}
 
+        .status-filter{ display:none; flex-wrap:wrap; gap:10px; margin-bottom:22px; }
+        .status-chip{ display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:100px; border:1.5px solid var(--line); background:var(--cream-warm); font-size:0.82rem; font-weight:700; color:var(--espresso-soft); cursor:pointer; transition:all .2s ease; }
+        .status-chip:hover{border-color:var(--gold);}
+        .status-chip input{ width:15px;height:15px; accent-color:var(--terracotta); cursor:pointer; }
+        .status-chip.active{ background:var(--espresso); color:var(--cream-warm); border-color:var(--espresso); }
+
+
         /* ============ TABLE CARD ============ */
         .table-card{
             background:var(--cream-warm);
@@ -710,6 +717,8 @@
 
     <div class="content">
 
+        <div class="status-filter" id="statusFilter"></div>
+
         <!-- ================= OVERVIEW ================= -->
         <section class="section-panel active" id="panel-overview">
             <div class="stat-grid">
@@ -893,6 +902,16 @@
     };
     let currentSection = 'overview';
 
+    const statusOptionsMap = {
+        orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
+        items: ['In Stock','Low Stock','Out of Stock'],
+        suppliers: ['Active','Inactive'],
+        admins: ['Active','Invited','Suspended'],
+        customers: ['Active','Blocked'],
+    };
+    let excludedStatuses = new Set();
+    function statusAllowed(label){ return !excludedStatuses.has(label); }
+
     const $navItems = $('.nav-item');
     const $topAddBtn = $('#topAddBtn');
     const $addBtnLabel = $('#addBtnLabel');
@@ -911,6 +930,10 @@
         $addBtnLabel.text(cfg.addLabel || '');
         $searchInput.val('');
         $('.search-wrap').toggleClass('sw-hidden', !cfg.showSearch);
+
+        excludedStatuses = new Set();
+        renderStatusFilter();
+
         closeSidebar();
         renderAll();
     }
@@ -1095,6 +1118,29 @@
     }
 
     /* ============================================================
+   STATUS FILTER CHECKBOXES
+   ============================================================ */
+    function renderStatusFilter(){
+        const options = statusOptionsMap[currentSection];
+        const $filter = $('#statusFilter');
+        if(!options){ $filter.empty().hide(); return; }
+        $filter.css('display','flex').html(options.map(s => `
+            <label class="status-chip">
+              <input type="checkbox" value="${s}">
+              ${s}
+            </label>
+        `).join(''));
+    }
+
+    $(document).on('change', '#statusFilter input[type="checkbox"]', function(){
+        const val = $(this).val();
+        const checked = $(this).is(':checked');
+        $(this).closest('.status-chip').toggleClass('active', checked);
+        if(checked) excludedStatuses.delete(val); else excludedStatuses.add(val);
+        renderAll();
+    });
+
+    /* ============================================================
        RENDER: ORDERS
        ============================================================ */
     function renderOrders(filter=''){
@@ -1152,17 +1198,18 @@
         const obj = {
             company_name : f,
             contact_name : f,
-            supplier_status : f
+            supplier_statuses : Array.from(excludedStatuses)      // SET
         };
 
         $.ajax({
             url: "http://localhost:8080/v1/supplier/filterSuppliers",
             type: 'GET',
-            data: obj,
-
+            // contentType: 'application/json',
+            traditional: true,
             headers: {
                 'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
             },
+            data: obj,
             success: function (response){
                 if(response.status === 200){
                     let html = "";

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -60,7 +61,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public int getSupplierCount() {
-        return supplierRepository.getActiveSupplierCount();
+        return supplierRepository.getSupplierCount();
     }
 
     @Override
@@ -91,9 +92,15 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
-    public List<SupplierDTO> filterSuppliers(String companyName, String contactName, String status) {
+    public List<SupplierDTO> filterSuppliers(String companyName, String contactName, Set<String> supplierStatus) {
         log.info("Execute Method filterSuppliers()");
-
+        String[] status = null;
+        if(supplierStatus != null){
+            status = supplierStatus.toArray(String[]::new);
+            for(String s: status){
+                System.out.println(s);
+            }
+        }
         return supplierRepository.filterSuppliers(companyName, contactName, status);
     }
 

@@ -16,5 +16,4 @@ public class SupplierDTO {
     private String contact;
     private String email;
     private SupplierStatus supplierStatus;
-
 }

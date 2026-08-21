@@ -2,13 +2,19 @@ package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.SupplierDTO;
+import lk.ijse.CakeShop.dto.filterDTOs.SupplierFilterDTO;
 import lk.ijse.CakeShop.enumerations.SupplierStatus;
 import lk.ijse.CakeShop.service.SupplierService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+
+import static lk.ijse.CakeShop.constatns.ResponseMessage.SUCCESS_MESSAGE;
 
 @RestController
 @RequestMapping(value = "v1/supplier")
@@ -25,23 +31,23 @@ public class SupplierController {
 
     @GetMapping(value = "/getSupplierCount", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getSupplierCount(){
-        return new CommonResponse(200, supplierService.getSupplierCount(), "SUCCESS");
+        return new CommonResponse(200, supplierService.getSupplierCount(), SUCCESS_MESSAGE);
     }
 
     @GetMapping(value = "/findSupplierById/{supplier_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse findSupplierById(@PathVariable long supplier_id){
         SupplierDTO response = supplierService.findSupplierByID(supplier_id);
-        return new CommonResponse(200, response, "SUCCESS");
+        return new CommonResponse(200, response, SUCCESS_MESSAGE);
     }
 
     @GetMapping(value = "/filterSuppliers", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse filterSuppliers(
             @RequestParam(value = "company_name") String companyName,
             @RequestParam(value = "contact_name") String contactName,
-            @RequestParam(value = "supplier_status", required = false) String supplierStatus
+            @RequestParam(value = "supplier_statuses", required = false) Set<String> supplierStatus
     ){
         List<SupplierDTO> responseList = supplierService.filterSuppliers(companyName, contactName, supplierStatus);
-        return new CommonResponse(200, responseList, "SUCCESS");
+        return new CommonResponse(200, responseList, SUCCESS_MESSAGE);
     }
 
 }

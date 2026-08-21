@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static lk.ijse.CakeShop.constatns.ResponseMessage.SUCCESS_MESSAGE;
+
 @RestController
 @RequestMapping(value = "v1/user")
 @AllArgsConstructor
@@ -62,7 +64,7 @@ public class UserController {
             @RequestParam (value = "is_staff") boolean isStaff
     ){
         List<UserDTO> userDTOList = userService.getUsers(userName, userEmail, isStaff);
-        return new CommonResponse(200, userDTOList, "SUCCESSFUL");
+        return new CommonResponse(200, userDTOList, SUCCESS_MESSAGE);
     }
 
     @GetMapping(value = "/getStaffCount", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -71,12 +73,12 @@ public class UserController {
             @RequestParam (value = "is_staff") boolean isStaff
     ){
         int userCount = userService.getUserCountByRole(userRole, isStaff);
-        return new CommonResponse(200, userCount, "SUCCESSFUL");
+        return new CommonResponse(200, userCount, SUCCESS_MESSAGE);
     }
 
     @GetMapping(value = "/findUserById/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getUserById(@PathVariable long userId){
         UserDTO responseDTO = userService.findUserById(userId);
-        return new CommonResponse(200, responseDTO, "SUCCESSFUL");
+        return new CommonResponse(200, responseDTO, SUCCESS_MESSAGE);
     }
 }
