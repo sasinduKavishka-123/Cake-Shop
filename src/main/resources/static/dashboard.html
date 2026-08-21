@@ -909,8 +909,8 @@
         admins: ['Active','Invited','Suspended'],
         customers: ['Active','Blocked'],
     };
-    let excludedStatuses = new Set();
-    function statusAllowed(label){ return !excludedStatuses.has(label); }
+    let activeStatuses = new Set();
+    function statusAllowed(label){ return !activeStatuses.has(label); }
 
     const $navItems = $('.nav-item');
     const $topAddBtn = $('#topAddBtn');
@@ -931,7 +931,7 @@
         $searchInput.val('');
         $('.search-wrap').toggleClass('sw-hidden', !cfg.showSearch);
 
-        excludedStatuses = new Set();
+        activeStatuses = new Set();
         renderStatusFilter();
 
         closeSidebar();
@@ -1136,7 +1136,7 @@
         const val = $(this).val();
         const checked = $(this).is(':checked');
         $(this).closest('.status-chip').toggleClass('active', checked);
-        if(checked) excludedStatuses.delete(val); else excludedStatuses.add(val);
+        if(checked) activeStatuses.add(val); else activeStatuses.delete(val);
         renderAll();
     });
 
@@ -1198,7 +1198,7 @@
         const obj = {
             company_name : f,
             contact_name : f,
-            supplier_statuses : Array.from(excludedStatuses)      // SET
+            supplier_statuses : Array.from(activeStatuses)      // SET
         };
 
         $.ajax({
