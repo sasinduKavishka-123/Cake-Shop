@@ -1,6 +1,8 @@
 package lk.ijse.CakeShop.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lk.ijse.CakeShop.enumerations.StockStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,9 +21,13 @@ public class StockItem {
     private long stockItemId;
 
     private String itemName;
-    private int stockQty;
+    @Column(nullable = false)
+    @PositiveOrZero
+    private Integer stockQty;
     private String unitOfMeasure;
-    private int reorderLevel;
+    @Column(nullable = false)
+    @PositiveOrZero
+    private Integer reorderLevel;
 
     @Enumerated(EnumType.STRING)
     private StockStatus stockStatus;

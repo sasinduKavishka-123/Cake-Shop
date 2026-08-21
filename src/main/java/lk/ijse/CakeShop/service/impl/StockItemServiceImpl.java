@@ -2,7 +2,10 @@ package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.StockItemDTO;
 import lk.ijse.CakeShop.entity.StockItem;
+import lk.ijse.CakeShop.entity.StockItemCategory;
+import lk.ijse.CakeShop.enumerations.StockStatus;
 import lk.ijse.CakeShop.exception.CustomException;
+import lk.ijse.CakeShop.repository.StockItemCatRepository;
 import lk.ijse.CakeShop.repository.StockItemRepository;
 import lk.ijse.CakeShop.service.StockItemService;
 import lombok.AllArgsConstructor;
@@ -17,7 +20,7 @@ import java.util.Optional;
 public class StockItemServiceImpl implements StockItemService {
 
     private final StockItemRepository stockItemRepository;
-
+    private final StockItemCatRepository stockItemCatRepository;
 
     @Override
     public void saveStockItem(StockItemDTO stockItemDTO) {
@@ -27,9 +30,17 @@ public class StockItemServiceImpl implements StockItemService {
             log.error("Error in Method saveStockItem()");
             throw new CustomException(402, "INVALID ITEM NAME");
         }
-        if(stockItemDTO.getStockItemCategoryName().isEmpty()){
+        if(stockItemDTO.getStockItemCategoryId()<1){
             log.error("Error in Method saveStockItem()");
-            throw new CustomException(402, "CATEGORY IS EMPTY");
+            throw new CustomException(402, "CATEGORY ID IS EMPTY");
+        }
+        if(stockItemDTO.getStockQty() < 0){
+            log.error("Error in Method saveStockItem()");
+            throw new CustomException(402, "INVALID STOCK QUANTITY");
+        }
+        if(stockItemDTO.getReorderLevel() < 0){
+            log.error("Error in Method saveStockItem()");
+            throw new CustomException(402, "INVALID REORDER LEVEL");
         }
 
         StockItem stockItem = new StockItem();
@@ -42,6 +53,32 @@ public class StockItemServiceImpl implements StockItemService {
             stockItem = optionalStockItem.get();
         }
 
+        StockItemCategory category = new StockItemCategory();
+        Optional<StockItemCategory> optionalCat = stockItemCatRepository.findById(stockItemDTO.getStockItemCategoryId());
+        if(optionalCat.isEmpty()){
+            log.error("Error in Method saveStockItem()");
+            throw new CustomException(404, "CATEGORY NOT FOUND");
+        }
+        category = optionalCat.get();
 
+        StockStatus stockStatus = null;
+        if(stockItemDTO.getStockQty() == 0){
+            stockStatus = StockStatus.OUT_OF_STOCK;
+        }
+        else if(stockItemDTO.getStockQty() <= stockItemDTO.getReorderLevel()){
+            stockStatus = StockStatus.LOW_STOCK;
+        }
+        else{
+            stockStatus = StockStatus.IN_STOCK;
+        }
+
+        stockItem.setItemName(stockItemDTO.getItemName());
+        stockItem.setStockQty(stockItemDTO.getStockQty());
+        stockItem.setUnitOfMeasure(stockItemDTO.getUnitOfMeasure());
+        stockItem.setReorderLevel(stockItemDTO.getReorderLevel());
+        stockItem.setStockStatus(stockStatus);
+        stockItem.setStockItemCategory(category);
+
+        stockItemRepository.save(stockItem);
     }
 }

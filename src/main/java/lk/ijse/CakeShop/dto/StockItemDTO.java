@@ -25,4 +25,12 @@ public class StockItemDTO {
     private long stockItemCategoryId;
     private String stockItemCategoryName;
 
+    public StockItemDTO(long stockItemId, String itemName, int stockQty, String unitOfMeasure, int reorderLevel, StockStatus stockStatus, long stockItemCategoryId) {
+        this.stockItemId = stockItemId;
+        this.itemName = itemName;
+        this.stockQty = stockQty;
+        this.unitOfMeasure = unitOfMeasure;
+        this.reorderLevel = reorderLevel;
+        this.stockItemCategoryId = stockItemCategoryId;
+    }
 }
