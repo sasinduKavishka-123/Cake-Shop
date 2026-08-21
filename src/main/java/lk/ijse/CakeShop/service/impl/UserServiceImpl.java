@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -90,15 +91,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDTO> getUsers(String name, String email, boolean isStaff) {
+    public List<UserDTO> getUsers(String name, String email, boolean isStaff, Set<String> userStatuses) {
         log.info("Execute method getUsers()");
 
         List<User> users = new ArrayList<>();
 
+        String[] status = null;
+        if(userStatuses != null){
+            status = userStatuses.toArray(String[]::new);
+        }
+
         if(isStaff){
-            users = userRepository.getStaff(name, email);
+            users = userRepository.getStaff(name, email, status);
         }else{
-            users = userRepository.getCustomers(name, email);
+            users = userRepository.getCustomers(name, email, status);
         }
 
         List<UserDTO> userDTOS = new ArrayList<>();

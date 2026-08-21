@@ -2,15 +2,11 @@ package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.SupplierDTO;
-import lk.ijse.CakeShop.dto.filterDTOs.SupplierFilterDTO;
-import lk.ijse.CakeShop.enumerations.SupplierStatus;
 import lk.ijse.CakeShop.service.SupplierService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 

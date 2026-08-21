@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 import static lk.ijse.CakeShop.constatns.ResponseMessage.SUCCESS_MESSAGE;
 
@@ -61,9 +62,10 @@ public class UserController {
     public CommonResponse getUsers(
             @RequestParam (value = "user_name") String userName,
             @RequestParam (value = "user_email") String userEmail,
-            @RequestParam (value = "is_staff") boolean isStaff
+            @RequestParam (value = "is_staff") boolean isStaff,
+            @RequestParam (value = "user_status", required = false) Set<String> userStatuses
     ){
-        List<UserDTO> userDTOList = userService.getUsers(userName, userEmail, isStaff);
+        List<UserDTO> userDTOList = userService.getUsers(userName, userEmail, isStaff, userStatuses);
         return new CommonResponse(200, userDTOList, SUCCESS_MESSAGE);
     }
 

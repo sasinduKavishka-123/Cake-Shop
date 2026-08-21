@@ -97,9 +97,6 @@ public class SupplierServiceImpl implements SupplierService {
         String[] status = null;
         if(supplierStatus != null){
             status = supplierStatus.toArray(String[]::new);
-            for(String s: status){
-                System.out.println(s);
-            }
         }
         return supplierRepository.filterSuppliers(companyName, contactName, status);
     }

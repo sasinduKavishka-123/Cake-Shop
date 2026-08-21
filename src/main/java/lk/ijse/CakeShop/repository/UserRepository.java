@@ -27,13 +27,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query(value = "SELECT u FROM User u " +
             "WHERE (u.userRoles != 'Customer') AND" +
-            " ( (?1 IS NULL OR u.userName LIKE %?1%) OR (?2 IS NULL OR u.userEmail LIKE %?2%) )")
-    List<User> getStaff(String name, String email);
+            " ( (?1 IS NULL OR u.userName LIKE %?1%) OR (?2 IS NULL OR u.userEmail LIKE %?2%))" +
+            "AND " +
+            "(?3 IS NULL OR str(u.userStatus) IN ?3)"
+    )
+    List<User> getStaff(String name, String email, String[] status);
 
     @Query(value = "SELECT u FROM User u " +
             "WHERE (u.userRoles = 'Customer') AND" +
-            "( (?1 IS NULL OR u.userName LIKE %?1%) OR (?2 IS NULL OR u.userEmail LIKE %?2%) )")
-    List<User> getCustomers(String name, String email);
+            "( (?1 IS NULL OR u.userName LIKE %?1%) OR (?2 IS NULL OR u.userEmail LIKE %?2%) )" +
+            "AND " +
+            "(?3 IS NULL OR str(u.userStatus) IN ?3)")
+    List<User> getCustomers(String name, String email, String[] status);
 
     @Query(value = "SELECT COUNT(u.userId) FROM User u WHERE u.userRoles = ?1")
     int getCustomerCount(String userRole);
