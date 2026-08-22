@@ -1295,21 +1295,61 @@ $modalSave.on('click', function(){
     }
 
     if(type === 'stock'){
-        const data = {
-            name: $('#f_name').val().trim() || 'Unnamed Stock Item',
-            category: $('#f_category').val(),
-            unit: $('#f_unit').val(),
-            quantity: Number($('#f_quantity').val()) || 0,
-            reorderLevel: Number($('#f_reorderLevel').val()) || 0,
-        };
-        if(isEdit){
-            const idx = stockItems.findIndex(s=>s.id===id);
-            stockItems[idx] = {...stockItems[idx], ...data};
-            showToast('Stock item updated');
-        } else {
-            stockItems.unshift({id:nextStockId++, ...data});
-            showToast('Stock item added');
+
+        let itemName = $('#f_name').val().trim();
+        let categoryId = $('#f_category').val();
+        let unit = $('#f_unit').val();
+        let qty = Number($('#f_quantity').val()) || 0;
+        let reorderLevel =  Number($('#f_reorderLevel').val()) || 0;
+
+        if(!validateName(itemName)){ alert("INVALID COMPANY NAME"); $modalSave.prop('disabled', false); return; }
+        if(qty < 0){alert("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
+        if(reorderLevel < 0){alert("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
+
+        const obj = {
+            stockItemId : 0,
+            itemName : itemName,
+            stockItemCategoryId : categoryId,
+            stockQty : qty,
+            unitOfMeasure : unit,
+            reorderLevel : reorderLevel
         }
+
+        if(isEdit){
+            obj.stockItemId = id;
+        }
+
+        $.ajax({
+            url: "http://localhost:8080/v1/stockItem/saveStockItem",
+            type: "POST",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            data: JSON.stringify(obj),
+            success: function (response){
+                if(response.status === 200){
+                    if(isEdit){
+                        showToast('Stock Item Updated');
+                    }else{
+                        showToast('Stock Item Saved');
+                    }
+                    closeModal();
+                    renderAll();
+                }else{
+                    alert(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                if(e.message){
+                    alert(e.message);
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
 
     if(type === 'restock'){
