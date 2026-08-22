@@ -528,6 +528,57 @@
         }
         .check-chip.active{background:var(--espresso); border-color:var(--espresso); color:var(--cream-warm);}
 
+        /* ---- restock: add-item row + in-form line-items table ---- */
+        .restock-add-row{
+            display:grid;
+            grid-template-columns:2fr 1fr 1fr auto;
+            gap:10px;
+            align-items:center;
+        }
+        .restock-add-row .add-btn{white-space:nowrap;}
+        .restock-table-wrap{
+            border:1.5px solid var(--line);
+            border-radius:14px;
+            overflow:hidden;
+            margin-top:14px;
+        }
+        .restock-table{width:100%; border-collapse:collapse;}
+        .restock-table th{
+            background:var(--cream);
+            font-size:0.68rem;
+            text-transform:uppercase;
+            letter-spacing:0.06em;
+            font-weight:800;
+            color:var(--espresso-soft);
+            padding:10px 14px;
+            text-align:left;
+        }
+        .restock-table td{
+            padding:10px 14px;
+            font-size:0.85rem;
+            border-top:1px solid var(--line);
+        }
+        .restock-remove-btn{
+            color:var(--error);
+            font-weight:800;
+            font-size:0.76rem;
+            cursor:pointer;
+        }
+        .restock-remove-btn:hover{text-decoration:underline;}
+        .restock-total-row{
+            display:flex;
+            justify-content:flex-end;
+            align-items:baseline;
+            gap:8px;
+            margin-top:14px;
+            font-weight:800;
+            font-size:0.95rem;
+        }
+        .restock-total-row span{color:var(--terracotta-deep); font-family:'Fraunces',serif; font-size:1.1rem;}
+        @media (max-width:600px){
+            .restock-add-row{grid-template-columns:1fr;}
+        }
+
         .btn-secondary{
             flex:1;
             padding:14px;
@@ -669,6 +720,16 @@
             Suppliers
             <span class="nav-count" id="navCountSuppliers">0</span>
         </li>
+        <li class="nav-item" data-section="stock">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 8l9-5 9 5-9 5-9-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 8v8l9 5 9-5V8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 13v8" stroke="currentColor" stroke-width="1.8"/></svg></span>
+            Stock
+            <span class="nav-count" id="navCountStock">0</span>
+        </li>
+        <li class="nav-item" data-section="restock">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 4v6h6M20 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 15a8 8 0 0 0 14.1 3.4M19.5 9A8 8 0 0 0 5.4 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            Restock
+            <span class="nav-count" id="navCountRestock">0</span>
+        </li>
         <li class="nav-item" data-section="admins">
             <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8"/></svg></span>
             Admins
@@ -787,6 +848,26 @@
                 <table>
                     <thead><tr><th>Company</th><th>Contact Person</th><th>Email</th><th>Status</th><th></th></tr></thead>
                     <tbody id="suppliersBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= STOCK ITEMS ================= -->
+        <section class="section-panel" id="panel-stock">
+            <div class="table-card">
+                <table>
+                    <thead><tr><th>Stock Item</th><th>Category</th><th>Quantity</th><th>Reorder Level</th><th>Status</th><th></th></tr></thead>
+                    <tbody id="stockBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= RESTOCK ================= -->
+        <section class="section-panel" id="panel-restock">
+            <div class="table-card">
+                <table>
+                    <thead><tr><th>Restock ID</th><th>Supplier</th><th>Items</th><th>Total Cost</th><th>Date</th><th></th></tr></thead>
+                    <tbody id="restockBody"></tbody>
                 </table>
             </div>
         </section>

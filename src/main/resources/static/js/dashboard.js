@@ -1,6 +1,6 @@
 /* ============================================================
-       MOCK DATA
-       ============================================================ */
+   MOCK DATA
+   ============================================================ */
 let orders = [
     {id:'ORD-1042', customer:'Nadeesha Perera', items:'2x Butter Croissant, 1x Rose Cake', total:4100, status:'Pending', date:'2026-08-11'},
     {id:'ORD-1041', customer:'Kavindu Silva', items:'1x Berry Tart, 2x Latte', total:2190, status:'Preparing', date:'2026-08-11'},
@@ -19,8 +19,57 @@ let items = [
     {id:6, name:'Macaron Box (6)', category:'Gluten-Free', price:1150, stock:5, img:'https://images.unsplash.com/photo-1558326567-98ae2405596b?auto=format&fit=crop&w=200&q=80', badges:['Gluten-Free']},
 ];
 
+let suppliers = [
+    {id:1, name:'Colombo Flour Mills', category:'Flour & Grains', contact:'Ruwan Perera', phone:'+94 77 210 4455', email:'ruwan@cfm.lk', lastOrder:'2026-08-05', status:'Active'},
+    {id:2, name:'Hillside Dairy Co.', category:'Dairy & Eggs', contact:'Sanduni Weerasinghe', phone:'+94 71 664 2201', email:'sanduni@hillsidedairy.lk', lastOrder:'2026-08-08', status:'Active'},
+    {id:3, name:'Tropical Fruit Traders', category:'Fruit & Produce', contact:'Mohamed Rizwan', phone:'+94 76 330 9981', email:'rizwan@tft.lk', lastOrder:'2026-07-29', status:'Inactive'},
+    {id:4, name:'EcoBox Packaging', category:'Packaging', contact:'Nimali Gunasekara', phone:'+94 70 555 1123', email:'nimali@ecobox.lk', lastOrder:'2026-08-02', status:'Active'},
+    {id:5, name:'Ceylon Bean Roasters', category:'Beverages', contact:'Dinuka Wickrama', phone:'+94 77 890 3345', email:'dinuka@ceylonbean.lk', lastOrder:'2026-08-09', status:'Active'},
+];
+
+let stockItems = [
+    {id:1, name:'All-Purpose Flour', category:'Flour & Grains', unit:'kg', quantity:42, reorderLevel:15},
+    {id:2, name:'Unsalted Butter', category:'Dairy & Eggs', unit:'kg', quantity:8, reorderLevel:10},
+    {id:3, name:'Fresh Eggs', category:'Dairy & Eggs', unit:'dozen', quantity:0, reorderLevel:5},
+    {id:4, name:'Granulated Sugar', category:'Flour & Grains', unit:'kg', quantity:30, reorderLevel:12},
+    {id:5, name:'Fresh Strawberries', category:'Fruit & Produce', unit:'kg', quantity:6, reorderLevel:8},
+    {id:6, name:'Takeaway Boxes', category:'Packaging', unit:'pcs', quantity:210, reorderLevel:100},
+    {id:7, name:'Espresso Beans', category:'Beverages', unit:'kg', quantity:3, reorderLevel:6},
+];
+
+let restocks = [
+    {id:'RS-1001', supplier:'Colombo Flour Mills', date:'2026-08-05',
+        items:[{itemId:1, name:'All-Purpose Flour', unit:'kg', qty:50, price:180},
+            {itemId:4, name:'Granulated Sugar', unit:'kg', qty:30, price:210}],
+        total: 50*180 + 30*210},
+    {id:'RS-1002', supplier:'Hillside Dairy Co.', date:'2026-08-08',
+        items:[{itemId:2, name:'Unsalted Butter', unit:'kg', qty:20, price:1450}],
+        total: 20*1450},
+];
+
+let admins = [
+    {id:1, name:'Amaya Ranasinghe', email:'amaya@sugarandflour.lk', role:'Owner', status:'Active', lastActive:'Today'},
+    {id:2, name:'Kavindu Silva', email:'kavindu@sugarandflour.lk', role:'Manager', status:'Active', lastActive:'Yesterday'},
+    {id:3, name:'Ishara Fernando', email:'ishara@sugarandflour.lk', role:'Staff', status:'Invited', lastActive:'—'},
+];
+
+let customers = [
+    {id:1, name:'Nadeesha Perera', email:'nadeesha.p@gmail.com', phone:'+94 77 512 3344', orders:14, spent:28400, status:'Active', joined:'2025-11-02'},
+    {id:2, name:'Kavindu Rathnayake', email:'kavindu.r@gmail.com', phone:'+94 71 220 9987', orders:6, spent:9800, status:'Active', joined:'2026-01-15'},
+    {id:3, name:'Ishara Wickramasinghe', email:'ishara.w@gmail.com', phone:'+94 76 884 1122', orders:22, spent:41200, status:'Active', joined:'2025-08-20'},
+    {id:4, name:'Tharindu Jayasuriya', email:'tharindu.j@gmail.com', phone:'+94 70 663 5521', orders:2, spent:2700, status:'Blocked', joined:'2026-03-05'},
+];
+
 let nextOrderNum = 1043;
 let nextItemId = 7;
+let nextSupplierId = 6;
+let nextStockId = 8;
+let nextRestockNum = 1003;
+let nextAdminId = 4;
+let nextCustomerId = 5;
+
+/* holds the line items being built inside the open Restock form, before Save */
+let restockDraftItems = [];
 
 /* ============================================================
    NAVIGATION
@@ -30,6 +79,8 @@ const sections = {
     orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:'New Order', showSearch:true},
     items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item', showSearch:true},
     suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier', showSearch:true},
+    stock: {title:'Stock', sub:'Track raw ingredient inventory and reorder levels.', addLabel:'New Stock Item', showSearch:true},
+    restock: {title:'Restock', sub:'Log supplier restock orders and replenish inventory.', addLabel:'New Restock', showSearch:true},
     admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
     customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:null, showSearch:true},
 };
@@ -39,6 +90,7 @@ const statusOptionsMap = {
     orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
     items: ['In Stock','Low Stock','Out of Stock'],
     suppliers: ['Active','Inactive'],
+    stock: ['In Stock','Low Stock','Out of Stock'],
     admins: ['Active','Suspended'],
     customers: ['Active','Suspended'],
 };
@@ -91,18 +143,33 @@ function statusBadgeClass(status){
     return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',Cancelled:'badge-cancelled',
         ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',SUSPENDED:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
 }
+
 function roleBadgeClass(role){
     return {Admin:'badge-admin', Manager:'badge-manager', Driver:'badge-staff'}[role] || 'badge-staff';
 }
-function stockInfo(stock){
+
+function stockInfo(stock, reorderLevel){
     if(stock === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
-    if(stock <= 8) return {label:'Low Stock', cls:'badge-lowstock'};
+    if(stock <= reorderLevel) return {label:'Low Stock', cls:'badge-lowstock'};
     return {label:'In Stock', cls:'badge-instock'};
 }
+
+function stockLevelInfo(qty, reorderLevel){
+    if(qty === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
+    if(qty <= reorderLevel) return {label:'Low Stock', cls:'badge-lowstock'};
+    return {label:'In Stock', cls:'badge-instock'};
+}
+
 function showToast(msg){
     $('#toastMsg').text(msg);
     $('#toast').addClass('show');
     setTimeout(()=> $('#toast').removeClass('show'), 2200);
+}
+
+function spaceToUnderscore(str) {
+    return str
+        .trim()                 // Removes leading/trailing spaces
+        .replace(/\s+/g, '_');  // Replaces single or multiple consecutive spaces with a single underscore
 }
 
 /* ============================================================
@@ -238,7 +305,7 @@ function renderOverview(){
 
     const lowItems = items.filter(i=>i.stock<=8);
     $('#lowStockBody').html(lowItems.map(i => {
-        const info = stockInfo(i.stock);
+        const info = stockInfo(i.stock, 8);
         return `
     <tr>
       <td class="cell-main"><img class="cell-thumb" src="${i.img}" alt=""><span class="cell-title">${i.name}</span></td>
@@ -303,7 +370,7 @@ function renderItems(filter=''){
     const f = filter.toLowerCase();
     const rows = items.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
     $('#itemsBody').html(rows.map(i => {
-        const info = stockInfo(i.stock);
+        const info = stockInfo(i.stock, 8);
         return `
     <tr>
       <td class="cell-main"><img class="cell-thumb" src="${i.img}" alt=""><div><div class="cell-title">${i.name}</div><div class="cell-sub">${i.badges.join(', ') || 'No badges'}</div></div></td>
@@ -337,7 +404,6 @@ function renderSuppliers(filter=''){
         url: "http://localhost:8080/v1/supplier/filterSuppliers",
         type: 'GET',
         // contentType: 'application/json',
-        traditional: true,
         headers: {
             'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
         },
@@ -377,6 +443,109 @@ function renderSuppliers(filter=''){
             $('#suppliersBody').html(`<tr class="empty-row"><td colspan="5">No suppliers match your search.</td></tr>`);
         }
     });
+}
+
+
+/* ============================================================
+   RENDER: STOCK ITEM
+   ============================================================ */
+function renderStock(filter=''){
+    const f = filter.toLowerCase();
+
+    // convert In Stock -> In_Stock     otherwise sql won't filter status correctly
+    let statuses = new Set();
+    for(let s of activeStatuses){
+        statuses.add(spaceToUnderscore(s));
+    }
+
+    const obj = {
+        item_name : f,
+        category_name : f,
+        item_statuses : Array.from(statuses)      // SET
+    };
+
+    $.ajax({
+        url: "http://localhost:8080/v1/stockItem/filterStockItems",
+        type: "GET",
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function(response){
+            if(response.status === 200){
+                let html = '';
+                for(const s of response.body){
+                    const info = stockInfo(s.stockQty, s.reorderLevel);
+                    html += `<tr>
+                              <td class="cell-title">${s.itemName}</td>
+                              <td>${s.stockItemCategoryName}</td>
+                              <td>${s.stockQty} ${s.unitOfMeasure}</td>
+                              <td>${s.reorderLevel} ${s.unitOfMeasure}</td>
+                              <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
+                              <td>
+                                <div class="row-actions">
+                                  <button class="icon-btn" data-edit="stock" data-id="${s.stockItemId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                                </div>
+                              </td>
+                            </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No Stock Items match your search.</td></tr>`;
+                }
+                $('#stockBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                });
+            }
+            else{
+                alert(response.message);
+                $('#stockBody').html(`<tr class="empty-row"><td colspan="5">No Stock Items match your search.</td></tr>`);
+            }
+        },
+        error: function (response){
+            response.message ? alert(response.message) : alert("SERVER DOES NOT RESPONDED");
+            $('#stockBody').html(`<tr class="empty-row"><td colspan="5">No Stock Items match your search.</td></tr>`);
+        }
+    });
+}
+
+/* ============================================================
+   RENDER: RESTOCK (main section table)
+   ============================================================ */
+function renderRestock(filter=''){
+    const f = filter.toLowerCase();
+    const rows = restocks.filter(r => !f || r.id.toLowerCase().includes(f) || r.supplier.toLowerCase().includes(f));
+    $('#restockBody').html(rows.map(r => `
+    <tr>
+      <td class="cell-title">${r.id}</td>
+      <td>${r.supplier}</td>
+      <td>${r.items.length} item${r.items.length !== 1 ? 's' : ''}</td>
+      <td class="cell-title">${money(r.total)}</td>
+      <td>${r.date}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="restock" data-id="${r.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="icon-btn danger" data-delete="restock" data-id="${r.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="6">No restock records match your search.</td></tr>`);
+}
+
+/* renders the live line-items table INSIDE the open Restock form */
+function renderRestockDraftTable(){
+    const rows = restockDraftItems.map((it, idx) => `
+    <tr>
+      <td>${it.name}</td>
+      <td>${it.qty} ${it.unit}</td>
+      <td>${money(it.price)}</td>
+      <td>${money(it.qty * it.price)}</td>
+      <td><span class="restock-remove-btn" data-idx="${idx}">Remove</span></td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
+    $('#restockItemsBody').html(rows);
+    const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
+    $('#restockTotalDisplay').text(money(total));
 }
 
 /* ============================================================
@@ -507,6 +676,8 @@ function updateNavCounts(){
     $('#navCountOrders').text(orders.length);
     $('#navCountItems').text(items.length);
     updateSupplierCount();
+    $('#navCountStock').text(stockItems.length);
+    $('#navCountRestock').text(restocks.length);
     updateStaffCount();
     updateCustomerCount();
 }
@@ -577,6 +748,8 @@ function renderAll(){
     if(currentSection==='orders') renderOrders(q);
     if(currentSection==='items') renderItems(q);
     if(currentSection==='suppliers') renderSuppliers(q);
+    if(currentSection==='stock') renderStock(q);
+    if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
 }
@@ -586,6 +759,8 @@ $searchInput.on('input', function(){
     if(currentSection==='orders') renderOrders(q);
     if(currentSection==='items') renderItems(q);
     if(currentSection==='suppliers') renderSuppliers(q);
+    if(currentSection==='stock') renderStock(q);
+    if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
 });
@@ -667,6 +842,68 @@ function supplierFormHTML(s){
                 </div>
             </div>
         `;
+}
+
+function stockFormHTML(s){
+    s = s || {name:'', category:'Flour & Grains', unit:'kg', quantity:'', reorderLevel:''};
+    return `
+    <div class="field-group"><label>Item Name</label><input type="text" id="f_name" value="${s.name}" placeholder="e.g. All-Purpose Flour"></div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Category</label>
+        <select id="f_category">
+          ${['Flour & Grains','Dairy & Eggs','Fruit & Produce','Packaging','Beverages'].map(c=>`<option ${s.category===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group"><label>Unit</label>
+        <select id="f_unit">
+          ${['kg','g','L','ml','pcs','dozen'].map(u=>`<option ${s.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Quantity in Stock</label><input type="number" id="f_quantity" value="${s.quantity}" placeholder="0"></div>
+      <div class="field-group"><label>Reorder Level</label><input type="number" id="f_reorderLevel" value="${s.reorderLevel}" placeholder="0"></div>
+    </div>
+  `;
+}
+
+function restockFormHTML(r){
+    r = r || {supplier:'', date:new Date().toISOString().split('T')[0]};
+    return `
+    <div class="field-row-2">
+      <div class="field-group"><label>Supplier</label>
+        <select id="f_supplier">
+          <option value="">Select a supplier</option>
+          ${suppliers.map(s=>`<option value="${s.name}" ${r.supplier===s.name?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group"><label>Restock Date</label><input type="date" id="f_date" value="${r.date}"></div>
+    </div>
+ 
+    <div class="field-group">
+      <label>Add Item</label>
+      <div class="restock-add-row">
+        <select id="f_itemSelect">
+          <option value="">Select an item</option>
+          ${stockItems.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('')}
+        </select>
+        <input type="number" id="f_itemQty" placeholder="Qty" min="1">
+        <input type="number" id="f_itemPrice" placeholder="Price/Unit" min="0" step="0.01">
+        <button type="button" class="add-btn" id="addRestockItemBtn"><span class="plus">+</span> Add</button>
+      </div>
+    </div>
+ 
+    <div class="field-group">
+      <label>Restock Items</label>
+      <div class="restock-table-wrap">
+        <table class="restock-table">
+          <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th><th></th></tr></thead>
+          <tbody id="restockItemsBody"></tbody>
+        </table>
+      </div>
+      <div class="restock-total-row">Total: <span id="restockTotalDisplay">Rs. 0</span></div>
+    </div>
+  `;
 }
 
 function adminFormHTML(a, isEdit){
@@ -783,6 +1020,18 @@ function openForm(type, id){
         }
 
     }
+    if(type === 'stock'){
+        const record = isEdit ? stockItems.find(s=>s.id===id) : null;
+        $modalTitle.text(isEdit ? 'Edit Stock Item' : 'New Stock Item');
+        $modalBody.html(stockFormHTML(record));
+    }
+    if(type === 'restock'){
+        const record = isEdit ? restocks.find(r=>r.id===id) : null;
+        restockDraftItems = record ? record.items.map(it => ({...it})) : [];
+        $modalTitle.text(isEdit ? 'Edit Restock' : 'New Restock');
+        $modalBody.html(restockFormHTML(record));
+        renderRestockDraftTable();
+    }
     if(type === 'admin'){
         $modalTitle.text(isEdit ? 'Edit Admin' : 'New Admin');
         if(isEdit){
@@ -854,8 +1103,32 @@ $topAddBtn.on('click', function(){
     if(currentSection==='orders') openForm('order', null);
     if(currentSection==='items') openForm('item', null);
     if(currentSection==='suppliers') openForm('supplier', null);
+    if(currentSection==='stock') openForm('stock', null);
+    if(currentSection==='restock') openForm('restock', null);
     if(currentSection==='admins') openForm('admin', null);
     if(currentSection==='customers') openForm('customer', null);
+});
+
+/* ---- restock: add item to the in-form line-items table ---- */
+$(document).on('click', '#addRestockItemBtn', function(){
+    const itemId = Number($('#f_itemSelect').val());
+    const qty = Number($('#f_itemQty').val());
+    const price = Number($('#f_itemPrice').val());
+    if(!itemId || !qty || !price){ showToast('Select an item, quantity and price'); return; }
+    const item = stockItems.find(i => i.id === itemId);
+    if(!item) return;
+    restockDraftItems.push({itemId: item.id, name: item.name, unit: item.unit, qty, price});
+    renderRestockDraftTable();
+    $('#f_itemSelect').val('');
+    $('#f_itemQty').val('');
+    $('#f_itemPrice').val('');
+});
+
+/* ---- restock: remove a line item from the in-form table ---- */
+$(document).on('click', '.restock-remove-btn', function(){
+    const idx = Number($(this).data('idx'));
+    restockDraftItems.splice(idx, 1);
+    renderRestockDraftTable();
 });
 
 /* delegated edit buttons — bound once on document since rows are re-rendered */
@@ -972,6 +1245,42 @@ $modalSave.on('click', function(){
                 $modalSave.prop('disabled', false);
             }
         });
+    }
+
+    if(type === 'stock'){
+        const data = {
+            name: $('#f_name').val().trim() || 'Unnamed Stock Item',
+            category: $('#f_category').val(),
+            unit: $('#f_unit').val(),
+            quantity: Number($('#f_quantity').val()) || 0,
+            reorderLevel: Number($('#f_reorderLevel').val()) || 0,
+        };
+        if(isEdit){
+            const idx = stockItems.findIndex(s=>s.id===id);
+            stockItems[idx] = {...stockItems[idx], ...data};
+            showToast('Stock item updated');
+        } else {
+            stockItems.unshift({id:nextStockId++, ...data});
+            showToast('Stock item added');
+        }
+    }
+
+    if(type === 'restock'){
+        const supplier = $('#f_supplier').val();
+        const date = $('#f_date').val() || new Date().toISOString().split('T')[0];
+        if(!supplier){ showToast('Please select a supplier'); return; }
+        if(restockDraftItems.length === 0){ showToast('Add at least one item'); return; }
+        const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
+        const data = { supplier, date, items:[...restockDraftItems], total };
+        if(isEdit){
+            const idx = restocks.findIndex(r=>r.id===id);
+            restocks[idx] = {...restocks[idx], ...data};
+            showToast('Restock updated');
+        } else {
+            const newId = 'RS-' + (nextRestockNum++);
+            restocks.unshift({id:newId, ...data});
+            showToast('Restock recorded');
+        }
     }
 
     if(type === 'admin'){

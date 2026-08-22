@@ -12,7 +12,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -80,5 +83,30 @@ public class StockItemServiceImpl implements StockItemService {
         stockItem.setStockItemCategory(category);
 
         stockItemRepository.save(stockItem);
+    }
+
+    @Override
+    public List<StockItemDTO> filterStockItems(String itemName, String categoryName, Set<String> statuses) {
+        log.info("Executing Method Beverages()");
+
+        String[] statusList = null;
+        if(statuses != null){
+            statusList = statuses.toArray(String[]::new);
+        }
+        List<StockItemDTO> dtoList = new ArrayList<>();
+        List<StockItem> list =  stockItemRepository.filterStockItems(itemName, categoryName, statusList);
+        for(StockItem i : list){
+            StockItemDTO d = new StockItemDTO();
+            d.setStockItemId(i.getStockItemId());
+            d.setItemName(i.getItemName());
+            d.setStockQty(i.getStockQty());
+            d.setStockStatus(i.getStockStatus());
+            d.setStockItemCategoryName(i.getStockItemCategory().getCategoryName());
+            d.setReorderLevel(i.getReorderLevel());
+            d.setUnitOfMeasure(i.getUnitOfMeasure());
+
+            dtoList.add(d);
+        }
+        return dtoList;
     }
 }
