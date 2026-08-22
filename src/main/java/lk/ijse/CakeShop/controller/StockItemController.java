@@ -2,6 +2,7 @@ package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.StockItemDTO;
+import lk.ijse.CakeShop.dto.formDTOs.StockItemFormDTO;
 import lk.ijse.CakeShop.service.StockItemService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
@@ -33,6 +34,17 @@ public class StockItemController {
     ){
         List<StockItemDTO> list = stockItemService.filterStockItems(itemName, categoryName, itemStatuses);
         return new CommonResponse(200, list, SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getStockItemCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getStockItemCount(){
+        return new CommonResponse(200, stockItemService.getStockItemCount(), SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getStockItemFormInfo/{stockItemId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getStockItemFormInfo(@PathVariable long stockItemId){
+        StockItemFormDTO formDTO = stockItemService.getStockItemFormInfoByID(stockItemId);
+        return new CommonResponse(200, formDTO, SUCCESS_MESSAGE);
     }
 
 }

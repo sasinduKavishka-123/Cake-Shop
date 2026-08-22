@@ -17,4 +17,6 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
     )
     List<StockItem> filterStockItems(String itemName, String itemCategory, String[] itemStatuses);
 
+    @Query(value = "SELECT COUNT(si.stockItemId) FROM StockItem si")
+    int getStockItemCount();
 }

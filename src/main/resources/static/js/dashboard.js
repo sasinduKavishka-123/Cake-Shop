@@ -676,7 +676,7 @@ function updateNavCounts(){
     $('#navCountOrders').text(orders.length);
     $('#navCountItems').text(items.length);
     updateSupplierCount();
-    $('#navCountStock').text(stockItems.length);
+    updateStockItemCount();
     $('#navCountRestock').text(restocks.length);
     updateStaffCount();
     updateCustomerCount();
@@ -733,6 +733,24 @@ function updateSupplierCount(){
         success:function (response){
             if(response.status === 200){
                 $('#navCountSuppliers').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
+}
+
+function updateStockItemCount(){
+    $.ajax({
+        url: "http://localhost:8080/v1/stockItem/getStockItemCount",
+        type: "GET",
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                $('#navCountStock').text(response.body);
             }
             else{
                 alert(response.message);
@@ -845,23 +863,27 @@ function supplierFormHTML(s){
 }
 
 function stockFormHTML(s){
-    s = s || {name:'', category:'Flour & Grains', unit:'kg', quantity:'', reorderLevel:''};
+
+    if(!s.itemName){  s.itemName = ''; }
+    if(!s.stockQty){s.stockQty = ''}
+    if(!s.reorderLevel){s.reorderLevel = ''}
+
     return `
-    <div class="field-group"><label>Item Name</label><input type="text" id="f_name" value="${s.name}" placeholder="e.g. All-Purpose Flour"></div>
+    <div class="field-group"><label>Item Name</label><input type="text" id="f_name" value="${s.itemName}" placeholder="e.g. All-Purpose Flour"></div>
     <div class="field-row-2">
       <div class="field-group"><label>Category</label>
         <select id="f_category">
-          ${['Flour & Grains','Dairy & Eggs','Fruit & Produce','Packaging','Beverages'].map(c=>`<option ${s.category===c?'selected':''}>${c}</option>`).join('')}
+            ${(s.categoryList || []).map(c => `<option value="${c.categoryId}" ${s.stockItemCatDTO?.categoryName === c.categoryName ? 'selected' : ''}>${c.categoryName}</option>`).join('')}
         </select>
       </div>
       <div class="field-group"><label>Unit</label>
         <select id="f_unit">
-          ${['kg','g','L','ml','pcs','dozen'].map(u=>`<option ${s.unit===u?'selected':''}>${u}</option>`).join('')}
+          ${['Kg','g','L','ml','pcs','dozen'].map(u=>`<option ${s.unitOfMeasure===u?'selected':''}>${u}</option>`).join('')}
         </select>
       </div>
     </div>
     <div class="field-row-2">
-      <div class="field-group"><label>Quantity in Stock</label><input type="number" id="f_quantity" value="${s.quantity}" placeholder="0"></div>
+      <div class="field-group"><label>Quantity in Stock</label><input type="number" id="f_quantity" value="${s.stockQty}" placeholder="0"></div>
       <div class="field-group"><label>Reorder Level</label><input type="number" id="f_reorderLevel" value="${s.reorderLevel}" placeholder="0"></div>
     </div>
   `;
@@ -1021,9 +1043,34 @@ function openForm(type, id){
 
     }
     if(type === 'stock'){
-        const record = isEdit ? stockItems.find(s=>s.id===id) : null;
+        if(id === null){id = 0;}
         $modalTitle.text(isEdit ? 'Edit Stock Item' : 'New Stock Item');
-        $modalBody.html(stockFormHTML(record));
+
+        $.ajax({
+            url: "http://localhost:8080/v1/stockItem/getStockItemFormInfo/" + id,
+            type: "GET",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer ' + localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(stockFormHTML(response.body));
+                }
+                else {
+                    alert(response.message)
+                }
+            },
+            error: function (response){
+                if(response.message){
+                    alert(response.message);
+                }else {
+                    alert("UNEXPECTED ERROR");
+                }
+            }
+        });
+
+
     }
     if(type === 'restock'){
         const record = isEdit ? restocks.find(r=>r.id===id) : null;
