@@ -1143,6 +1143,7 @@ function openForm(type, id){
         })
     }
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
+    $formModal.toggleClass('modal-wide', type === 'restock');
     openModal();
 }
 

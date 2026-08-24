@@ -24,10 +24,8 @@ public class Restock {
     private Supplier supplier;
 
     @OneToMany(mappedBy = "restock", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<RestockDetail> restock;
+    private List<RestockDetail> restockDetails;
 
     private LocalDate date;
-    private int qty;
-    private BigDecimal pricePerUnit;
     private BigDecimal total;
 }

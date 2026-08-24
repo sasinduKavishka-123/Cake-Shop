@@ -401,6 +401,7 @@
             padding:18px 28px 26px;
             border-top:1px solid var(--line);
         }
+        .modal.modal-wide{width:min(720px,94vw);}
 
         .field-group{margin-bottom:18px;}
         .field-group label{
@@ -539,10 +540,12 @@
         .restock-table-wrap{
             border:1.5px solid var(--line);
             border-radius:14px;
-            overflow:hidden;
+            overflow-x:auto;
+            overflow-y:hidden;
+            -webkit-overflow-scrolling:touch;
             margin-top:14px;
         }
-        .restock-table{width:100%; border-collapse:collapse;}
+        .restock-table{width:100%; min-width:520px; border-collapse:collapse;}
         .restock-table th{
             background:var(--cream);
             font-size:0.68rem;
