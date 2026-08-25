@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -135,12 +136,34 @@ public class RestockServiceImpl implements RestockService {
         log.info("Executing Method getRestockFormData()");
         RestockFormDTO formDTO = new RestockFormDTO();
 
-        List<SupplierDTO> suppliers = supplierRepository.getSupplierIdAndName();
+        List<RestockDetailDTO> restockDetails = new ArrayList<>();
+        List<StockItemDTO> items = new ArrayList<>();
 
-        List<StockItemDTO> items = stockItemRepository.getItemIDAndName();
+        if(id > 0){
+            Restock r;
+            Optional<Restock> optionalRestock = restockRepository.findById(id);
+            if(optionalRestock.isEmpty()){
+                log.error("Error in Method getRestockFormData()");
+                throw new CustomException(404, "RESTOCK DETAIL NOT FOUND");
+            }
+            r = optionalRestock.get();
+
+            formDTO.setTotal(r.getTotal());
+            formDTO.setDate(r.getDate());
+            formDTO.setSupplierID(r.getSupplier().getSupplierId());
+
+            restockDetails = restockDetailRepository.getRestockDetailsByRestockId(id);
+
+            // get item data
+            items = stockItemRepository.getItemIDAndName();
+        }
+
+        // get supplier data
+        List<SupplierDTO> suppliers = supplierRepository.getSupplierIdAndName();
 
         formDTO.setSuppliers(suppliers);
         formDTO.setStockItems(items);
+        formDTO.setRestockDetails(restockDetails);
         return formDTO;
     }
 

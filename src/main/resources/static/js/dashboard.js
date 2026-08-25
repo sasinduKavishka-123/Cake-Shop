@@ -567,38 +567,35 @@ function renderRestock(filter=''){
             $('#restockBody').html(`<tr class="empty-row"><td colspan="5">No Restock Data match your search.</td></tr>`);
         }
     });
-
-    $('#restockBody').html(rows.map(r => `
-    <tr>
-      <td class="cell-title">${r.id}</td>
-      <td>${r.supplier}</td>
-      <td>${r.items.length} item${r.items.length !== 1 ? 's' : ''}</td>
-      <td class="cell-title">${money(r.total)}</td>
-      <td>${r.date}</td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="restock" data-id="${r.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="restock" data-id="${r.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="6">No restock records match your search.</td></tr>`);
 }
 
 /* renders the live line-items table INSIDE the open Restock form */
-function renderRestockDraftTable(){
-    const rows = restockDraftItems.map((it, idx) => `
-    <tr>
-      <td>${it.name}</td>
-      <td>${it.qty} ${it.unit}</td>
-      <td>${money(it.price)}</td>
-      <td>${money(it.qty * it.price)}</td>
-      <td><span class="restock-remove-btn" data-idx="${idx}">Remove</span></td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
+function renderRestockDraftTable(details, isEdit){
+    let rows = '';
+    if(isEdit){
+        rows = details.map((rd) => `
+          <tr>
+            <td>${rd.stockItemName}</td>
+            <td>${rd.qty} ${rd.unitOfMeasure}</td>
+            <td>${money(rd.pricePerUnit)}</td>
+            <td>${money(rd.qty * rd.pricePerUnit)}</td>
+          </tr>
+        `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
+    }
+    else{
+        rows = details.map((it, idx) => `
+          <tr>
+            <td>${it.name}</td>
+            <td>${it.qty} ${it.unit}</td>
+            <td>${money(it.price)}</td>
+            <td>${money(it.qty * it.price)}</td>
+            <td><span class="restock-remove-btn" data-idx="${idx}">Remove</span></td>
+          </tr>
+        `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
+    }
+
     $('#restockItemsBody').html(rows);
-    const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
-    $('#restockTotalDisplay').text(money(total));
+
 }
 
 /* ============================================================
@@ -844,6 +841,7 @@ const $modalScrim = $('#modalScrim');
 const $modalTitle = $('#modalTitle');
 const $modalBody = $('#modalBody');
 const $modalSave = $('#modalSave');
+const $modalPrint = $('#modalPrint');
 const $saveLabel = $('#saveLabel');
 
 let editContext = null; // {type, id or null}
@@ -942,43 +940,57 @@ function stockFormHTML(s){
   `;
 }
 
-function restockFormHTML(r){
-    r = r || {supplier:'', date:new Date().toISOString().split('T')[0]};
-    return `
-    <div class="field-row-2">
-      <div class="field-group"><label>Supplier</label>
-        <select id="f_supplier">
-          <option value="">Select a supplier</option>
-          ${suppliers.map(s=>`<option value="${s.name}" ${r.supplier===s.name?'selected':''}>${s.name}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field-group"><label>Restock Date</label><input type="date" id="f_date" value="${r.date}"></div>
-    </div>
- 
-    <div class="field-group">
-      <label>Add Item</label>
-      <div class="restock-add-row">
-        <select id="f_itemSelect">
-          <option value="">Select an item</option>
-          ${stockItems.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('')}
-        </select>
-        <input type="number" id="f_itemQty" placeholder="Qty" min="1">
-        <input type="number" id="f_itemPrice" placeholder="Price/Unit" min="0" step="0.01">
-        <button type="button" class="add-btn" id="addRestockItemBtn"><span class="plus">+</span> Add</button>
-      </div>
-    </div>
- 
-    <div class="field-group">
-      <label>Restock Items</label>
-      <div class="restock-table-wrap">
-        <table class="restock-table">
-          <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th><th></th></tr></thead>
-          <tbody id="restockItemsBody"></tbody>
-        </table>
-      </div>
-      <div class="restock-total-row">Total: <span id="restockTotalDisplay">Rs. 0</span></div>
-    </div>
-  `;
+function restockFormHTML(r, isEdit){
+    // r = r || {supplier:'', date:new Date().toISOString().split('T')[0]};
+
+    let total = r.total === null ? 0:r.total;
+
+    let tableTopics = '';       // change the detai table topics (remove button)
+    let disableText = '';       // change disable state
+
+    if(isEdit){ disableText = 'disabled'}
+
+    let html = `<div class="field-row-2">
+                          <div class="field-group"><label>Supplier</label>
+                            <select id="f_supplier" ${disableText}>
+                              <option value="">Select a supplier</option>
+                              ${r.suppliers.map(s=>`<option value="${s.supplierId}" ${r.supplierID===s.supplierId?'selected':''}>${s.companyName}</option>`).join('')}
+                            </select>
+                          </div>
+                          <div class="field-group"><label>Restock Date</label><input type="date" id="f_date" value="${r.date}" ${disableText}></div>
+                        </div>`;
+    if(!isEdit){
+        html += `<div class="field-group">
+                  <label>Add Item</label>
+                  <div class="restock-add-row">
+                    <select id="f_itemSelect">
+                      <option value="">Select an item</option>
+                      ${r.stockItems.map(i=>`<option value="${i.stockItemId}">${i.itemName} (${i.unitOfMeasure})</option>`).join('')}
+                    </select>
+                    <input type="number" id="f_itemQty" placeholder="Qty" min="1">
+                    <input type="number" id="f_itemPrice" placeholder="Price/Unit" min="0" step="0.01">
+                    <button type="button" class="add-btn" id="addRestockItemBtn"><span class="plus">+</span> Add</button>
+                  </div>
+                </div>`;
+
+        tableTopics = `<thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th><th></th></tr></thead>`;
+    }
+    else{
+        tableTopics = `<thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th></tr></thead>`;
+    }
+
+    html += `<div class="field-group">
+              <label>Restock Items</label>
+              <div class="restock-table-wrap">
+                <table class="restock-table">
+                  ${tableTopics}
+                  <tbody id="restockItemsBody"></tbody>
+                </table>
+              </div>
+              <div class="restock-total-row">Total: <span id="restockTotalDisplay">${money(total)}</span></div>
+            </div>`;
+
+    return html;
 }
 
 function adminFormHTML(a, isEdit){
@@ -1126,11 +1138,38 @@ function openForm(type, id){
 
     }
     if(type === 'restock'){
-        const record = isEdit ? restocks.find(r=>r.id===id) : null;
-        restockDraftItems = record ? record.items.map(it => ({...it})) : [];
-        $modalTitle.text(isEdit ? 'Edit Restock' : 'New Restock');
-        $modalBody.html(restockFormHTML(record));
-        renderRestockDraftTable();
+        // const record = isEdit ? restocks.find(r=>r.id===id) : null;
+        // restockDraftItems = record ? record.items.map(it => ({...it})) : [];
+        $modalTitle.text(isEdit ? 'Print Restock' : 'New Restock');
+
+        if(id === null){
+            id = 0;
+        }
+
+        $.ajax({
+            url:"http://localhost:8080/v1/restock/getRestockFormData/" + id,
+            type : "GET",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer ' + localStorage.getItem("JWT")
+            },
+            success: function(response){
+                if(response.status === 200){
+                    $modalBody.html(restockFormHTML(response.body, isEdit));
+                    renderRestockDraftTable(response.body.restockDetails, isEdit);
+                }
+                else {
+                    alert(response.message)
+                }
+            },
+            error: function (response){
+                if(response.message){
+                    alert(response.message);
+                }else {
+                    alert("UNEXPECTED ERROR");
+                }
+            }
+        });
     }
     if(type === 'admin'){
         $modalTitle.text(isEdit ? 'Edit Admin' : 'New Admin');
@@ -1195,8 +1234,18 @@ function openForm(type, id){
             }
         })
     }
+
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
     $formModal.toggleClass('modal-wide', type === 'restock');
+
+    if(type === 'restock' && isEdit){
+        $modalSave.hide();
+        $modalPrint.show();
+    } else {
+        $modalSave.show();
+        $modalPrint.hide();
+    }
+
     openModal();
 }
 
@@ -1230,6 +1279,53 @@ $(document).on('click', '.restock-remove-btn', function(){
     const idx = Number($(this).data('idx'));
     restockDraftItems.splice(idx, 1);
     renderRestockDraftTable();
+});
+
+/* ---- restock: print the current restock order ---- */
+$modalPrint.on('click', function(){
+    const restockId = (editContext && editContext.id) || '';
+    const supplier = $('#f_supplier').val() || '—';
+    const date = $('#f_date').val() || '—';
+    const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
+
+    const rowsHtml = restockDraftItems.map(it => `
+    <tr>
+      <td>${it.name}</td>
+      <td>${it.qty} ${it.unit}</td>
+      <td>${money(it.price)}</td>
+      <td>${money(it.qty * it.price)}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="4">No items on this restock order.</td></tr>`;
+
+    const printWin = window.open('', '_blank', 'width=800,height=900');
+    printWin.document.write(`
+    <html>
+    <head>
+      <title>Restock ${restockId}</title>
+      <style>
+        body{font-family: Arial, Helvetica, sans-serif; padding:36px; color:#3A2822;}
+        h1{font-size:1.4rem; margin-bottom:4px;}
+        p{margin:2px 0 20px; color:#6B5248;}
+        table{width:100%; border-collapse:collapse; margin-top:10px;}
+        th, td{padding:9px 12px; border:1px solid #ddd; text-align:left; font-size:0.9rem;}
+        th{background:#F5EFE4;}
+        tfoot td{font-weight:bold;}
+      </style>
+    </head>
+    <body>
+      <h1>Restock Order ${restockId}</h1>
+      <p>Supplier: ${supplier}<br>Date: ${date}</p>
+      <table>
+        <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+        <tfoot><tr><td colspan="3">Total</td><td>${money(total)}</td></tr></tfoot>
+      </table>
+    </body>
+    </html>
+  `);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 300);
 });
 
 /* delegated edit buttons — bound once on document since rows are re-rendered */

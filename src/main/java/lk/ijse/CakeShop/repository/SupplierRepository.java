@@ -23,7 +23,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
             "(?3 IS NULL OR str(s.supplierStatus) IN (?3))")
     List<SupplierDTO> filterSuppliers(String companyName, String contactName, String[] status);
 
-    @Query(value = "SELECT new lk.ijse.CakeShop.dto.SupplierDTO(s.supplierId, s.supplierName)" +
+    @Query(value = "SELECT new lk.ijse.CakeShop.dto.SupplierDTO(s.supplierId, s.companyName)" +
             "FROM Supplier s")
     List<SupplierDTO> getSupplierIdAndName();
 }
