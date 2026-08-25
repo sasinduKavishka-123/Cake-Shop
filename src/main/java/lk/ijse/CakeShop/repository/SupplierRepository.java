@@ -24,6 +24,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     List<SupplierDTO> filterSuppliers(String companyName, String contactName, String[] status);
 
     @Query(value = "SELECT new lk.ijse.CakeShop.dto.SupplierDTO(s.supplierId, s.companyName)" +
-            "FROM Supplier s")
+            "FROM Supplier s WHERE s.supplierStatus != 'INACTIVE'")
     List<SupplierDTO> getSupplierIdAndName();
 }

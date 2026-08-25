@@ -583,12 +583,12 @@ function renderRestockDraftTable(details, isEdit){
         `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
     }
     else{
-        rows = details.map((it, idx) => `
+        rows = details.map((rd, idx) => `
           <tr>
-            <td>${it.name}</td>
-            <td>${it.qty} ${it.unit}</td>
-            <td>${money(it.price)}</td>
-            <td>${money(it.qty * it.price)}</td>
+            <td>${rd.stockItemName}</td>
+            <td>${rd.qty}</td>
+            <td>${money(rd.pricePerUnit)}</td>
+            <td>${money(rd.qty * rd.pricePerUnit)}</td>
             <td><span class="restock-remove-btn" data-idx="${idx}">Remove</span></td>
           </tr>
         `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
@@ -847,7 +847,12 @@ const $saveLabel = $('#saveLabel');
 let editContext = null; // {type, id or null}
 
 function openModal(){ $formModal.addClass('show'); $modalScrim.addClass('show'); }
-function closeModal(){ $formModal.removeClass('show'); if(!$confirmModal.hasClass('show')) $modalScrim.removeClass('show'); $modalSave.prop('disabled', false);}
+function closeModal(){
+    $formModal.removeClass('show');
+    if(!$confirmModal.hasClass('show')) $modalScrim.removeClass('show');
+    $modalSave.prop('disabled', false);
+    restockDraftItems = [];
+}
 $('#modalClose').on('click', closeModal);
 $('#modalCancel').on('click', closeModal);
 
@@ -1259,16 +1264,39 @@ $topAddBtn.on('click', function(){
     if(currentSection==='customers') openForm('customer', null);
 });
 
+/* ---- restock: restrict price/unit to at most 2 decimal digits while typing ---- */
+$(document).on('input', '#f_itemPrice', function(){
+    const val = $(this).val();
+    const parts = val.split('.');
+    if(parts.length > 1 && parts[1].length > 2){
+        $(this).val(parts[0] + '.' + parts[1].slice(0, 2));
+    }
+});
+
 /* ---- restock: add item to the in-form line-items table ---- */
 $(document).on('click', '#addRestockItemBtn', function(){
     const itemId = Number($('#f_itemSelect').val());
     const qty = Number($('#f_itemQty').val());
-    const price = Number($('#f_itemPrice').val());
+    const price = Math.round(Number($('#f_itemPrice').val()) * 100) / 100;
     if(!itemId || !qty || !price){ showToast('Select an item, quantity and price'); return; }
-    const item = stockItems.find(i => i.id === itemId);
-    if(!item) return;
-    restockDraftItems.push({itemId: item.id, name: item.name, unit: item.unit, qty, price});
-    renderRestockDraftTable();
+
+    const item = {
+        stockItemId: Number($('#f_itemSelect').val()),
+        stockItemName: $('#f_itemSelect option:selected').text(),
+        pricePerUnit: price,
+        qty: qty
+    }
+
+    restockDraftItems.push(item);
+
+    // update total value
+    let total = 0;
+    for (let i of restockDraftItems) {
+        total += (i.pricePerUnit * i.qty);
+    }
+    $('#restockTotalDisplay').text(money(total));
+
+    renderRestockDraftTable(restockDraftItems, false);
     $('#f_itemSelect').val('');
     $('#f_itemQty').val('');
     $('#f_itemPrice').val('');
@@ -1278,7 +1306,15 @@ $(document).on('click', '#addRestockItemBtn', function(){
 $(document).on('click', '.restock-remove-btn', function(){
     const idx = Number($(this).data('idx'));
     restockDraftItems.splice(idx, 1);
-    renderRestockDraftTable();
+
+    // update total value
+    let total = 0;
+    for (let i of restockDraftItems) {
+        total += (i.pricePerUnit * i.qty);
+    }
+    $('#restockTotalDisplay').text(money(total));
+
+    renderRestockDraftTable(restockDraftItems, false);
 });
 
 /* ---- restock: print the current restock order ---- */
@@ -1390,13 +1426,13 @@ $modalSave.on('click', function(){
         let email = $('#f_email').val().trim();
         let status = $('#f_status').val().toUpperCase();
 
-        if(!validateName(companyName)){ alert("INVALID COMPANY NAME"); $modalSave.prop('disabled', false); return; }
-        if(!validateName(contactPersonName)){ alert("INVALID PERSON NAME"); $modalSave.prop('disabled', false); return; }
-        if(!validEmail(email)){ alert("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
-        if(!validatePhoneNumber(phone)){ alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+        if(!validateName(companyName)){ showToast("INVALID COMPANY NAME"); $modalSave.prop('disabled', false); return; }
+        if(!validateName(contactPersonName)){ showToast("INVALID PERSON NAME"); $modalSave.prop('disabled', false); return; }
+        if(!validEmail(email)){ showToast("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
+        if(!validatePhoneNumber(phone)){ showToast("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
         phone = formatPhoneNumber(phone);
-        if(!phone){alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+        if(!phone){showToast("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
         const obj = {
             supplierId : 0,
@@ -1452,9 +1488,9 @@ $modalSave.on('click', function(){
         let qty = Number($('#f_quantity').val()) || 0;
         let reorderLevel =  Number($('#f_reorderLevel').val()) || 0;
 
-        if(!validateName(itemName)){ alert("INVALID COMPANY NAME"); $modalSave.prop('disabled', false); return; }
-        if(qty < 0){alert("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
-        if(reorderLevel < 0){alert("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
+        if(!validateName(itemName)){ showToast("INVALID COMPANY NAME"); $modalSave.prop('disabled', false); return; }
+        if(qty < 0){showToast("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
+        if(reorderLevel < 0){showToast("INVALID STOCK QUANTITY"); $modalSave.prop('disabled', false); return;}
 
         const obj = {
             stockItemId : 0,
@@ -1504,20 +1540,48 @@ $modalSave.on('click', function(){
 
     if(type === 'restock'){
         const supplier = $('#f_supplier').val();
-        const date = $('#f_date').val() || new Date().toISOString().split('T')[0];
-        if(!supplier){ showToast('Please select a supplier'); return; }
-        if(restockDraftItems.length === 0){ showToast('Add at least one item'); return; }
-        const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
-        const data = { supplier, date, items:[...restockDraftItems], total };
-        if(isEdit){
-            const idx = restocks.findIndex(r=>r.id===id);
-            restocks[idx] = {...restocks[idx], ...data};
-            showToast('Restock updated');
-        } else {
-            const newId = 'RS-' + (nextRestockNum++);
-            restocks.unshift({id:newId, ...data});
-            showToast('Restock recorded');
+        const date = $('#f_date').val(); // || new Date().toISOString().split('T')[0];
+
+        if(!supplier){ showToast('Please select a supplier'); $modalSave.prop('disabled', false); return; }
+        if(!date){ showToast('Please select a date'); $modalSave.prop('disabled', false); return; }
+        if(restockDraftItems.length === 0){ showToast('Add at least one item'); $modalSave.prop('disabled', false); return; }
+
+        const obj ={
+            restockId : 0,
+            supplierId : supplier,
+            date : date,
+            total :0,
+            restockDetailDTOList : restockDraftItems
         }
+
+        $.ajax({
+            url: "http://localhost:8080/v1/restock/saveRestock",
+            type: "POST",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            data: JSON.stringify(obj),
+            success: function(response){
+                if(response.status === 200){
+                    showToast('Restock Data Created');
+                    restockDraftItems = [];
+                    closeModal();
+                    renderAll();
+                }else{
+                    alert(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (response){
+                if(response.message){
+                    alert(response.message);
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
 
     if(type === 'admin'){
@@ -1525,12 +1589,12 @@ $modalSave.on('click', function(){
         let email = $('#f_email').val().trim();
         let contact = $('#f_phone').val().trim();
 
-        if(!validateName(name)){ alert("INVALID NAME"); $modalSave.prop('disabled', false); return; }
-        if(!validEmail(email)){ alert("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
-        if(!validatePhoneNumber(contact)){ alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+        if(!validateName(name)){ showToast("INVALID NAME"); $modalSave.prop('disabled', false); return; }
+        if(!validEmail(email)){ showToast("INVALID EMAIL"); $modalSave.prop('disabled', false); return; }
+        if(!validatePhoneNumber(contact)){ showToast("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
         contact = formatPhoneNumber(contact);
-        if(!contact){alert("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
+        if(!contact){showToast("INVALID CONTACT"); $modalSave.prop('disabled', false); return;}
 
         if(!isEdit){
             const passOk = validatePasswordStrength();

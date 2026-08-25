@@ -153,7 +153,8 @@ public class RestockServiceImpl implements RestockService {
             formDTO.setSupplierID(r.getSupplier().getSupplierId());
 
             restockDetails = restockDetailRepository.getRestockDetailsByRestockId(id);
-
+        }
+        else{
             // get item data
             items = stockItemRepository.getItemIDAndName();
         }
