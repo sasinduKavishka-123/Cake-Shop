@@ -19,4 +19,8 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     @Query(value = "SELECT COUNT(si.stockItemId) FROM StockItem si")
     int getStockItemCount();
+
+    @Query(value = "SELECT new lk.ijse.CakeShop.dto.StockItemDTO(s.stockItemId, s.itemName, s.unitOfMeasure)" +
+            "FROM StockItem s")
+    List<StockItemDTO> getItemIDAndName();
 }

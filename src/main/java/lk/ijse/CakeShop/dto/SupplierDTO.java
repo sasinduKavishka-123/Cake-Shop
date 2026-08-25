@@ -16,4 +16,9 @@ public class SupplierDTO {
     private String contact;
     private String email;
     private SupplierStatus supplierStatus;
+
+    public SupplierDTO(long supplierId, String companyName) {
+        this.supplierId = supplierId;
+        this.companyName = companyName;
+    }
 }

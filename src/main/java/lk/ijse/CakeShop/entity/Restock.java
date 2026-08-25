@@ -26,6 +26,7 @@ public class Restock {
     @OneToMany(mappedBy = "restock", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<RestockDetail> restockDetails;
 
+    private int itemsCount;
     private LocalDate date;
     private BigDecimal total;
 }

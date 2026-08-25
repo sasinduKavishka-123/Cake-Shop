@@ -13,10 +13,12 @@ import java.util.List;
 @Data
 public class RestockDTO {
 
-    private long        restockId;
-    private long        supplierId;
-    private LocalDate   date;
-    private BigDecimal  total;
+    private long restockId;
+    private long supplierId;
+    private String supplierName;
+    private LocalDate date;
+    private BigDecimal total;
+    private int itemCount;
 
     private List<RestockDetailDTO> restockDetailDTOList;
 
@@ -25,5 +27,13 @@ public class RestockDTO {
         this.supplierId = supplierId;
         this.date = date;
         this.restockDetailDTOList = restockDetailDTOList;
+    }
+
+    public RestockDTO(long restockId, String supplierName, LocalDate date, BigDecimal total, int itemCount) {
+        this.restockId = restockId;
+        this.supplierName = supplierName;
+        this.date = date;
+        this.total = total;
+        this.itemCount = itemCount;
     }
 }

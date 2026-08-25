@@ -2,6 +2,9 @@ package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.RestockDTO;
 import lk.ijse.CakeShop.dto.RestockDetailDTO;
+import lk.ijse.CakeShop.dto.StockItemDTO;
+import lk.ijse.CakeShop.dto.SupplierDTO;
+import lk.ijse.CakeShop.dto.formDTOs.RestockFormDTO;
 import lk.ijse.CakeShop.entity.Restock;
 import lk.ijse.CakeShop.entity.RestockDetail;
 import lk.ijse.CakeShop.entity.StockItem;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -80,15 +84,20 @@ public class RestockServiceImpl implements RestockService {
         }
 
         BigDecimal total = BigDecimal.ZERO;
+        int itemCount = 0;
         for(RestockDetailDTO r : restockDTO.getRestockDetailDTOList()){
             BigDecimal val = r.getPricePerUnit().multiply(BigDecimal.valueOf(r.getQty()));
             total = total.add(val);
+
+            // increase item count
+            itemCount++;
         }
 
         restock.setDate(restockDTO.getDate());
         restock.setSupplier(supplier);
         restock.setTotal(restockDTO.getTotal());
         restock.setTotal(total);
+        restock.setItemsCount(itemCount);
 
         Restock savedRestock = restockRepository.save(restock);
 
@@ -119,5 +128,24 @@ public class RestockServiceImpl implements RestockService {
             restockDetailRepository.save(rd);
         }
 
+    }
+
+    @Override
+    public RestockFormDTO getRestockFormData(long id) {
+        log.info("Executing Method getRestockFormData()");
+        RestockFormDTO formDTO = new RestockFormDTO();
+
+        List<SupplierDTO> suppliers = supplierRepository.getSupplierIdAndName();
+
+        List<StockItemDTO> items = stockItemRepository.getItemIDAndName();
+
+        formDTO.setSuppliers(suppliers);
+        formDTO.setStockItems(items);
+        return formDTO;
+    }
+
+    @Override
+    public List<RestockDTO> filterRestock(String restockId, String supplierName) {
+        return restockRepository.filterRestock(restockId, supplierName);
     }
 }

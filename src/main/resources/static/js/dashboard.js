@@ -514,7 +514,60 @@ function renderStock(filter=''){
    ============================================================ */
 function renderRestock(filter=''){
     const f = filter.toLowerCase();
-    const rows = restocks.filter(r => !f || r.id.toLowerCase().includes(f) || r.supplier.toLowerCase().includes(f));
+
+    const obj = {
+        restock_id: f,
+        supplier_name: f
+    }
+
+    $.ajax({
+        url:"http://localhost:8080/v1/restock/filterRestock",
+        type:"GET",
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (response){
+            if(response.status === 200){
+                let html = '';
+                for(const r of response.body){
+                    html += `<tr>
+                              <td class="cell-title">${r.restockId}</td>
+                              <td>${r.supplierName}</td>
+                              <td>${r.itemCount} item${r.itemCount !== 1 ? 's' : ''}</td>
+                              <td class="cell-title">${money(r.total)}</td>
+                              <td>${r.date}</td>
+                              <td>
+                                <div class="row-actions">
+                                  <button class="icon-btn" data-edit="restock" data-id="${r.restockId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                                </div>
+                              </td>
+                            </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No Restock Data match your search.</td></tr>`;
+                }
+                $('#restockBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                });
+            }
+            else{
+                alert(response.message);
+                $('#restockBody').html(`<tr class="empty-row"><td colspan="5">No Restock Data match your search.</td></tr>`);
+            }
+        },
+        error: function (response){
+            if(response.message){
+                alert(response.message);
+            }
+            else{
+                alert("UNEXPECTED ERROR");
+            }
+            $('#restockBody').html(`<tr class="empty-row"><td colspan="5">No Restock Data match your search.</td></tr>`);
+        }
+    });
+
     $('#restockBody').html(rows.map(r => `
     <tr>
       <td class="cell-title">${r.id}</td>
