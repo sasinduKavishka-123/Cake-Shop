@@ -911,7 +911,7 @@ function supplierFormHTML(s){
                 <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${s.contact}" placeholder="+94771234567"></div>
                 <div class="field-group"><label>Status</label>
                     <select id="f_status">
-                        ${['Active','Inactive'].map(v=>`<option ${s.supplierStatus===v?'selected':''}>${v}</option>`).join('')}
+                        ${['ACTIVE','INACTIVE'].map(v=>`<option ${s.supplierStatus===v?'selected':''}>${v}</option>`).join('')}
                     </select>
                 </div>
             </div>
