@@ -18,7 +18,7 @@ public class Discount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long discount_id;
 
-    @Column(precision = 3, scale = 2)
+    @Column(precision = 5, scale = 2)
     private BigDecimal discountRate;
 
     @OneToMany(mappedBy = "discount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
