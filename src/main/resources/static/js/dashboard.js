@@ -88,7 +88,7 @@ let currentSection = 'overview';
 
 const statusOptionsMap = {
     orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
-    items: ['In Stock','Low Stock','Out of Stock'],
+    items: ['Gluten-Free','Nut-Free','Vegan'],
     suppliers: ['Active','Inactive'],
     stock: ['In Stock','Low Stock','Out of Stock'],
     admins: ['Active','Suspended'],
@@ -151,12 +151,6 @@ function roleBadgeClass(role){
 function stockInfo(stock, reorderLevel){
     if(stock === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
     if(stock <= reorderLevel) return {label:'Low Stock', cls:'badge-lowstock'};
-    return {label:'In Stock', cls:'badge-instock'};
-}
-
-function stockLevelInfo(qty, reorderLevel){
-    if(qty === 0) return {label:'Out of Stock', cls:'badge-outofstock'};
-    if(qty <= reorderLevel) return {label:'Low Stock', cls:'badge-lowstock'};
     return {label:'In Stock', cls:'badge-instock'};
 }
 
@@ -368,7 +362,10 @@ function renderOrders(filter=''){
    ============================================================ */
 function renderItems(filter=''){
     const f = filter.toLowerCase();
-    const rows = items.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
+    // const rows = items.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
+
+
+
     $('#itemsBody').html(rows.map(i => {
         const info = stockInfo(i.stock, 8);
         return `
@@ -444,7 +441,6 @@ function renderSuppliers(filter=''){
         }
     });
 }
-
 
 /* ============================================================
    RENDER: STOCK ITEM
@@ -1264,16 +1260,26 @@ $topAddBtn.on('click', function(){
     if(currentSection==='customers') openForm('customer', null);
 });
 
-/* ---- restock: restrict price/unit to at most 2 decimal digits while typing ---- */
-$(document).on('input', '#f_itemPrice', function(){
-    const val = $(this).val();
-    const parts = val.split('.');
-    if(parts.length > 1 && parts[1].length > 2){
-        $(this).val(parts[0] + '.' + parts[1].slice(0, 2));
-    }
+// item: restrict price/unit to at most 2 decimal digits while typing
+$(document).on('input', '#f_price', function(){
+    validatePriceInput($(this));
 });
 
-/* ---- restock: add item to the in-form line-items table ---- */
+// restock: restrict price/unit to at most 2 decimal digits while typing
+$(document).on('input', '#f_itemPrice', function(){
+    validatePriceInput($(this));
+});
+
+// prevent input from typing mor than 2 decimal digits
+const validatePriceInput = function(element){
+    const val = element.val();
+    const parts = val.split('.');
+    if(parts.length > 1 && parts[1].length > 2){
+        element.val(parts[0] + '.' + parts[1].slice(0, 2));
+    }
+}
+
+// restock: add item to the in-form line-items table
 $(document).on('click', '#addRestockItemBtn', function(){
     const itemId = Number($('#f_itemSelect').val());
     const qty = Number($('#f_itemQty').val());
@@ -1302,7 +1308,7 @@ $(document).on('click', '#addRestockItemBtn', function(){
     $('#f_itemPrice').val('');
 });
 
-/* ---- restock: remove a line item from the in-form table ---- */
+// restock: remove a line item from the in-form table
 $(document).on('click', '.restock-remove-btn', function(){
     const idx = Number($(this).data('idx'));
     restockDraftItems.splice(idx, 1);

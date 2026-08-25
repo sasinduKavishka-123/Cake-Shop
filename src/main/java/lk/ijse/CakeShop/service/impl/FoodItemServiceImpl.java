@@ -13,7 +13,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -50,7 +53,7 @@ public class FoodItemServiceImpl implements FoodItemService {
         FoodItem foodItem = new FoodItem();
 
         if(foodItemDTO.getFoodItemId() > 0){
-            Optional<FoodItem> optionalFoodItem = foodItemRepository.findById(foodItem.getFoodItemId());
+            Optional<FoodItem> optionalFoodItem = foodItemRepository.findById(foodItemDTO.getFoodItemId());
             if(optionalFoodItem.isEmpty()){
                 log.error("Error in Method saveFoodItem()");
                 throw new CustomException(404, "FOOD ITEM NOT FOUND");
@@ -78,7 +81,30 @@ public class FoodItemServiceImpl implements FoodItemService {
         foodItem.setDiscount(discount);
         foodItem.setImagePath(foodItemDTO.getImagePath());
         foodItem.setDescription(foodItemDTO.getDescription());
+        foodItem.setBadges(foodItemDTO.getBadges());
 
         foodItemRepository.save(foodItem);
+    }
+
+    @Override
+    public List<FoodItemDTO> filterFoodItems(String itemName, String itemCategory, List<String> badges) {
+        log.info("Executing Method filterFoodItems()");
+
+        List<FoodItem> foodItems = foodItemRepository.filterFoodItems(itemName, itemCategory, badges);
+        List<FoodItemDTO> dtoList = new ArrayList<>();
+        for(FoodItem f : foodItems){
+            FoodItemDTO dto = new FoodItemDTO();
+            dto.setFoodItemId(f.getFoodItemId());
+            dto.setFoodItemName(f.getFoodItemName());
+            dto.setDescription(f.getDescription());
+            dto.setBadges(f.getBadges());
+            dto.setPrice(f.getPrice());
+            dto.setDiscountId(f.getDiscount().getDiscount_id());
+            dto.setFoodItemCategoryId(f.getFoodItemCategory().getCategoryId());
+            dto.setImagePath(f.getImagePath());
+
+            dtoList.add(dto);
+        }
+        return dtoList;
     }
 }

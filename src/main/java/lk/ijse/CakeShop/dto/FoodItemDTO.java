@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,5 +22,7 @@ public class FoodItemDTO {
     private long discountId;
     private Double discount;
     private String foodItemCategory;
+    private String badges;
+    private List<String> badgesList;
 
 }

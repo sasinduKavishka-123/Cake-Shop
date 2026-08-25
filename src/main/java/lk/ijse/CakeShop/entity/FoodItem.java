@@ -34,4 +34,5 @@ public class FoodItem {
     private BigDecimal price;
     private String description;
     private String imagePath;
+    private String badges;
 }
