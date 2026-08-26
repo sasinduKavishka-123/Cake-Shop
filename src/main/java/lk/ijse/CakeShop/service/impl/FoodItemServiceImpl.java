@@ -1,6 +1,9 @@
 package lk.ijse.CakeShop.service.impl;
 
+import lk.ijse.CakeShop.dto.DiscountDTO;
+import lk.ijse.CakeShop.dto.FoodItemCategoryDTO;
 import lk.ijse.CakeShop.dto.FoodItemDTO;
+import lk.ijse.CakeShop.dto.formDTOs.FoodItemFormDTO;
 import lk.ijse.CakeShop.entity.Discount;
 import lk.ijse.CakeShop.entity.FoodItem;
 import lk.ijse.CakeShop.entity.FoodItemCategory;
@@ -13,10 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -50,10 +50,12 @@ public class FoodItemServiceImpl implements FoodItemService {
             foodItemDTO.setDiscountId(1);       // 0 discount rate
         }
 
-        FoodItem foodItemByName = foodItemRepository.findFoodItemByName(foodItemDTO.getFoodItemName());
-        if(foodItemByName != null){
-            log.error("Error in Method saveFoodItem()");
-            throw new CustomException(400, "FOOD ITEM ALREADY EXIST");
+        if(foodItemDTO.getFoodItemId() < 1){
+            FoodItem foodItemByName = foodItemRepository.findFoodItemByName(foodItemDTO.getFoodItemName());
+            if(foodItemByName != null){
+                log.error("Error in Method saveFoodItem()");
+                throw new CustomException(400, "FOOD ITEM ALREADY EXIST");
+            }
         }
 
         FoodItem foodItem = new FoodItem();
@@ -117,5 +119,46 @@ public class FoodItemServiceImpl implements FoodItemService {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    @Override
+    public int getFoodItemCount() {
+        log.info("Executing Method getFoodItemCount()");
+        return foodItemRepository.getFoodItemCount();
+    }
+
+    @Override
+    public FoodItemFormDTO getFoodItemFormData(long id) {
+        log.info("Executing Method getFoodItemFormData()");
+
+        FoodItemFormDTO formDTO = new FoodItemFormDTO();
+        FoodItem foodItem = new FoodItem();
+
+        if(id > 0){
+            Optional<FoodItem> optionalFoodItem = foodItemRepository.findById(id);
+            if(optionalFoodItem.isEmpty()){
+                log.error("Error in Method getFoodItemFormData()");
+                throw new CustomException(404, "ITEM NOT FOUND");
+            }
+            foodItem = optionalFoodItem.get();
+
+            formDTO.setFoodItemId(foodItem.getFoodItemId());
+            formDTO.setFoodItemName(foodItem.getFoodItemName());
+            formDTO.setFoodItemCategoryId(foodItem.getFoodItemCategory().getCategoryId());
+            formDTO.setDiscountId(foodItem.getDiscount().getDiscount_id());
+            formDTO.setDescription(foodItem.getDescription());
+            formDTO.setPrice(foodItem.getPrice());
+            formDTO.setImagePath(foodItem.getImagePath());
+            formDTO.setBadgesList(Arrays.asList(foodItem.getBadges().split(",")));
+        }
+
+        // for dropdown options -----------------------
+        List<FoodItemCategoryDTO> categoryList = foodItemCategoryRepository.getAllCategories();
+        List<DiscountDTO> discountList = discountRepository.getAllDiscounts();
+
+        formDTO.setItemCategorList(categoryList);
+        formDTO.setDiscountList(discountList);
+
+        return formDTO;
     }
 }

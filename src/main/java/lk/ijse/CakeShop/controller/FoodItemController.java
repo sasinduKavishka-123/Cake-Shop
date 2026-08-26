@@ -35,4 +35,14 @@ public class FoodItemController {
         return new CommonResponse(200, foodItemDTOList, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getFoodItemCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getFoodItemCount(){
+        return new CommonResponse(200, foodItemService.getFoodItemCount(), SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getFoodItemFormDate/{food_item_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getFoodItemFormData(@PathVariable long food_item_id){
+        return new CommonResponse(200, foodItemService.getFoodItemFormData(food_item_id), SUCCESS_MESSAGE);
+    }
+
 }

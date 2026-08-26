@@ -35,6 +35,7 @@ public class FoodItem {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
     private String description;
+    @Column(name = "image_path", length = 1000)
     private String imagePath;
     private String badges;
 }

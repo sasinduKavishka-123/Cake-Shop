@@ -754,7 +754,7 @@ function renderCustomers(filter=''){
    ============================================================ */
 function updateNavCounts(){
     $('#navCountOrders').text(orders.length);
-    $('#navCountItems').text(items.length);
+    updateFoodItemCount();
     updateSupplierCount();
     updateStockItemCount();
     updateRestockCount();
@@ -857,6 +857,24 @@ function updateRestockCount(){
     });
 }
 
+function updateFoodItemCount(){
+    $.ajax({
+        url: "http://localhost:8080/v1/foodItems/getFoodItemCount",
+        type: "GET",
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                $('#navCountItems').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
+}
+
 function renderAll(){
     updateNavCounts();
     const q = $searchInput.val();
@@ -922,25 +940,40 @@ function orderFormHTML(o){
 }
 
 function itemFormHTML(i){
-    i = i || {name:'', category:'Signature Cakes', price:'', stock:'', img:'', badges:[]};
+    if(i.foodItemName === null){
+        i.foodItemName = '';
+        i.description = '';
+        i.imagePath = '';
+    }
+
     const allBadges = ['Vegan','Nut-Free','Gluten-Free'];
+
+    if(i.badgesList === null){
+        i.badgesList = [];
+    }
+
     return `
-    <div class="field-group"><label>Item Name</label><input type="text" id="f_name" value="${i.name}" placeholder="e.g. Berry Fruit Tart"></div>
+    <div class="field-group"><label>Item Name</label><input type="text" id="f_name" value="${i.foodItemName}" placeholder="e.g. Berry Fruit Tart"></div>
     <div class="field-row-2">
       <div class="field-group"><label>Category</label>
         <select id="f_category">
-          ${['Signature Cakes','Tarts','Croissants','Gluten-Free','Drinks'].map(c=>`<option ${i.category===c?'selected':''}>${c}</option>`).join('')}
+          ${i.itemCategorList.map(c=>`<option value="${c.foodItemCatID}" ${i.foodItemCategoryId===c.foodItemCatID?'selected':''}>${c.foodItemCatName}</option>`).join('')}
         </select>
       </div>
       <div class="field-group"><label>Price (Rs.)</label><input type="number" id="f_price" value="${i.price}" placeholder="0"></div>
     </div>
     <div class="field-row-2">
-      <div class="field-group"><label>Stock (units)</label><input type="number" id="f_stock" value="${i.stock}" placeholder="0"></div>
-      <div class="field-group"><label>Image URL</label><input type="url" id="f_img" value="${i.img}" placeholder="https://..."></div>
+      <div class="field-group"><label>Discount</label>
+        <select id="f_discount">
+          ${i.discountList.map(d=>`<option value="${d.discountId}" ${i.discountId===d.discountId?'selected':''}>${d.discountRate} %</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group"><label>Image URL</label><input type="url" id="f_img" value="${i.imagePath}" placeholder="https://..."><a href="#" id="getImagesLink" class="get-images-link">🔍 Get images</a></div>
     </div>
+    <div class="field-group"><label>Item Description</label><input type="text" id="f_description" value="${i.description}" placeholder="e.g. Description the about food item"></div>
     <div class="field-group"><label>Dietary Badges</label>
       <div class="check-row" id="badgeChips">
-        ${allBadges.map(b=>`<div class="check-chip ${i.badges.includes(b)?'active':''}" data-badge="${b}">${b}</div>`).join('')}
+        ${allBadges.map(b=>`<div class="check-chip ${i.badgesList.includes(b)?'active':''}" data-badge="${b}">${b}</div>`).join('')}
       </div>
     </div>
   `;
@@ -1117,6 +1150,13 @@ $(document).on('click', '#badgeChips .check-chip', function(){
     $(this).toggleClass('active');
 });
 
+/* "get images" link in the item form — opens an Unsplash search for the item name */
+$(document).on('click', '#getImagesLink', function(e){
+    e.preventDefault();
+    const query = $('#f_name').val().trim() || $('#f_category').val() || 'bakery pastry';
+    window.open('https://unsplash.com/s/photos/' + encodeURIComponent(query), '_blank');
+});
+
 function openForm(type, id){
     editContext = {type, id};
     const isEdit = id !== null && id !== undefined;
@@ -1127,9 +1167,31 @@ function openForm(type, id){
         $modalBody.html(orderFormHTML(record));
     }
     if(type === 'item'){
-        const record = isEdit ? items.find(i=>i.id===id) : null;
         $modalTitle.text(isEdit ? 'Edit Menu Item' : 'New Menu Item');
-        $modalBody.html(itemFormHTML(record));
+        id = (id === null)? 0 : id;
+
+        $.ajax({
+            url: "http://localhost:8080/v1/foodItems/getFoodItemFormDate/" + id,
+            type: "GET",
+            contentType: 'application/json',
+            headers:{
+                'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(itemFormHTML(response.body));
+                }
+                else{
+                    showToast(response.message);
+                }
+            },
+            error: function (response){
+                if(response.message){
+                    showToast(response.message);
+                }
+                showToast("UNEXPECTED ERROR");
+            }
+        });
     }
     if(type === 'supplier'){
         $modalTitle.text(isEdit ? 'Edit Supplier' : 'New Supplier');
@@ -1147,11 +1209,14 @@ function openForm(type, id){
                         $modalBody.html(supplierFormHTML(response.body));
                     }
                     else{
-                        alert(response.message);
+                        showToast(response.message);
                     }
                 },
-                error: function (){
-                    alert("UNEXPECTED ERROR");
+                error: function (response){
+                    if(response.message){
+                        showToast(response.message);
+                    }
+                    showToast("UNEXPECTED ERROR");
                 }
             });
         }
@@ -1176,14 +1241,14 @@ function openForm(type, id){
                     $modalBody.html(stockFormHTML(response.body));
                 }
                 else {
-                    alert(response.message)
+                    showToast(response.message)
                 }
             },
             error: function (response){
                 if(response.message){
-                    alert(response.message);
+                    showToast(response.message);
                 }else {
-                    alert("UNEXPECTED ERROR");
+                    showToast("UNEXPECTED ERROR");
                 }
             }
         });
@@ -1212,14 +1277,14 @@ function openForm(type, id){
                     renderRestockDraftTable(response.body.restockDetails, isEdit);
                 }
                 else {
-                    alert(response.message)
+                    showToast(response.message)
                 }
             },
             error: function (response){
                 if(response.message){
-                    alert(response.message);
+                    showToast(response.message);
                 }else {
-                    alert("UNEXPECTED ERROR");
+                    showToast("UNEXPECTED ERROR");
                 }
             }
         });
@@ -1239,11 +1304,11 @@ function openForm(type, id){
                         $modalBody.html(adminFormHTML(response.body, isEdit));
                     }
                     else{
-                        alert(response.message);
+                        showToast(response.message);
                     }
                 },
                 error: function (){
-                    alert("UNEXPECTED ERROR");
+                    showToast("UNEXPECTED ERROR");
                 }
             })
         }else{
@@ -1279,11 +1344,11 @@ function openForm(type, id){
                     $modalBody.html(customerFormHTML(response.body));
                 }
                 else{
-                    alert(response.message);
+                    showToast(response.message);
                 }
             },
             error: function (){
-                alert("UNEXPECTED ERROR");
+                showToast("UNEXPECTED ERROR");
             }
         })
     }
@@ -1457,23 +1522,75 @@ $modalSave.on('click', function(){
     }
 
     if(type === 'item'){
-        const badges = $('#badgeChips .check-chip.active').map(function(){ return $(this).data('badge'); }).get();
-        const data = {
-            name: $('#f_name').val().trim() || 'Untitled Item',
-            category: $('#f_category').val(),
-            price: Number($('#f_price').val()) || 0,
-            stock: Number($('#f_stock').val()) || 0,
-            img: $('#f_img').val().trim() || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80',
-            badges,
-        };
-        if(isEdit){
-            const idx = items.findIndex(i=>i.id===id);
-            items[idx] = {...items[idx], ...data};
-            showToast('Item updated');
-        } else {
-            items.unshift({id:nextItemId++, ...data});
-            showToast('Item created');
+        // badges
+        const badgesList = $('#badgeChips .check-chip.active').map(function(){ return $(this).data('badge'); }).get();
+        let badges = '';
+        badgesList.forEach((b, index) => {
+            if(index === badgesList.length-1){
+                badges += b;
+            }else{
+                badges += b + ",";
+            }
+        });
+
+        let itemName = $('#f_name').val();
+        let price = Number($('#f_price').val());
+        let img = $('#f_img').val().trim() || 'https://images.unsplash.com/vector-1750272213032-5f8f1cf5080f?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+        let description = $('#f_description').val();
+        let categoryId = $('#f_category').val();
+        let discountId = $('#f_discount').val();
+
+        if(!validateName(itemName)){ showToast("INVALID ITEM NAME"); $modalSave.prop('disabled', false); return; }
+
+        // adding auto crop syntaxes so the image will align correctly (according to unsplash website)
+        if(img.includes("?auto=format") === false){
+            img = img + "?auto=format&fit=crop&w=200&q=80";
         }
+
+        const obj = {
+            foodItemId : 0,
+            foodItemName : itemName,
+            price : price,
+            imagePath : img,
+            description : description,
+            foodItemCategoryId : categoryId,
+            discountId : discountId,
+            badges: badges
+        };
+
+        if(isEdit){ obj.foodItemId = id; }
+
+        $.ajax({
+            url : "http://localhost:8080/v1/foodItems/saveFoodItem",
+            type : "POST",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            data : JSON.stringify(obj),
+            success: function (response){
+                if(response.status === 200){
+                    if(isEdit){
+                        showToast('Item Updated');
+                    }else{
+                        showToast('Item Saved');
+                    }
+                    closeModal();
+                    renderAll();
+                }else{
+                    alert(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                if(e.message){
+                    alert(e.message);
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
 
     if(type === 'supplier'){
