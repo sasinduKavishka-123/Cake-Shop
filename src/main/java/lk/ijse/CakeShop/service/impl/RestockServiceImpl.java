@@ -172,4 +172,9 @@ public class RestockServiceImpl implements RestockService {
     public List<RestockDTO> filterRestock(String restockId, String supplierName) {
         return restockRepository.filterRestock(restockId, supplierName);
     }
+
+    @Override
+    public int getRestockCountForThisMonth() {
+        return restockRepository.getThisMonthRestockCount();
+    }
 }

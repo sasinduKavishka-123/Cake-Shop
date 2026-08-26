@@ -364,25 +364,59 @@ function renderItems(filter=''){
     const f = filter.toLowerCase();
     // const rows = items.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
 
+    const obj = {
+        item_name:f,
+        item_category:f,
+        item_badges: Array.from(activeStatuses)     // badges set
+    }
 
+    $.ajax({
+        url:"http://localhost:8080/v1/foodItems/filterFoodItems",
+        type:"GET",
+        // contentType: 'application/json',
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const i of response.body){
 
-    $('#itemsBody').html(rows.map(i => {
-        const info = stockInfo(i.stock, 8);
-        return `
-    <tr>
-      <td class="cell-main"><img class="cell-thumb" src="${i.img}" alt=""><div><div class="cell-title">${i.name}</div><div class="cell-sub">${i.badges.join(', ') || 'No badges'}</div></div></td>
-      <td>${i.category}</td>
-      <td class="cell-title">${money(i.price)}</td>
-      <td>${i.stock} units</td>
-      <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="item" data-id="${i.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="item" data-id="${i.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>`;
-    }).join('') || `<tr class="empty-row"><td colspan="6">No items match your search.</td></tr>`);
+                    const finalPrice = i.price * ((100 - i.discount) / 100)
+
+                    html +=
+                        `<tr>
+                          <td class="cell-main"><img class="cell-thumb" src="${i.imagePath}" alt=""><div><div class="cell-title">${i.foodItemName}</div><div class="cell-sub">${i.badges.split(', ') || 'No badges'}</div></div></td>
+                          <td>${i.foodItemCategory}</td>
+                          <td class="cell-title">${money(i.price)}</td>
+                          <td>${i.discount} %</td>
+                          <td>${money(finalPrice)}</td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-edit="item" data-id="${i.foodItemId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No items match your search.</td></tr>`;
+                }
+                $('#itemsBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#itemsBody').html(`<tr class="empty-row"><td colspan="5">No items match your search.</td></tr>`);
+            }},
+        error: function (e){
+            e.message ? alert(e.message) : alert("SERVER DOES NOT RESPONDED");
+            $('#itemsBody').html(`<tr class="empty-row"><td colspan="5">No items match your search.</td></tr>`);
+        }
+    });
+
 }
 
 /* ============================================================
@@ -723,7 +757,7 @@ function updateNavCounts(){
     $('#navCountItems').text(items.length);
     updateSupplierCount();
     updateStockItemCount();
-    $('#navCountRestock').text(restocks.length);
+    updateRestockCount();
     updateStaffCount();
     updateCustomerCount();
 }
@@ -797,6 +831,24 @@ function updateStockItemCount(){
         success: function (response){
             if(response.status === 200){
                 $('#navCountStock').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
+}
+
+function updateRestockCount(){
+    $.ajax({
+        url: "http://localhost:8080/v1/restock/getRestockCount",
+        type: "GET",
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                $('#navCountRestock').text(response.body);
             }
             else{
                 alert(response.message);

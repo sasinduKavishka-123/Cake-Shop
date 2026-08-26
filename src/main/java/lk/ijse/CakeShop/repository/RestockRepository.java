@@ -18,4 +18,9 @@ public interface RestockRepository extends JpaRepository<Restock, Long> {
             "(?2 IS NULL OR r.supplier.supplierName LIKE %?2%)" +
             "ORDER BY r.restockId DESC")
     List<RestockDTO> filterRestock(String restockId, String SupplierName);
+
+    @Query(value = "SELECT COUNT(r.restockId) FROM Restock r WHERE " +
+            "MONTH(r.date) = MONTH(CURRENT_DATE) AND " +
+            "YEAR(r.date) = YEAR(CURRENT_DATE)")
+    int getThisMonthRestockCount();
 }

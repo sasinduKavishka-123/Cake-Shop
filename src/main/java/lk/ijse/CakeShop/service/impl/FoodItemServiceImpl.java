@@ -50,6 +50,12 @@ public class FoodItemServiceImpl implements FoodItemService {
             foodItemDTO.setDiscountId(1);       // 0 discount rate
         }
 
+        FoodItem foodItemByName = foodItemRepository.findFoodItemByName(foodItemDTO.getFoodItemName());
+        if(foodItemByName != null){
+            log.error("Error in Method saveFoodItem()");
+            throw new CustomException(400, "FOOD ITEM ALREADY EXIST");
+        }
+
         FoodItem foodItem = new FoodItem();
 
         if(foodItemDTO.getFoodItemId() > 0){
@@ -87,10 +93,15 @@ public class FoodItemServiceImpl implements FoodItemService {
     }
 
     @Override
-    public List<FoodItemDTO> filterFoodItems(String itemName, String itemCategory, List<String> badges) {
+    public List<FoodItemDTO> filterFoodItems(String itemName, String itemCategory, List<String> badgeList) {
         log.info("Executing Method filterFoodItems()");
 
-        List<FoodItem> foodItems = foodItemRepository.filterFoodItems(itemName, itemCategory, badges);
+        // Prepare the regex pattern from your Java List<String> badgeList
+        String badgeRegex = (badgeList == null || badgeList.isEmpty())
+                ? null
+                : String.join("|", badgeList);
+
+        List<FoodItem> foodItems = foodItemRepository.filterFoodItems(itemName, itemCategory, badgeRegex);
         List<FoodItemDTO> dtoList = new ArrayList<>();
         for(FoodItem f : foodItems){
             FoodItemDTO dto = new FoodItemDTO();
@@ -99,8 +110,8 @@ public class FoodItemServiceImpl implements FoodItemService {
             dto.setDescription(f.getDescription());
             dto.setBadges(f.getBadges());
             dto.setPrice(f.getPrice());
-            dto.setDiscountId(f.getDiscount().getDiscount_id());
-            dto.setFoodItemCategoryId(f.getFoodItemCategory().getCategoryId());
+            dto.setDiscount(f.getDiscount().getDiscountRate().doubleValue());
+            dto.setFoodItemCategory(f.getFoodItemCategory().getCategoryName());
             dto.setImagePath(f.getImagePath());
 
             dtoList.add(dto);

@@ -13,4 +13,5 @@ public interface RestockService {
 
     List<RestockDTO> filterRestock(String restockId, String SupplierName);
 
+    int getRestockCountForThisMonth();
 }

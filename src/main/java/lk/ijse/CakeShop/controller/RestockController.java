@@ -40,4 +40,8 @@ public class RestockController {
         return new CommonResponse(200, responseList, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getRestockCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getRestockCount(){
+        return new CommonResponse(200, restockService.getRestockCountForThisMonth(), SUCCESS_MESSAGE);
+    }
 }
