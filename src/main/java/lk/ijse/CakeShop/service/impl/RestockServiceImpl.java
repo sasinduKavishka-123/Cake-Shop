@@ -9,6 +9,7 @@ import lk.ijse.CakeShop.entity.Restock;
 import lk.ijse.CakeShop.entity.RestockDetail;
 import lk.ijse.CakeShop.entity.StockItem;
 import lk.ijse.CakeShop.entity.Supplier;
+import lk.ijse.CakeShop.enumerations.StockStatus;
 import lk.ijse.CakeShop.exception.CustomException;
 import lk.ijse.CakeShop.repository.RestockDetailRepository;
 import lk.ijse.CakeShop.repository.RestockRepository;
@@ -125,8 +126,20 @@ public class RestockServiceImpl implements RestockService {
             rd.setPricePerUnit(r.getPricePerUnit());
             rd.setQty(r.getQty());
             rd.setRestock(savedRestock);
-
+            // save restock data
             restockDetailRepository.save(rd);
+
+            // update stock item QTY and Status
+            int newQty = i.getStockQty() + r.getQty();
+            i.setStockQty(newQty);
+            if(newQty == 0){
+                i.setStockStatus(StockStatus.OUT_OF_STOCK);
+            }else if(newQty <= i.getReorderLevel()){
+                i.setStockStatus(StockStatus.LOW_STOCK);
+            }else{
+                i.setStockStatus(StockStatus.IN_STOCK);
+            }
+            stockItemRepository.save(i);
         }
 
     }
