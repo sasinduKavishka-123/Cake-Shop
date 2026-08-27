@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.dto;
 
+import lk.ijse.CakeShop.enumerations.TableStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,6 @@ public class ReservableTableDTO {
     private String tableCategoryName;
     private BigDecimal price;
     private int seatCount;
+    private TableStatus tableStatus;
 
 }

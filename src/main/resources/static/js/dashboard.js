@@ -60,6 +60,13 @@ let customers = [
     {id:4, name:'Tharindu Jayasuriya', email:'tharindu.j@gmail.com', phone:'+94 70 663 5521', orders:2, spent:2700, status:'Blocked', joined:'2026-03-05'},
 ];
 
+let tables = [
+    {id:1, name:'Window Booth A', type:'Window Seat', capacity:2, status:'Available'},
+    {id:2, name:'Communal Table', type:'Communal Table', capacity:8, status:'Reserved'},
+    {id:3, name:'Quiet Corner B', type:'Quiet Corner', capacity:4, status:'Available'},
+    {id:4, name:'Window Booth C', type:'Window Seat', capacity:2, status:'Maintenance'},
+];
+
 let nextOrderNum = 1043;
 let nextItemId = 7;
 let nextSupplierId = 6;
@@ -67,6 +74,7 @@ let nextStockId = 8;
 let nextRestockNum = 1003;
 let nextAdminId = 4;
 let nextCustomerId = 5;
+let nextTableId = 5;
 
 /* holds the line items being built inside the open Restock form, before Save */
 let restockDraftItems = [];
@@ -76,13 +84,14 @@ let restockDraftItems = [];
    ============================================================ */
 const sections = {
     overview: {title:'Overview', sub:"Welcome back — here's what's happening today.", addLabel:null, showSearch:false},
-    orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:'New Order', showSearch:true},
+    orders: {title:'Orders', sub:'Manage customer orders and fulfillment status.', addLabel:null, showSearch:true},
     items: {title:'Menu Items', sub:'Manage your bakery catalog, pricing and stock.', addLabel:'New Item', showSearch:true},
     suppliers: {title:'Suppliers', sub:'Manage ingredient and packaging suppliers.', addLabel:'New Supplier', showSearch:true},
     stock: {title:'Stock', sub:'Track raw ingredient inventory and reorder levels.', addLabel:'New Stock Item', showSearch:true},
     restock: {title:'Restock', sub:'Log supplier restock orders and replenish inventory.', addLabel:'New Restock', showSearch:true},
     admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
     customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:null, showSearch:true},
+    tables: {title:'Tables', sub:'Manage reservable tables and seating capacity.', addLabel:'New Table', showSearch:true},
 };
 let currentSection = 'overview';
 
@@ -93,8 +102,10 @@ const statusOptionsMap = {
     stock: ['In Stock','Low Stock','Out of Stock'],
     admins: ['Active','Suspended'],
     customers: ['Active','Suspended'],
+    tables: ['Available','Reserved','Maintenance'],
 };
 let activeStatuses = new Set();
+let orderDateFilter = ''; // empty means all dates visible"
 
 const $navItems = $('.nav-item');
 const $topAddBtn = $('#topAddBtn');
@@ -118,6 +129,9 @@ function goToSection(name){
     activeStatuses = new Set();
     renderStatusFilter();
 
+    orderDateFilter = '';
+    $('#orderDateFilter').val('');
+
     closeSidebar();
     renderAll();
 }
@@ -140,8 +154,10 @@ function closeSidebar(){ $sidebar.removeClass('open'); $sidebarScrim.removeClass
    ============================================================ */
 function money(n){ return 'Rs. ' + n.toLocaleString(); }
 function statusBadgeClass(status){
-    return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',Cancelled:'badge-cancelled',
-        ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',SUSPENDED:'badge-suspended',Blocked:'badge-blocked'}[status] || 'badge-pending';
+    return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
+        Cancelled:'badge-cancelled',ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',
+        SUSPENDED:'badge-suspended',Blocked:'badge-blocked',Available:'badge-active',Reserved:'badge-pending',
+        Maintenance:'badge-suspended'}[status] || 'badge-pending';
 }
 
 function roleBadgeClass(role){
@@ -333,28 +349,104 @@ $(document).on('change', '#statusFilter input[type="checkbox"]', function(){
     renderAll();
 });
 
+/* ---- orders: filter by date ---- */
+$('#orderDateFilter').on('change', function(){
+    orderDateFilter = $(this).val();
+    renderAll();
+});
+$('#clearDateFilter').on('click', function(){
+    orderDateFilter = '';
+    $('#orderDateFilter').val('');
+    renderAll();
+});
+
 /* ============================================================
    RENDER: ORDERS
    ============================================================ */
 function renderOrders(filter=''){
     const f = filter.toLowerCase();
-    const rows = orders.filter(o => !f || o.id.toLowerCase().includes(f) || o.customer.toLowerCase().includes(f));
-    $('#ordersBody').html(rows.map(o => `
-    <tr>
-      <td class="cell-title">${o.id}</td>
-      <td>${o.customer}</td>
-      <td><span class="cell-sub">${o.items}</span></td>
-      <td class="cell-title">${money(o.total)}</td>
-      <td><span class="badge-pill ${statusBadgeClass(o.status)}">${o.status}</span></td>
-      <td>${o.date}</td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="order" data-id="${o.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="order" data-id="${o.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
+    const rows = orders.filter(o => !f || o.id.toLowerCase().includes(f) ||
+        o.customer.toLowerCase().includes(f) && (!orderDateFilter || o.date === orderDateFilter));
+
+    const obj = {
+        order_id: f,
+        user_name: f,
+        order_date: orderDateFilter,
+        status_list: Array.from(activeStatuses)
+    }
+
+    $.ajax({
+        url:"http://localhost:8080/v1/order/filterOrders",
+        type:"GET",
+        // contentType: 'application/json',
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const o of response.body){
+
+                    let itemList = '';
+                    o.orderItems.forEach( (item, index) =>{
+                        if(index == o.orderItems.length-1){
+                            itemList += item.qty + "x" + item.foodItemName;
+                        }else{
+                            itemList += item.qty + "x" + item.foodItemName + ", ";
+                        }
+                    });
+
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${o.orderId}</td>
+                          <td>${o.userName}</td>
+                          <td><span class="cell-sub">${itemList}</span></td>
+                          <td class="cell-title">${money(o.total)}</td>
+                          <td><span class="badge-pill ${statusBadgeClass(o.orderStatus)}">${o.orderStatus}</span></td>
+                          <td>${o.orderDate}</td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-edit="order" data-id="${o.orderId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              <button class="icon-btn danger" data-delete="order" data-id="${o.orderId}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No orders match your search.</td></tr>`;
+                }
+                $('#ordersBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#ordersBody').html(`<tr class="empty-row"><td colspan="5">No orders match your search.</td></tr>`);
+            }},
+        error: function (e){
+            e.message ? alert(e.message) : alert("SERVER DOES NOT RESPONDED");
+            $('#ordersBody').html(`<tr class="empty-row"><td colspan="5">No orders match your search.</td></tr>`);
+        }
+    });
+
+  //   $('#ordersBody').html(rows.map(o => `
+  //   <tr>
+  //     <td class="cell-title">${o.id}</td>
+  //     <td>${o.customer}</td>
+  //     <td><span class="cell-sub">${o.items}</span></td>
+  //     <td class="cell-title">${money(o.total)}</td>
+  //     <td><span class="badge-pill ${statusBadgeClass(o.status)}">${o.status}</span></td>
+  //     <td>${o.date}</td>
+  //     <td>
+  //       <div class="row-actions">
+  //         <button class="icon-btn" data-edit="order" data-id="${o.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  //         <button class="icon-btn danger" data-delete="order" data-id="${o.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+  //       </div>
+  //     </td>
+  //   </tr>
+  // `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
 }
 
 /* ============================================================
@@ -750,6 +842,28 @@ function renderCustomers(filter=''){
 }
 
 /* ============================================================
+   RENDER: TABLES
+   ============================================================ */
+function renderTables(filter=''){
+    const f = filter.toLowerCase();
+    const rows = tables.filter(t => (!f || t.name.toLowerCase().includes(f) || t.type.toLowerCase().includes(f)));
+    $('#tablesBody').html(rows.map(t => `
+    <tr>
+      <td class="cell-title">${t.name}</td>
+      <td>${t.type}</td>
+      <td>${t.capacity} guests</td>
+      <td><span class="badge-pill ${statusBadgeClass(t.status)}">${t.status}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="table" data-id="${t.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="icon-btn danger" data-delete="table" data-id="${t.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="5">No tables match your search.</td></tr>`);
+}
+
+/* ============================================================
    UPDATE COUNTS
    ============================================================ */
 function updateNavCounts(){
@@ -760,6 +874,7 @@ function updateNavCounts(){
     updateRestockCount();
     updateStaffCount();
     updateCustomerCount();
+    $('#navCountTables').text(tables.length);
 }
 
 function updateStaffCount(){
@@ -886,6 +1001,7 @@ function renderAll(){
     if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
+    if(currentSection==='tables') renderTables(q);
 }
 
 $searchInput.on('input', function(){
@@ -897,6 +1013,7 @@ $searchInput.on('input', function(){
     if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
+    if(currentSection==='tables') renderTables(q);
 });
 
 /* ============================================================
@@ -1144,6 +1261,26 @@ function customerFormHTML(c){
                 </div>`;
 }
 
+function tableFormHTML(t){
+    t = t || {name:'', type:'Window Seat', capacity:'', status:'Available'};
+    return `
+    <div class="field-group"><label>Table Name</label><input type="text" id="f_name" value="${t.name}" placeholder="e.g. Window Booth A"></div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Seating Type</label>
+        <select id="f_type">
+          ${['Window Seat','Communal Table','Quiet Corner'].map(ty=>`<option ${t.type===ty?'selected':''}>${ty}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group"><label>Capacity (guests)</label><input type="number" id="f_capacity" value="${t.capacity}" placeholder="0"></div>
+    </div>
+    <div class="field-group"><label>Status</label>
+      <select id="f_status">
+        ${['Available','Reserved','Maintenance'].map(v=>`<option ${t.status===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+  `;
+}
+
 /* dietary badge chips are rendered fresh each time the item modal opens,
    so bind once via delegation instead of re-wiring per open */
 $(document).on('click', '#badgeChips .check-chip', function(){
@@ -1352,6 +1489,11 @@ function openForm(type, id){
             }
         })
     }
+    if(type === 'table'){
+        const record = isEdit ? tables.find(t=>t.id===id) : null;
+        $modalTitle.text(isEdit ? 'Edit Table' : 'New Table');
+        $modalBody.html(tableFormHTML(record));
+    }
 
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
     $formModal.toggleClass('modal-wide', type === 'restock');
@@ -1375,6 +1517,7 @@ $topAddBtn.on('click', function(){
     if(currentSection==='restock') openForm('restock', null);
     if(currentSection==='admins') openForm('admin', null);
     if(currentSection==='customers') openForm('customer', null);
+    if(currentSection==='tables') openForm('table', null);
 });
 
 // item: restrict price/unit to at most 2 decimal digits while typing
@@ -1854,6 +1997,23 @@ $modalSave.on('click', function(){
                 $modalSave.prop('disabled', false);
             }
         });
+    }
+
+    if(type === 'table'){
+        const data = {
+            name: $('#f_name').val().trim() || 'Unnamed Table',
+            type: $('#f_type').val(),
+            capacity: Number($('#f_capacity').val()) || 0,
+            status: $('#f_status').val(),
+        };
+        if(isEdit){
+            const idx = tables.findIndex(t=>t.id===id);
+            tables[idx] = {...tables[idx], ...data};
+            showToast('Table updated');
+        } else {
+            tables.unshift({id:nextTableId++, ...data});
+            showToast('Table added');
+        }
     }
     // closeModal();
     // renderAll();

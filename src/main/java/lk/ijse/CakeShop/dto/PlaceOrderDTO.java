@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.dto;
 
+import lk.ijse.CakeShop.entity.User;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,8 @@ public class PlaceOrderDTO {
 
     private long orderId;
     private long userId;
+    private String userName;
+    private UserDTO user;
     private LocalDate orderDate;
     private BigDecimal discount;
     private BigDecimal subTotal;

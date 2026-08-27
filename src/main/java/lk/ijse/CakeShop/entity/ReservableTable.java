@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.entity;
 
 import jakarta.persistence.*;
+import lk.ijse.CakeShop.enumerations.TableStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +17,10 @@ public class ReservableTable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long tableId;
-    private BigDecimal price;
     private int seatCount;
+
+    @Enumerated(EnumType.STRING)
+    private TableStatus tableStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "table_category_id")

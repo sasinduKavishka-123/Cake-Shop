@@ -2,6 +2,7 @@ package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.OrderItemsDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
+import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.entity.FoodItem;
 import lk.ijse.CakeShop.entity.Order;
 import lk.ijse.CakeShop.entity.OrderItem;
@@ -15,9 +16,15 @@ import lk.ijse.CakeShop.repository.UserRepository;
 import lk.ijse.CakeShop.service.OrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -30,6 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private final FoodItemRepository foodItemRepository;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void saveOrder(PlaceOrderDTO placeOrderDTO) {
         log.info("Executing Method saveOrder()");
 
@@ -64,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus status = OrderStatus.PENDING;
 
         // save order ----------------------------------
-        order.setOrder_date(placeOrderDTO.getOrderDate());
+        order.setOrderDate(placeOrderDTO.getOrderDate());
         order.setDiscount(placeOrderDTO.getDiscount());
         order.setSubTotal(placeOrderDTO.getSubTotal());
         order.setTotal(placeOrderDTO.getTotal());
@@ -92,6 +100,92 @@ public class OrderServiceImpl implements OrderService {
             orderItemRepository.save(oi);
         }
 
+    }
+
+    @Override
+    public List<PlaceOrderDTO> filterOrders(String orderId, String userName, String date, Set<String> statuses) {
+        log.info("Executing Method filterOrders()");
+
+        String[] statusList = null;
+        if(statuses != null){
+            statusList = statuses.toArray(String[]::new);
+        }
+
+        List<PlaceOrderDTO> orderDTOS = new ArrayList<>();
+        List<Order> orders = orderRepository.filterOrders(orderId, userName, date, statusList);
+
+        for(Order o : orders){
+            PlaceOrderDTO p = new PlaceOrderDTO();
+            p.setOrderId(o.getOrderId());
+            p.setOrderStatus(o.getOrderStatus());
+            p.setTotal(o.getTotal());
+            p.setUserName(o.getUser().getUserName());
+            p.setOrderDate(o.getOrderDate());
+
+            // fill order items ---------------
+            List<OrderItemsDTO> itemList = new ArrayList<>();
+            for(OrderItem oi : o.getOrderItem()){
+                OrderItemsDTO dto = new OrderItemsDTO();
+                dto.setFoodItemName(oi.getFoodItem().getFoodItemName());
+                dto.setQty(oi.getQty());
+
+                itemList.add(dto);
+            }
+            p.setOrderItems(itemList);
+
+            orderDTOS.add(p);
+        }
+
+        return orderDTOS;
+    }
+
+    @Override
+    public PlaceOrderDTO getOrderDetailById(long orderId) {
+        log.info("Executing Method getOrderDetailById()");
+
+        if(orderId < 1){
+            log.error("Error in Method getOrderDetailById()");
+            throw new CustomException(402, "INVALID ORDER ID");
+        }
+
+        val optionalOrder = orderRepository.findById(orderId);
+        if(optionalOrder.isEmpty()){
+            log.error("Error in Method getOrderDetailById()");
+            throw new CustomException(404, "ORDER NOT FOUND");
+        }
+
+        PlaceOrderDTO placeOrderDTO = new PlaceOrderDTO();
+        Order o = optionalOrder.get();
+
+        placeOrderDTO.setOrderId(o.getOrderId());
+        placeOrderDTO.setOrderStatus(o.getOrderStatus());
+        placeOrderDTO.setSubTotal(o.getSubTotal());
+        placeOrderDTO.setDiscount(o.getDiscount());
+        placeOrderDTO.setTotal(o.getTotal());
+        placeOrderDTO.setOrderDate(o.getOrderDate());
+
+        // user details -----------------------
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserName(o.getUser().getUserName());
+        userDTO.setUserContact(o.getUser().getUserContact());
+        userDTO.setUserEmail(o.getUser().getUserEmail());
+        placeOrderDTO.setUser(userDTO);
+
+        // order item details --------------------------
+        List<OrderItemsDTO> itemList = new ArrayList<>();
+        for(OrderItem oi : o.getOrderItem()){
+            OrderItemsDTO dto = new OrderItemsDTO();
+            dto.setDiscount(oi.getDiscount());
+            dto.setPrice(oi.getPrice());
+            dto.setFinalPrice(oi.getFinalPrice());
+            dto.setFoodItemName(oi.getFoodItem().getFoodItemName());
+            dto.setQty(oi.getQty());
+
+            itemList.add(dto);
+        }
+        placeOrderDTO.setOrderItems(itemList);
+
+        return placeOrderDTO;
     }
 
 }

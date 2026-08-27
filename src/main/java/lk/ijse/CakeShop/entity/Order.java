@@ -19,7 +19,7 @@ import java.util.List;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long order_id;
+    private long orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -31,7 +31,7 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Delivery delivery;
 
-    private LocalDate order_date;
+    private LocalDate orderDate;
     @Column(precision = 10, scale = 2)
     private BigDecimal total;
     @Column(precision = 10, scale = 2)
