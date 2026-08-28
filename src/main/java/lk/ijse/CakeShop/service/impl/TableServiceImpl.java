@@ -3,23 +3,23 @@ package lk.ijse.CakeShop.service.impl;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.entity.ReservableTable;
 import lk.ijse.CakeShop.entity.TableCategory;
-import lk.ijse.CakeShop.enumerations.TableStatus;
 import lk.ijse.CakeShop.exception.CustomException;
 import lk.ijse.CakeShop.repository.TableCategoryRepository;
-import lk.ijse.CakeShop.repository.TableRepository;
+import lk.ijse.CakeShop.repository.ReservableTableRepository;
 import lk.ijse.CakeShop.service.TableService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class TableServiceImpl implements TableService {
 
-    private final TableRepository tableRepository;
+    private final ReservableTableRepository tableRepository;
     private final TableCategoryRepository tableCategoryRepository;
 
     @Override
@@ -58,5 +58,37 @@ public class TableServiceImpl implements TableService {
         reservableTable.setSeatCount(reservableTableDTO.getSeatCount());
 
         tableRepository.save(reservableTable);
+    }
+
+    @Override
+    public List<ReservableTableDTO> filterTables(String tableCategory, Set<String> statuses) {
+
+        log.info("Executing Method filterTables()");
+
+        String[] tableStatuses = null;
+        if(statuses != null){
+            tableStatuses = statuses.toArray(String[]::new);
+        }
+
+        System.out.println(tableCategory);
+        System.out.println(Arrays.toString(tableStatuses));
+
+        List<ReservableTableDTO> tableDTOList = new ArrayList<>();
+        List<ReservableTable> tableList = tableRepository.filterTables(tableCategory, tableStatuses);
+
+        for(ReservableTable t : tableList){
+            ReservableTableDTO tableDTO = new ReservableTableDTO();
+            tableDTO.setTableId(t.getTableId());
+            tableDTO.setTableStatus(t.getTableStatus());
+            tableDTO.setTableCategoryName(t.getTableCategory().getTableCategoryName());
+            tableDTO.setSeatCount(t.getSeatCount());
+
+            BigDecimal tablePrice = t.getTableCategory().getPricePerSeat().multiply(new BigDecimal(t.getSeatCount()));
+            tableDTO.setPrice(tablePrice);
+
+            tableDTOList.add(tableDTO);
+        }
+
+        return tableDTOList;
     }
 }

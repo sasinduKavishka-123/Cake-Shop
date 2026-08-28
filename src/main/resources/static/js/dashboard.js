@@ -67,6 +67,9 @@ let tables = [
     {id:4, name:'Window Booth C', type:'Window Seat', capacity:2, status:'Maintenance'},
 ];
 
+let tableCategories = [{id:1,name:'Window Seat'}, {id:2,name:'Communal Table'}, {id:3,name:'Quiet Corner'}];
+
+let nextCategoryId = 4;
 let nextOrderNum = 1043;
 let nextItemId = 7;
 let nextSupplierId = 6;
@@ -105,7 +108,8 @@ const statusOptionsMap = {
     tables: ['Available','Reserved','Maintenance'],
 };
 let activeStatuses = new Set();
-let orderDateFilter = ''; // empty means all dates visible"
+let orderDateFilter = ''; // empty means all dates visible
+let tableSubView = 'tables'; // 'tables' or 'categories'
 
 const $navItems = $('.nav-item');
 const $topAddBtn = $('#topAddBtn');
@@ -131,6 +135,12 @@ function goToSection(name){
 
     orderDateFilter = '';
     $('#orderDateFilter').val('');
+
+    tableSubView = 'tables';
+    $('.subnav-btn').removeClass('active');
+    $('.subnav-btn[data-tableview="tables"]').addClass('active');
+    $('#tablesView').show();
+    $('#categoriesView').hide();
 
     closeSidebar();
     renderAll();
@@ -330,15 +340,16 @@ function renderOverview(){
 STATUS FILTER CHECKBOXES
 ============================================================ */
 function renderStatusFilter(){
-    const options = statusOptionsMap[currentSection];
+    const inCategoriesView = currentSection === 'tables' && tableSubView === 'categories';
+    const options = inCategoriesView ? null : statusOptionsMap[currentSection];
     const $filter = $('#statusFilter');
     if(!options){ $filter.empty().hide(); return; }
     $filter.css('display','flex').html(options.map(s => `
-            <label class="status-chip">
-              <input type="checkbox" value="${s}">
-              ${s}
-            </label>
-        `).join(''));
+    <label class="status-chip">
+      <input type="checkbox" value="${s}">
+      ${s}
+    </label>
+  `).join(''));
 }
 
 $(document).on('change', '#statusFilter input[type="checkbox"]', function(){
@@ -357,6 +368,20 @@ $('#orderDateFilter').on('change', function(){
 $('#clearDateFilter').on('click', function(){
     orderDateFilter = '';
     $('#orderDateFilter').val('');
+    renderAll();
+});
+
+/* ---- tables section: toggle between "Manage Tables" and "Manage Categories" ---- */
+$('#tableSubnav').on('click', '.subnav-btn', function(){
+    tableSubView = $(this).data('tableview');
+    $('.subnav-btn').removeClass('active');
+    $(this).addClass('active');
+    $('#tablesView').toggle(tableSubView === 'tables');
+    $('#categoriesView').toggle(tableSubView === 'categories');
+    $addBtnLabel.text(tableSubView === 'tables' ? 'New Table' : 'New Category');
+    $searchInput.val('');
+    activeStatuses = new Set();
+    renderStatusFilter();
     renderAll();
 });
 
@@ -408,7 +433,7 @@ function renderOrders(filter=''){
                           <td>
                             <div class="row-actions">
                               <button class="icon-btn" data-edit="order" data-id="${o.orderId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                              <button class="icon-btn danger" data-delete="order" data-id="${o.orderId}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                              <button class="icon-btn" data-print-order="${o.orderId}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                             </div>
                           </td>
                         </tr>`;
@@ -430,23 +455,6 @@ function renderOrders(filter=''){
             $('#ordersBody').html(`<tr class="empty-row"><td colspan="5">No orders match your search.</td></tr>`);
         }
     });
-
-  //   $('#ordersBody').html(rows.map(o => `
-  //   <tr>
-  //     <td class="cell-title">${o.id}</td>
-  //     <td>${o.customer}</td>
-  //     <td><span class="cell-sub">${o.items}</span></td>
-  //     <td class="cell-title">${money(o.total)}</td>
-  //     <td><span class="badge-pill ${statusBadgeClass(o.status)}">${o.status}</span></td>
-  //     <td>${o.date}</td>
-  //     <td>
-  //       <div class="row-actions">
-  //         <button class="icon-btn" data-edit="order" data-id="${o.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  //         <button class="icon-btn danger" data-delete="order" data-id="${o.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-  //       </div>
-  //     </td>
-  //   </tr>
-  // `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
 }
 
 /* ============================================================
@@ -864,6 +872,59 @@ function renderTables(filter=''){
 }
 
 /* ============================================================
+   RENDER: TABLE CATEGORIES
+   ============================================================ */
+function renderTableCategories(filter=''){
+    const f = filter.toLowerCase();
+
+    const obj = {
+        table_category_name : f
+    }
+
+    $.ajax({
+        url:"http://localhost:8080/v1/tableCategory/filterTableCategories",
+        type: "GET",
+        data: obj,
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const c of response.body){
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${c.tableCategoryId}</td>
+                          <td class="cell-title">${c.tableCategoryName}</td>
+                          <td class="cell-title">${c.pricePerSeat}</td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-edit="category" data-id="${c.tableCategoryId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No category match your search.</td></tr>`;
+                }
+                $('#tableCategoriesBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#tableCategoriesBody').html(`<tr class="empty-row"><td colspan="5">No category match your search.</td></tr>`);
+            }
+        },
+        error: function (){
+            alert("SERVER DOES NOT RESPONDED");
+            $('#tableCategoriesBody').html(`<tr class="empty-row"><td colspan="5">No category match your search.</td></tr>`);
+        }
+    });
+}
+
+/* ============================================================
    UPDATE COUNTS
    ============================================================ */
 function updateNavCounts(){
@@ -1001,7 +1062,9 @@ function renderAll(){
     if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
-    if(currentSection==='tables') renderTables(q);
+    if(currentSection==='tables'){
+        if(tableSubView === 'tables') renderTables(q); else renderTableCategories(q);
+    }
 }
 
 $searchInput.on('input', function(){
@@ -1013,7 +1076,9 @@ $searchInput.on('input', function(){
     if(currentSection==='restock') renderRestock(q);
     if(currentSection==='admins') renderAdmins(q);
     if(currentSection==='customers') renderCustomers(q);
-    if(currentSection==='tables') renderTables(q);
+    if(currentSection==='tables'){
+        if(tableSubView === 'tables') renderTables(q); else renderTableCategories(q);
+    }
 });
 
 /* ============================================================
@@ -1043,7 +1108,23 @@ function orderFormHTML(o){
     o = o || {customer:'', items:'', total:'', status:'Pending', date:new Date().toISOString().split('T')[0]};
     return `
     <div class="field-group"><label>Customer Name</label><input type="text" id="f_customer" value="${o.customer}" placeholder="Customer name"></div>
-    <div class="field-group"><label>Order Items</label><textarea id="f_items" placeholder="e.g. 2x Butter Croissant, 1x Latte">${o.items}</textarea></div>
+    <label>Add Item</label>
+      <div class="restock-add-row restock-add-row-3col">
+        <input type="text" id="f_orderItemName" placeholder="Item name">
+        <input type="number" id="f_orderItemQty" placeholder="Qty" min="1">
+        <button type="button" class="add-btn" id="addOrderItemBtn"><span class="plus">+</span> Add</button>
+      </div>
+    </div>
+ 
+    <div class="field-group">
+      <label>Order Items</label>
+      <div class="restock-table-wrap">
+        <table class="restock-table">
+          <thead><tr><th>Item Name</th><th>Qty</th><th></th></tr></thead>
+          <tbody id="orderItemsBody"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="field-row-2">
       <div class="field-group"><label>Total (Rs.)</label><input type="number" id="f_total" value="${o.total}" placeholder="0"></div>
       <div class="field-group"><label>Date</label><input type="date" id="f_date" value="${o.date}"></div>
@@ -1054,6 +1135,32 @@ function orderFormHTML(o){
       </select>
     </div>
   `;
+}
+
+/* parses an "items" string (e.g. "2x Butter Croissant, 1x Latte") into {name, qty}
+   rows — used to seed the editable items table when opening an existing order */
+function parseOrderItems(text){
+    return text.split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .map(s => {
+            const match = s.match(/^(\d+)\s*x\s*(.+)$/i);
+            return match ? {qty: Number(match[1]), name: match[2].trim()} : {qty: 1, name: s};
+        });
+}
+
+/* holds the item rows being built inside the open Order form, before Save */
+let orderDraftItems = [];
+
+function renderOrderItemsTable(){
+    const rows = orderDraftItems.map((it, idx) => `
+    <tr>
+      <td>${it.name}</td>
+      <td>${it.qty}</td>
+      <td><span class="order-remove-btn" data-order-idx="${idx}">Remove</span></td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="3">No items added yet.</td></tr>`;
+    $('#orderItemsBody').html(rows);
 }
 
 function itemFormHTML(i){
@@ -1262,13 +1369,13 @@ function customerFormHTML(c){
 }
 
 function tableFormHTML(t){
-    t = t || {name:'', type:'Window Seat', capacity:'', status:'Available'};
+    t = t || {name:'', type: tableCategories[0] ? tableCategories[0].name : '', capacity:'', status:'Available'};
     return `
     <div class="field-group"><label>Table Name</label><input type="text" id="f_name" value="${t.name}" placeholder="e.g. Window Booth A"></div>
     <div class="field-row-2">
       <div class="field-group"><label>Seating Type</label>
         <select id="f_type">
-          ${['Window Seat','Communal Table','Quiet Corner'].map(ty=>`<option ${t.type===ty?'selected':''}>${ty}</option>`).join('')}
+          ${tableCategories.map(c=>`<option ${t.type===c.name?'selected':''}>${c.name}</option>`).join('')}
         </select>
       </div>
       <div class="field-group"><label>Capacity (guests)</label><input type="number" id="f_capacity" value="${t.capacity}" placeholder="0"></div>
@@ -1278,6 +1385,14 @@ function tableFormHTML(t){
         ${['Available','Reserved','Maintenance'].map(v=>`<option ${t.status===v?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
+  `;
+}
+
+function categoryFormHTML(c){
+    c = c || {name:''};
+    return `
+    <div class="field-group"><label>Category Name</label><input type="text" id="f_categoryName" value="${c.tableCategoryName}" placeholder="e.g. Patio Seating"></div>
+    <div class="field-group"><label>Price Per Seat</label><input type="number" id="f_seatPrice" value="${c.pricePerSeat}" placeholder="e.g. enter Seat Count"></div>
   `;
 }
 
@@ -1294,6 +1409,24 @@ $(document).on('click', '#getImagesLink', function(e){
     window.open('https://unsplash.com/s/photos/' + encodeURIComponent(query), '_blank');
 });
 
+/* order form: add an item to the order's items table */
+$(document).on('click', '#addOrderItemBtn', function(){
+    const name = $('#f_orderItemName').val().trim();
+    const qty = Number($('#f_orderItemQty').val());
+    if(!name || !qty){ showToast('Enter an item name and quantity'); return; }
+    orderDraftItems.push({name, qty});
+    renderOrderItemsTable();
+    $('#f_orderItemName').val('');
+    $('#f_orderItemQty').val('');
+});
+
+/* order form: remove an item row from the order's items table */
+$(document).on('click', '.order-remove-btn', function(){
+    const idx = Number($(this).data('order-idx'));
+    orderDraftItems.splice(idx, 1);
+    renderOrderItemsTable();
+});
+
 function openForm(type, id){
     editContext = {type, id};
     const isEdit = id !== null && id !== undefined;
@@ -1302,6 +1435,7 @@ function openForm(type, id){
         const record = isEdit ? orders.find(o=>o.id===id) : null;
         $modalTitle.text(isEdit ? 'Edit Order' : 'New Order');
         $modalBody.html(orderFormHTML(record));
+        renderOrderItemsTable();
     }
     if(type === 'item'){
         $modalTitle.text(isEdit ? 'Edit Menu Item' : 'New Menu Item');
@@ -1487,12 +1621,34 @@ function openForm(type, id){
             error: function (){
                 showToast("UNEXPECTED ERROR");
             }
-        })
+        });
     }
     if(type === 'table'){
         const record = isEdit ? tables.find(t=>t.id===id) : null;
         $modalTitle.text(isEdit ? 'Edit Table' : 'New Table');
         $modalBody.html(tableFormHTML(record));
+    }
+    if(type === 'category'){
+        $modalTitle.text(isEdit ? 'Edit Category' : 'New Category');
+        $.ajax({
+            url:'http://localhost:8080/v1/tableCategory/getTableCategoryDataById/' + id,
+            type:'GET',
+            contentType: 'application/json',
+            headers:{
+                'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(categoryFormHTML(response.body));
+                }
+                else{
+                    showToast(response.message);
+                }
+            },
+            error: function (){
+                showToast("UNEXPECTED ERROR");
+            }
+        });
     }
 
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
@@ -1517,7 +1673,7 @@ $topAddBtn.on('click', function(){
     if(currentSection==='restock') openForm('restock', null);
     if(currentSection==='admins') openForm('admin', null);
     if(currentSection==='customers') openForm('customer', null);
-    if(currentSection==='tables') openForm('table', null);
+    if(currentSection==='tables') openForm(tableSubView === 'tables' ? 'table' : 'category', null);
 });
 
 // item: restrict price/unit to at most 2 decimal digits while typing
@@ -1530,6 +1686,11 @@ $(document).on('input', '#f_itemPrice', function(){
     validatePriceInput($(this));
 });
 
+// table category: restrict price per seat to at most 2 decimal digits while typing
+$(document).on('input', '#f_seatPrice', function(){
+    validatePriceInput($(this));
+});
+
 // prevent input from typing mor than 2 decimal digits
 const validatePriceInput = function(element){
     const val = element.val();
@@ -1538,6 +1699,14 @@ const validatePriceInput = function(element){
         element.val(parts[0] + '.' + parts[1].slice(0, 2));
     }
 }
+
+// prevent input from typing decimal digits
+$(document).on('keydown', '#f_capacity', function (e) {
+    // Block '.', ',', 'e', 'E', and '-'
+    if (['.', ',', 'e', 'E', '-'].includes(e.key)) {
+        e.preventDefault();
+    }
+});
 
 // restock: add item to the in-form line-items table
 $(document).on('click', '#addRestockItemBtn', function(){
@@ -1621,6 +1790,48 @@ $modalPrint.on('click', function(){
         <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th></tr></thead>
         <tbody>${rowsHtml}</tbody>
         <tfoot><tr><td colspan="3">Total</td><td>${money(total)}</td></tr></tfoot>
+      </table>
+    </body>
+    </html>
+  `);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 300);
+});
+
+/* orders table: print an order receipt directly from the row, no modal needed */
+$(document).on('click', '[data-print-order]', function(){
+    const orderId = $(this).data('print-order');
+    const order = orders.find(o => o.id === orderId);
+    if(!order) return;
+
+    const parsedItems = parseOrderItems(order.items);
+    const rowsHtml = parsedItems.map(it => `
+    <tr><td>${it.name}</td><td>${it.qty}</td></tr>
+  `).join('') || `<tr><td colspan="2">No items on this order.</td></tr>`;
+
+    const printWin = window.open('', '_blank', 'width=800,height=900');
+    printWin.document.write(`
+    <html>
+    <head>
+      <title>Order ${order.id}</title>
+      <style>
+        body{font-family: Arial, Helvetica, sans-serif; padding:36px; color:#3A2822;}
+        h1{font-size:1.4rem; margin-bottom:4px;}
+        p{margin:2px 0 20px; color:#6B5248;}
+        table{width:100%; border-collapse:collapse; margin-top:10px;}
+        th, td{padding:9px 12px; border:1px solid #ddd; text-align:left; font-size:0.9rem;}
+        th{background:#F5EFE4;}
+        tfoot td{font-weight:bold;}
+      </style>
+    </head>
+    <body>
+      <h1>Order ${order.id}</h1>
+      <p>Customer: ${order.customer}<br>Status: ${order.status}<br>Date: ${order.date}</p>
+      <table>
+        <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+        <tfoot><tr><td>Total</td><td>${money(order.total)}</td></tr></tfoot>
       </table>
     </body>
     </html>
@@ -2006,6 +2217,7 @@ $modalSave.on('click', function(){
             capacity: Number($('#f_capacity').val()) || 0,
             status: $('#f_status').val(),
         };
+
         if(isEdit){
             const idx = tables.findIndex(t=>t.id===id);
             tables[idx] = {...tables[idx], ...data};
@@ -2014,6 +2226,49 @@ $modalSave.on('click', function(){
             tables.unshift({id:nextTableId++, ...data});
             showToast('Table added');
         }
+    }
+
+    if(type === 'category'){
+        let categoryName = $('#f_categoryName').val();
+        let pricePerSeat = $('#f_seatPrice').val();
+
+        const obj = {
+            tableCategoryId:0,
+            tableCategoryName: categoryName,
+            pricePerSeat: pricePerSeat
+        };
+
+        if(isEdit){
+            obj.tableCategoryId = id
+        }
+
+        $.ajax({
+            url:'http://localhost:8080/v1/tableCategory/saveTableCategory',
+            type: 'POST',
+            // contentType:'application/json',
+            data: obj,
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    if(isEdit){
+                        showToast('Category Updated');
+                    }else{
+                        showToast('Category Saved');
+                    }
+                    closeModal();
+                    renderAll();
+                }else{
+                    show(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                alert("UNEXPECTED ERROR");
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
     // closeModal();
     // renderAll();

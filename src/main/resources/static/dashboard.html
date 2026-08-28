@@ -280,6 +280,30 @@
         }
         .date-clear-btn:hover{border-color:var(--gold); color:var(--espresso);}
 
+        /* ============ TABLES SECTION SUB-VIEW TOGGLE ============ */
+        .table-subnav{
+            display:flex;
+            gap:10px;
+            margin-bottom:22px;
+        }
+        .subnav-btn{
+            padding:10px 20px;
+            border-radius:100px;
+            border:1.5px solid var(--line);
+            background:var(--cream-warm);
+            font-weight:800;
+            font-size:0.86rem;
+            color:var(--espresso-soft);
+            cursor:pointer;
+            transition:all .2s ease;
+        }
+        .subnav-btn:hover{border-color:var(--gold); color:var(--espresso);}
+        .subnav-btn.active{
+            background:var(--espresso);
+            color:var(--cream-warm);
+            border-color:var(--espresso);
+        }
+
         /* ============ TABLE CARD ============ */
         .table-card{
             background:var(--cream-warm);
@@ -947,11 +971,26 @@
 
         <!-- ================= TABLES ================= -->
         <section class="section-panel" id="panel-tables">
-            <div class="table-card">
-                <table>
-                    <thead><tr><th>Table</th><th>Type</th><th>Capacity</th><th>Status</th><th></th></tr></thead>
-                    <tbody id="tablesBody"></tbody>
-                </table>
+            <div class="table-subnav" id="tableSubnav">
+                <button class="subnav-btn active" data-tableview="tables">Manage Tables</button>
+                <button class="subnav-btn" data-tableview="categories">Manage Categories</button>
+            </div>
+            <div id="tablesView">
+                <div class="table-card">
+                    <table>
+                        <thead><tr><th>Table</th><th>Type</th><th>Capacity</th><th>Status</th><th></th></tr></thead>
+                        <tbody id="tablesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="categoriesView" style="display:none;">
+                <div class="table-card">
+                    <table>
+                        <thead><tr><th>Category ID</th><th>Category Name</th><th>Price Per Seat</th><th></th></tr></thead>
+                        <tbody id="tableCategoriesBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
