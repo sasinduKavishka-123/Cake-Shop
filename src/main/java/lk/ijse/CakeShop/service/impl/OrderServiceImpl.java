@@ -188,4 +188,20 @@ public class OrderServiceImpl implements OrderService {
         return placeOrderDTO;
     }
 
+    @Override
+    public void updateOrderStatus(long orderID, OrderStatus status) {
+        log.info("Executing Method updateOrderStatus()");
+
+        Optional<Order> optionalOrder = orderRepository.findById(orderID);
+        if(optionalOrder.isEmpty()){
+            log.error("Error in Method updateOrderStatus()");
+            throw new CustomException(404, "Order Not Found");
+        }
+        Order order = optionalOrder.get();
+        order.setOrderStatus(status);
+
+        orderRepository.save(order);
+
+    }
+
 }

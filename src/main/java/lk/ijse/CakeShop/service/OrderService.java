@@ -15,4 +15,6 @@ public interface OrderService {
 
     PlaceOrderDTO getOrderDetailById(long orderId);
 
+    void updateOrderStatus(long orderID, OrderStatus status);
+
 }

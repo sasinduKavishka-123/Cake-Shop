@@ -1176,31 +1176,42 @@ $('#modalCancel').on('click', closeModal);
 function orderFormHTML(o){
     o = o || {customer:'', items:'', total:'', status:'Pending', date:new Date().toISOString().split('T')[0]};
     return `
-    <div class="field-group"><label>Customer Name</label><input type="text" id="f_customer" value="${o.customer}" placeholder="Customer name"></div>
-    <label>Add Item</label>
-      <div class="restock-add-row restock-add-row-3col">
-        <input type="text" id="f_orderItemName" placeholder="Item name">
-        <input type="number" id="f_orderItemQty" placeholder="Qty" min="1">
-        <button type="button" class="add-btn" id="addOrderItemBtn"><span class="plus">+</span> Add</button>
-      </div>
+    
+    <div class="field-group"><label>Customer Name</label><input disabled type="text" id="f_customer" value="${o.user.userName}" placeholder="Customer name"></div>
+    <div class="field-row-2">
+        <div class="field-group">
+            <label>Contact</label> <input disabled type="text" id="f_customer_contact" value="${o.user.userContact}" placeholder="contact">
+        </div>
+        <div class="field-group">
+            <label>Email</label> <input disabled type="text" id="f_customer_email" value="${o.user.userEmail}" placeholder="email" min="1">
+        </div>
+    </div>
+ 
+    <div class="field-row-2">
+      <div class="field-group"><label>Date</label><input disabled type="date" id="f_date" value="${o.orderDate}"></div>
     </div>
  
     <div class="field-group">
       <label>Order Items</label>
       <div class="restock-table-wrap">
         <table class="restock-table">
-          <thead><tr><th>Item Name</th><th>Qty</th><th></th></tr></thead>
+          <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th></tr></thead>
           <tbody id="orderItemsBody"></tbody>
         </table>
       </div>
     </div>
     <div class="field-row-2">
-      <div class="field-group"><label>Total (Rs.)</label><input type="number" id="f_total" value="${o.total}" placeholder="0"></div>
-      <div class="field-group"><label>Date</label><input type="date" id="f_date" value="${o.date}"></div>
+      <div class="field-group"><label>Sub Total (Rs.)</label><input disabled type="text" id="f_total" value="${money(o.subTotal)}" placeholder="0"></div>
+      <div class="field-group"><label>Discount (Rs.)</label><input disabled type="text" id="f_total" value="${money(o.discount)}" placeholder="0"></div>
     </div>
+    
+    <div class="field-row-2">
+      <div class="field-group"><label>Total (Rs.)</label><input disabled type="text" id="f_total" value="${money(o.total)}" placeholder="0"></div>
+    </div>
+    
     <div class="field-group"><label>Status</label>
       <select id="f_status">
-        ${['Pending','Preparing','Ready','Delivered','Cancelled'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        ${['Pending','Preparing','Ready','Delivered','Cancelled'].map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </div>
   `;
@@ -1218,17 +1229,16 @@ function parseOrderItems(text){
         });
 }
 
-/* holds the item rows being built inside the open Order form, before Save */
-let orderDraftItems = [];
-
-function renderOrderItemsTable(){
-    const rows = orderDraftItems.map((it, idx) => `
+function renderOrderItemsTable(itemList){
+    const rows = itemList.map((it, idx) => `
     <tr>
-      <td>${it.name}</td>
+      <td>${it.foodItemName}</td>
       <td>${it.qty}</td>
-      <td><span class="order-remove-btn" data-order-idx="${idx}">Remove</span></td>
+      <td>${it.price}</td>
+      <td>${it.discount}</td>
+      <td>${it.finalPrice}</td>
     </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="3">No items added yet.</td></tr>`;
+  `).join('') || `<tr class="empty-row"><td colspan="5">No items added yet.</td></tr>`;
     $('#orderItemsBody').html(rows);
 }
 
@@ -1482,33 +1492,36 @@ $(document).on('click', '#getImagesLink', function(e){
     window.open('https://unsplash.com/s/photos/' + encodeURIComponent(query), '_blank');
 });
 
-/* order form: add an item to the order's items table */
-$(document).on('click', '#addOrderItemBtn', function(){
-    const name = $('#f_orderItemName').val().trim();
-    const qty = Number($('#f_orderItemQty').val());
-    if(!name || !qty){ showToast('Enter an item name and quantity'); return; }
-    orderDraftItems.push({name, qty});
-    renderOrderItemsTable();
-    $('#f_orderItemName').val('');
-    $('#f_orderItemQty').val('');
-});
-
-/* order form: remove an item row from the order's items table */
-$(document).on('click', '.order-remove-btn', function(){
-    const idx = Number($(this).data('order-idx'));
-    orderDraftItems.splice(idx, 1);
-    renderOrderItemsTable();
-});
-
 function openForm(type, id){
     editContext = {type, id};
     const isEdit = id !== null && id !== undefined;
 
     if(type === 'order'){
-        const record = isEdit ? orders.find(o=>o.id===id) : null;
         $modalTitle.text(isEdit ? 'Edit Order' : 'New Order');
-        $modalBody.html(orderFormHTML(record));
-        renderOrderItemsTable();
+
+        $.ajax({
+            url: "http://localhost:8080/v1/order/getOrderFormDetail/" + id,
+            type: "GET",
+            contentType: 'application/json',
+            headers:{
+                'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(orderFormHTML(response.body));
+                    renderOrderItemsTable(response.body.orderItems);
+                }
+                else{
+                    showToast(response.message);
+                }
+            },
+            error: function (response){
+                if(response.message){
+                    showToast(response.message);
+                }
+                showToast("UNEXPECTED ERROR");
+            }
+        });
     }
     if(type === 'item'){
         $modalTitle.text(isEdit ? 'Edit Menu Item' : 'New Menu Item');
@@ -1743,7 +1756,7 @@ function openForm(type, id){
     }
 
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
-    $formModal.toggleClass('modal-wide', type === 'restock');
+    $formModal.toggleClass('modal-wide', type === 'restock' || type === 'order');
 
     if(type === 'restock' && isEdit){
         $modalSave.hide();
@@ -1953,22 +1966,40 @@ $modalSave.on('click', function(){
     const isEdit = id !== null && id !== undefined;
 
     if(type === 'order'){
-        const data = {
-            customer: $('#f_customer').val().trim() || 'Guest Customer',
-            items: $('#f_items').val().trim() || '—',
-            total: Number($('#f_total').val()) || 0,
-            date: $('#f_date').val() || new Date().toISOString().split('T')[0],
-            status: $('#f_status').val(),
+
+        const obj = {
+            order_id: id,
+            order_status: $('#f_status').val().toUpperCase()
         };
-        if(isEdit){
-            const idx = orders.findIndex(o=>o.id===id);
-            orders[idx] = {...orders[idx], ...data};
-            showToast('Order updated');
-        } else {
-            const newId = 'ORD-' + (nextOrderNum++);
-            orders.unshift({id:newId, ...data});
-            showToast('Order created');
-        }
+
+        $.ajax({
+            url : "http://localhost:8080/v1/order/updateOrderStatus",
+            type : "PATCH",
+            // contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            data : obj,
+            success: function (response){
+                if(response.status === 200){
+                    showToast('Order updated');
+
+                    closeModal();
+                    renderAll();
+                }else{
+                    alert(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                if(e.message){
+                    alert(e.message);
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
 
     if(type === 'item'){
