@@ -15,4 +15,7 @@ public interface TableCategoryRepository extends JpaRepository<TableCategory, Lo
             "FROM TableCategory tc WHERE (?1 IS NULL OR tc.tableCategoryName LIKE %?1%)")
     List<TableCategoryDTO> filterTableCategories(String categoryName);
 
+    @Query(value = "SELECT tc FROM TableCategory tc " +
+            "WHERE tc.tableCategoryName = ?1")
+    TableCategory getTableCategoryByName(String name);
 }

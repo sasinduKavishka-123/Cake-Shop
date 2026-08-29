@@ -105,7 +105,7 @@ const statusOptionsMap = {
     stock: ['In Stock','Low Stock','Out of Stock'],
     admins: ['Active','Suspended'],
     customers: ['Active','Suspended'],
-    tables: ['Available','Reserved','Maintenance'],
+    tables: ['Available','Unavailable'],
 };
 let activeStatuses = new Set();
 let orderDateFilter = ''; // empty means all dates visible
@@ -165,8 +165,8 @@ function closeSidebar(){ $sidebar.removeClass('open'); $sidebarScrim.removeClass
 function money(n){ return 'Rs. ' + n.toLocaleString(); }
 function statusBadgeClass(status){
     return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
-        Cancelled:'badge-cancelled',ACTIVE:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',
-        SUSPENDED:'badge-suspended',Blocked:'badge-blocked',Available:'badge-active',Reserved:'badge-pending',
+        Cancelled:'badge-cancelled',Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',
+        Suspended:'badge-suspended',Blocked:'badge-blocked',Available:'badge-active',Reserved:'badge-pending',
         Maintenance:'badge-suspended'}[status] || 'badge-pending';
 }
 
@@ -190,6 +190,12 @@ function spaceToUnderscore(str) {
     return str
         .trim()                 // Removes leading/trailing spaces
         .replace(/\s+/g, '_');  // Replaces single or multiple consecutive spaces with a single underscore
+}
+
+// make status name to normal (only first letter is uppercase)
+function formatStatus(status) {
+    if (!status) return '';
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
 /* ============================================================
@@ -415,12 +421,14 @@ function renderOrders(filter=''){
 
                     let itemList = '';
                     o.orderItems.forEach( (item, index) =>{
-                        if(index == o.orderItems.length-1){
+                        if(index === o.orderItems.length-1){
                             itemList += item.qty + "x" + item.foodItemName;
                         }else{
                             itemList += item.qty + "x" + item.foodItemName + ", ";
                         }
                     });
+
+                    let status = formatStatus(o.orderStatus);
 
                     html +=
                         `<tr>
@@ -428,7 +436,7 @@ function renderOrders(filter=''){
                           <td>${o.userName}</td>
                           <td><span class="cell-sub">${itemList}</span></td>
                           <td class="cell-title">${money(o.total)}</td>
-                          <td><span class="badge-pill ${statusBadgeClass(o.orderStatus)}">${o.orderStatus}</span></td>
+                          <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
                           <td>${o.orderDate}</td>
                           <td>
                             <div class="row-actions">
@@ -543,12 +551,13 @@ function renderSuppliers(filter=''){
             if(response.status === 200){
                 let html = "";
                 for(const s of response.body){
+                    let status = formatStatus(s.supplierStatus);
                     html +=
                         `<tr>
                               <td class="cell-title">${s.companyName}</td>
                               <td><div class="cell-title" style="font-weight:600;">${s.supplierName}</div><div class="cell-sub">${s.contact}</div></td>
                               <td>${s.email}</td>
-                              <td><span class="badge-pill ${statusBadgeClass(s.supplierStatus)}">${s.supplierStatus}</span></td>
+                              <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
                               <td>
                                 <div class="row-actions">
                                   <button class="icon-btn" data-edit="supplier" data-id="${s.supplierId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -752,23 +761,25 @@ function renderAdmins(filter=''){
             if(response.status === 200){
                 let html = "";
                 for(const r of response.body){
+
+                    let status = formatStatus(r.userStatus);
                     html +=
                         `<tr>
-                                <td class="cell-main">
-                                  <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${r.userName.charAt(0)}</span>
-                                  <div><div class="cell-title">${r.userName}</div><div class="cell-sub">${r.userEmail}</div></div>
-                                </td>
-                                <td>${r.userId}</td>
-                                <td>${r.userContact}</td>
-                                <td><span class="badge-pill ${roleBadgeClass(r.userRoles)}">${r.userRoles}</span></td>
-                                <td><span class="badge-pill ${statusBadgeClass(r.userStatus)}">${r.userStatus}</span></td>
-                                <td>
-                                  <div class="row-actions">
-                                    <button class="icon-btn" data-edit="admin" data-id="${r.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-<!--                                    <button class="icon-btn danger" data-delete="admin" data-id="${r.userId}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>-->
-                                  </div>
-                                </td>
-                            </tr>`;
+                            <td class="cell-main">
+                              <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${r.userName.charAt(0)}</span>
+                              <div><div class="cell-title">${r.userName}</div><div class="cell-sub">${r.userEmail}</div></div>
+                            </td>
+                            <td>${r.userId}</td>
+                            <td>${r.userContact}</td>
+                            <td><span class="badge-pill ${roleBadgeClass(r.userRoles)}">${r.userRoles}</span></td>
+                            <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
+                            <td>
+                              <div class="row-actions">
+                                <button class="icon-btn" data-edit="admin" data-id="${r.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<!--                                <button class="icon-btn danger" data-delete="admin" data-id="${r.userId}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>-->
+                              </div>
+                            </td>
+                        </tr>`;
                 }
                 if(response.body.length === 0){
                     html += `<tr class="empty-row"><td colspan="5">No admins match your search.</td></tr>`;
@@ -813,21 +824,24 @@ function renderCustomers(filter=''){
             if(response.status === 200){
                 let html = "";
                 for(const c of response.body){
+
+                    let status = formatStatus(c.userStatus);
+
                     html +=
                         `<tr>
-                                <td class="cell-main">
-                                  <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${c.userName.charAt(0)}</span>
-                                  <div><div class="cell-title">${c.userName}</div><div class="cell-sub">${c.userEmail}</div></div>
-                                </td>
-                                <td>${c.userId}</td>
-                                <td>${c.userContact}</td>
-                                <td><span class="badge-pill ${statusBadgeClass(c.userStatus)}">${c.userStatus}</span></td>
-                                <td>
-                                  <div class="row-actions">
-                                    <button class="icon-btn" data-edit="customer" data-id="${c.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                                  </div>
-                                </td>
-                            </tr>`;
+                            <td class="cell-main">
+                              <span class="admin-avatar" style="width:36px;height:36px;font-size:0.82rem;">${c.userName.charAt(0)}</span>
+                              <div><div class="cell-title">${c.userName}</div><div class="cell-sub">${c.userEmail}</div></div>
+                            </td>
+                            <td>${c.userId}</td>
+                            <td>${c.userContact}</td>
+                            <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
+                            <td>
+                              <div class="row-actions">
+                                <button class="icon-btn" data-edit="customer" data-id="${c.userId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              </div>
+                            </td>
+                        </tr>`;
                 }
                 if(response.body.length === 0){
                     html += `<tr class="empty-row"><td colspan="5">No customers match your search.</td></tr>`;
@@ -854,21 +868,58 @@ function renderCustomers(filter=''){
    ============================================================ */
 function renderTables(filter=''){
     const f = filter.toLowerCase();
-    const rows = tables.filter(t => (!f || t.name.toLowerCase().includes(f) || t.type.toLowerCase().includes(f)));
-    $('#tablesBody').html(rows.map(t => `
-    <tr>
-      <td class="cell-title">${t.name}</td>
-      <td>${t.type}</td>
-      <td>${t.capacity} guests</td>
-      <td><span class="badge-pill ${statusBadgeClass(t.status)}">${t.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="table" data-id="${t.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="table" data-id="${t.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No tables match your search.</td></tr>`);
+
+    const obj = {
+        table_category: f,
+        table_statuses: Array.from(activeStatuses)
+    }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/table/filterTables",
+        type: 'GET',
+        data: obj,
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const t of response.body){
+
+                    let status = formatStatus(t.tableStatus);
+
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${t.tableId}</td>
+                          <td class="cell-title">${t.tableCategoryName}</td>
+                          <td>${t.seatCount} guests</td>
+                          <td>${money(t.price)}</td>
+                          <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-edit="table" data-id="${t.tableId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No Table match your search.</td></tr>`;
+                }
+                $('#tablesBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#tablesBody').html(`<tr class="empty-row"><td colspan="5">No Table match your search.</td></tr>`);
+            }
+        },
+        error: function (){
+            alert("SERVER DOES NOT RESPONDED");
+            $('#tablesBody').html(`<tr class="empty-row"><td colspan="5">No Table match your search.</td></tr>`);
+        }
+    });
 }
 
 /* ============================================================
@@ -896,7 +947,7 @@ function renderTableCategories(filter=''){
                         `<tr>
                           <td class="cell-title">${c.tableCategoryId}</td>
                           <td class="cell-title">${c.tableCategoryName}</td>
-                          <td class="cell-title">${c.pricePerSeat}</td>
+                          <td class="cell-title">${money(c.pricePerSeat)}</td>
                           <td>
                             <div class="row-actions">
                               <button class="icon-btn" data-edit="category" data-id="${c.tableCategoryId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -935,7 +986,7 @@ function updateNavCounts(){
     updateRestockCount();
     updateStaffCount();
     updateCustomerCount();
-    $('#navCountTables').text(tables.length);
+    updateTableCount();
 }
 
 function updateStaffCount(){
@@ -1043,6 +1094,24 @@ function updateFoodItemCount(){
         success: function (response){
             if(response.status === 200){
                 $('#navCountItems').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
+}
+
+function updateTableCount(){
+    $.ajax({
+        url: "http://localhost:8080/v1/table/getTableCount",
+        type: "GET",
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                $('#navCountTables').text(response.body);
             }
             else{
                 alert(response.message);
@@ -1370,26 +1439,30 @@ function customerFormHTML(c){
 
 function tableFormHTML(t){
     t = t || {name:'', type: tableCategories[0] ? tableCategories[0].name : '', capacity:'', status:'Available'};
+
     return `
-    <div class="field-group"><label>Table Name</label><input type="text" id="f_name" value="${t.name}" placeholder="e.g. Window Booth A"></div>
+    <div class="field-group"><label>Table ID</label><input type="text" id="f_id" value="${t.tableId}" placeholder="e.g. Window Booth A" disabled></div>
     <div class="field-row-2">
       <div class="field-group"><label>Seating Type</label>
         <select id="f_type">
-          ${tableCategories.map(c=>`<option ${t.type===c.name?'selected':''}>${c.name}</option>`).join('')}
+          ${t.categories.map(c=>`<option value="${c.tableCategoryId}" ${t.tableCategoryId===c.tableCategoryId?'selected':''}>${c.tableCategoryName}</option>`).join('')}
         </select>
       </div>
-      <div class="field-group"><label>Capacity (guests)</label><input type="number" id="f_capacity" value="${t.capacity}" placeholder="0"></div>
+      <div class="field-group"><label>Capacity (guests)</label><input type="number" id="f_capacity" value="${t.seatCount}" placeholder="0"></div>
     </div>
     <div class="field-group"><label>Status</label>
       <select id="f_status">
-        ${['Available','Reserved','Maintenance'].map(v=>`<option ${t.status===v?'selected':''}>${v}</option>`).join('')}
+        ${['Available','Unavailable'].map(v=>`<option ${formatStatus(t.tableStatus)===v?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
   `;
 }
 
 function categoryFormHTML(c){
-    c = c || {name:''};
+    if(c.tableCategoryName === null){
+        c = {tableCategoryName:'', pricePerSeat: ''};
+    }
+
     return `
     <div class="field-group"><label>Category Name</label><input type="text" id="f_categoryName" value="${c.tableCategoryName}" placeholder="e.g. Patio Seating"></div>
     <div class="field-group"><label>Price Per Seat</label><input type="number" id="f_seatPrice" value="${c.pricePerSeat}" placeholder="e.g. enter Seat Count"></div>
@@ -1527,8 +1600,6 @@ function openForm(type, id){
 
     }
     if(type === 'restock'){
-        // const record = isEdit ? restocks.find(r=>r.id===id) : null;
-        // restockDraftItems = record ? record.items.map(it => ({...it})) : [];
         $modalTitle.text(isEdit ? 'Print Restock' : 'New Restock');
 
         if(id === null){
@@ -1624,12 +1695,32 @@ function openForm(type, id){
         });
     }
     if(type === 'table'){
-        const record = isEdit ? tables.find(t=>t.id===id) : null;
         $modalTitle.text(isEdit ? 'Edit Table' : 'New Table');
-        $modalBody.html(tableFormHTML(record));
+        if(id === null){id = 0;}
+        $.ajax({
+            url:'http://localhost:8080/v1/table/getTableFormData/' + id,
+            type:'GET',
+            contentType: 'application/json',
+            headers:{
+                'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(tableFormHTML(response.body));
+                }
+                else{
+                    showToast(response.message);
+                }
+            },
+            error: function (){
+                showToast("UNEXPECTED ERROR");
+            }
+        });
     }
     if(type === 'category'){
         $modalTitle.text(isEdit ? 'Edit Category' : 'New Category');
+        if(id === null){id = 0;}
+
         $.ajax({
             url:'http://localhost:8080/v1/tableCategory/getTableCategoryDataById/' + id,
             type:'GET',
@@ -1675,6 +1766,11 @@ $topAddBtn.on('click', function(){
     if(currentSection==='customers') openForm('customer', null);
     if(currentSection==='tables') openForm(tableSubView === 'tables' ? 'table' : 'category', null);
 });
+
+
+/* ============================================================
+   INPUT VALIDATIONS
+   ============================================================ */
 
 // item: restrict price/unit to at most 2 decimal digits while typing
 $(document).on('input', '#f_price', function(){
@@ -2211,21 +2307,55 @@ $modalSave.on('click', function(){
     }
 
     if(type === 'table'){
-        const data = {
-            name: $('#f_name').val().trim() || 'Unnamed Table',
-            type: $('#f_type').val(),
-            capacity: Number($('#f_capacity').val()) || 0,
-            status: $('#f_status').val(),
+
+        let tableType = $('#f_type').val();
+        let capacity = Number($('#f_capacity').val());
+        let status = $('#f_status').val().toUpperCase();
+
+        if(capacity < 1){ showToast("INVALID SEAT COUNT"); $modalSave.prop('disabled', false); return; }
+
+        const obj = {
+            tableId: 0,
+            tableCategoryId: tableType,
+            seatCount: capacity,
+            tableStatus: status,
         };
 
         if(isEdit){
-            const idx = tables.findIndex(t=>t.id===id);
-            tables[idx] = {...tables[idx], ...data};
-            showToast('Table updated');
-        } else {
-            tables.unshift({id:nextTableId++, ...data});
-            showToast('Table added');
+            obj.tableId = id;
         }
+
+        $.ajax({
+            url: "http://localhost:8080/v1/table/saveTable",
+            type: "POST",
+            contentType: "application/json",
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            data: JSON.stringify(obj),
+            success: function (response){
+                if(response.status === 200){
+                    if(isEdit){
+                        showToast('Table Updated');
+                    }else{
+                        showToast('Table Added');
+                    }
+                    closeModal();
+                    renderAll();
+                }else{
+                    alert(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                if(e.message){
+                    alert(e.message);
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
 
     if(type === 'category'){
@@ -2245,8 +2375,8 @@ $modalSave.on('click', function(){
         $.ajax({
             url:'http://localhost:8080/v1/tableCategory/saveTableCategory',
             type: 'POST',
-            // contentType:'application/json',
-            data: obj,
+            contentType:'application/json',
+            data: JSON.stringify(obj),
             headers:{
                 'Authorization':'Bearer '+localStorage.getItem("JWT")
             },
@@ -2260,12 +2390,16 @@ $modalSave.on('click', function(){
                     closeModal();
                     renderAll();
                 }else{
-                    show(response.message);
+                    showToast(response.message);
                     $modalSave.prop('disabled', false);
                 }
             },
             error: function (e){
-                alert("UNEXPECTED ERROR");
+                if(e.message){
+                    alert(e.message)
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
                 $modalSave.prop('disabled', false);
             }
         });

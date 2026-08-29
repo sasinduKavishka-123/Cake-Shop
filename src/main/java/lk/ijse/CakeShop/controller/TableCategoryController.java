@@ -2,7 +2,7 @@ package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.TableCategoryDTO;
-import lk.ijse.CakeShop.service.impl.TableCategoryService;
+import lk.ijse.CakeShop.service.TableCategoryService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

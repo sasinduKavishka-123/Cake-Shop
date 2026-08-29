@@ -1,4 +1,4 @@
-package lk.ijse.CakeShop.service.impl;
+package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.TableCategoryDTO;
 

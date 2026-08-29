@@ -2,6 +2,7 @@ package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
+import lk.ijse.CakeShop.dto.formDTOs.TableFormDTO;
 import lk.ijse.CakeShop.service.TableService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
@@ -21,19 +22,30 @@ public class TableController {
 
     private final TableService tableService;
 
-    @PostMapping(value = "saveTable", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/saveTable", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveTable(@RequestBody ReservableTableDTO reservableTableDTO){
         tableService.saveTable(reservableTableDTO);
         return new CommonResponse(200, SUCCESS_MESSAGE);
     }
 
-    @GetMapping(value = "filterTables", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/filterTables", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse filterTables(
             @RequestParam(value = "table_category", required = false) String tableCategory,
             @RequestParam(value = "table_statuses", required = false) Set<String> statuses
     ){
         List<ReservableTableDTO> tableDTOList = tableService.filterTables(tableCategory, statuses);
         return new CommonResponse(200, tableDTOList, SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getTableCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getTableCount(){
+        return new CommonResponse(200, tableService.getTableCount(),SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getTableFormData/{table_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getTableFormDataById(@PathVariable long table_id){
+        TableFormDTO formDTO = tableService.getTableDataById(table_id);
+        return new CommonResponse(200, formDTO, SUCCESS_MESSAGE);
     }
 
 }

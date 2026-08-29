@@ -1,6 +1,8 @@
 package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
+import lk.ijse.CakeShop.dto.TableCategoryDTO;
+import lk.ijse.CakeShop.dto.formDTOs.TableFormDTO;
 import lk.ijse.CakeShop.entity.ReservableTable;
 import lk.ijse.CakeShop.entity.TableCategory;
 import lk.ijse.CakeShop.exception.CustomException;
@@ -90,5 +92,47 @@ public class TableServiceImpl implements TableService {
         }
 
         return tableDTOList;
+    }
+
+    @Override
+    public int getTableCount() {
+        log.info("Executing Method getTableCount()");
+        return tableRepository.getTableCount();
+    }
+
+    @Override
+    public TableFormDTO getTableDataById(long tableId) {
+        log.info("Executing Method getTableDataById()");
+
+        TableFormDTO tableFormDTO = new TableFormDTO();
+        if(tableId > 0){
+            Optional<ReservableTable> tableOptional = tableRepository.findById(tableId);
+            if(tableOptional.isEmpty()){
+                log.error("Error in Method getTableDataById()");
+                throw new CustomException(404, "TABLE NOT FOUND");
+            }
+            ReservableTable t = tableOptional.get();
+
+            tableFormDTO.setTableId(t.getTableId());
+            tableFormDTO.setTableCategoryId(t.getTableId());
+            tableFormDTO.setTableCategoryName(t.getTableCategory().getTableCategoryName());
+            tableFormDTO.setTableCategoryId(t.getTableCategory().getTableCategoryId());
+            tableFormDTO.setTableStatus(t.getTableStatus());
+            tableFormDTO.setSeatCount(t.getSeatCount());
+
+            BigDecimal tablePrice = t.getTableCategory().getPricePerSeat().multiply(new BigDecimal(t.getSeatCount()));
+            tableFormDTO.setPrice(tablePrice);
+        }
+
+        // get next table id for new form
+        if(tableId < 1){
+            tableFormDTO.setTableId(tableRepository.getLastTableId() + 1);
+        }
+
+        // get Table categories
+        List<TableCategoryDTO> tableCategoryDTOS = tableCategoryRepository.filterTableCategories(null);
+        tableFormDTO.setCategories(tableCategoryDTOS);
+
+        return tableFormDTO;
     }
 }
