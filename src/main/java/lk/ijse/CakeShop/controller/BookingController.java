@@ -9,6 +9,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Set;
+
 import static lk.ijse.CakeShop.constatns.ResponseMessage.SUCCESS_MESSAGE;
 
 @RestController
@@ -37,6 +40,17 @@ public class BookingController {
     ){
         bookingService.updateBookingStatus(bookingId, status);
         return new CommonResponse(200, SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/filterBooking", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse filterBookings(
+            @RequestParam(value = "booking_id") String bookingId,
+            @RequestParam(value = "user_name") String userName,
+            @RequestParam(value = "booking_date") String bookingDate,
+            @RequestParam(value = "booking_statuses") Set<String> statuses
+    ){
+        List<BookingDTO> bookingDTOList = bookingService.filterBooking(bookingId, userName, bookingDate, statuses);
+        return new CommonResponse(200, bookingDTOList, SUCCESS_MESSAGE);
     }
 
 }

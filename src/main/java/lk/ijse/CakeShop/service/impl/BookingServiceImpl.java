@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -149,5 +150,32 @@ public class BookingServiceImpl implements BookingService {
         booking.setBookingStatus(bookingStatus);
         bookingRepository.save(booking);
 
+    }
+
+    @Override
+    public List<BookingDTO> filterBooking(String bookingId, String userName, String date, Set<String> statuses) {
+        log.info("Executing Method filterBooking()");
+
+        String[] statusArr = null;
+        if(!statuses.isEmpty()){
+            statusArr = statuses.toArray(String[]::new);
+        }
+
+        List<Booking> bookingList = bookingRepository.filterBookings(bookingId, userName, date, statusArr);
+        List<BookingDTO> bookingDTOList = new ArrayList<>();
+
+        for(Booking b : bookingList){
+            BookingDTO bd = new BookingDTO();
+            bd.setBookingId(b.getBookingId());
+            bd.setBookingStatus(b.getBookingStatus());
+            bd.setBookingTime(b.getBookingTime());
+            bd.setBookingDate(b.getBookingDate());
+            bd.setTotal(b.getTotal());
+            bd.setTableType(b.getTableType());
+            bd.setSeatCount(b.getSeatCount());
+            bd.setUserName(b.getUser().getUserName());
+            bookingDTOList.add(bd);
+        }
+        return bookingDTOList;
     }
 }

@@ -23,4 +23,5 @@ public class BookingDTO {
     private BookingStatus bookingStatus;
 
     private long userId;
+    private String userName;
 }

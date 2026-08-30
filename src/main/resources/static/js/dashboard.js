@@ -119,6 +119,7 @@ const statusOptionsMap = {
 };
 let activeStatuses = new Set();
 let orderDateFilter = ''; // empty means all dates visible
+let bookingDateFilter = ''; // yyyy-mm-dd, empty means "show all dates"
 let tableSubView = 'tables'; // 'tables' or 'categories'
 
 const $navItems = $('.nav-item');
@@ -145,6 +146,9 @@ function goToSection(name){
 
     orderDateFilter = '';
     $('#orderDateFilter').val('');
+
+    bookingDateFilter = '';
+    $('#bookingDateFilter').val('');
 
     tableSubView = 'tables';
     $('.subnav-btn').removeClass('active');
@@ -384,6 +388,17 @@ $('#orderDateFilter').on('change', function(){
 $('#clearDateFilter').on('click', function(){
     orderDateFilter = '';
     $('#orderDateFilter').val('');
+    renderAll();
+});
+
+/* ---- bookings: filter by date ---- */
+$('#bookingDateFilter').on('change', function(){
+    bookingDateFilter = $(this).val();
+    renderAll();
+});
+$('#clearBookingDateFilter').on('click', function(){
+    bookingDateFilter = '';
+    $('#bookingDateFilter').val('');
     renderAll();
 });
 
@@ -990,7 +1005,7 @@ function renderTableCategories(filter=''){
    ============================================================ */
 function renderBookings(filter=''){
     const f = filter.toLowerCase();
-    const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f)));
+    const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f) && (!bookingDateFilter || b.date === bookingDateFilter)));
     $('#bookingsBody').html(rows.map(b => `
     <tr>
       <td class="cell-title">${b.id}</td>
