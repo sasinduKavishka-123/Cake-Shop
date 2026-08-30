@@ -67,6 +67,13 @@ let tables = [
     {id:4, name:'Window Booth C', type:'Window Seat', capacity:2, status:'Maintenance'},
 ];
 
+let bookings = [
+    {id:'BK-1001', customer:'Nadeesha Perera', phone:'+94 77 512 3344', date:'2026-08-31', slot:'11 AM – 1 PM', guests:2, table:'Window Booth A', status:'Confirmed'},
+    {id:'BK-1002', customer:'Kavindu Rathnayake', phone:'+94 71 220 9987', date:'2026-08-31', slot:'6 – 8 PM', guests:6, table:'Communal Table', status:'Pending'},
+    {id:'BK-1003', customer:'Ishara Wickramasinghe', phone:'+94 76 884 1122', date:'2026-08-30', slot:'1 – 3 PM', guests:3, table:'Quiet Corner B', status:'Completed'},
+    {id:'BK-1004', customer:'Tharindu Jayasuriya', phone:'+94 70 663 5521', date:'2026-08-29', slot:'9 – 11 AM', guests:2, table:'Window Booth C', status:'Cancelled'},
+];
+
 let tableCategories = [{id:1,name:'Window Seat'}, {id:2,name:'Communal Table'}, {id:3,name:'Quiet Corner'}];
 
 let nextCategoryId = 4;
@@ -78,6 +85,7 @@ let nextRestockNum = 1003;
 let nextAdminId = 4;
 let nextCustomerId = 5;
 let nextTableId = 5;
+let nextBookingNum = 1005;
 
 /* holds the line items being built inside the open Restock form, before Save */
 let restockDraftItems = [];
@@ -95,6 +103,7 @@ const sections = {
     admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
     customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:null, showSearch:true},
     tables: {title:'Tables', sub:'Manage reservable tables and seating capacity.', addLabel:'New Table', showSearch:true},
+    bookings: {title:'Bookings', sub:'View and manage customer table reservations.', addLabel:'New Booking', showSearch:true},
 };
 let currentSection = 'overview';
 
@@ -106,6 +115,7 @@ const statusOptionsMap = {
     admins: ['Active','Suspended'],
     customers: ['Active','Suspended'],
     tables: ['Available','Unavailable'],
+    bookings: ['Pending','Confirmed','Completed','Cancelled'],
 };
 let activeStatuses = new Set();
 let orderDateFilter = ''; // empty means all dates visible
@@ -167,7 +177,7 @@ function statusBadgeClass(status){
     return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
         Cancelled:'badge-cancelled',Active:'badge-active',Inactive:'badge-inactive',Invited:'badge-invited',
         Suspended:'badge-suspended',Blocked:'badge-blocked',Available:'badge-active',Reserved:'badge-pending',
-        Maintenance:'badge-suspended'}[status] || 'badge-pending';
+        Maintenance:'badge-suspended',Confirmed:'badge-ready',Completed:'badge-delivered'}[status] || 'badge-pending';
 }
 
 function roleBadgeClass(role){
@@ -976,6 +986,31 @@ function renderTableCategories(filter=''){
 }
 
 /* ============================================================
+   RENDER: BOOKINGS
+   ============================================================ */
+function renderBookings(filter=''){
+    const f = filter.toLowerCase();
+    const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f)));
+    $('#bookingsBody').html(rows.map(b => `
+    <tr>
+      <td class="cell-title">${b.id}</td>
+      <td>${b.customer}</td>
+      <td>${b.date}</td>
+      <td>${b.slot}</td>
+      <td>${b.guests}</td>
+      <td>${b.table || '—'}</td>
+      <td><span class="badge-pill ${statusBadgeClass(b.status)}">${b.status}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="booking" data-id="${b.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="icon-btn danger" data-delete="booking" data-id="${b.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="8">No bookings match your search.</td></tr>`);
+}
+
+/* ============================================================
    UPDATE COUNTS
    ============================================================ */
 function updateNavCounts(){
@@ -987,6 +1022,7 @@ function updateNavCounts(){
     updateStaffCount();
     updateCustomerCount();
     updateTableCount();
+    $('#navCountBookings').text(bookings.length);
 }
 
 function updateStaffCount(){
@@ -1134,6 +1170,7 @@ function renderAll(){
     if(currentSection==='tables'){
         if(tableSubView === 'tables') renderTables(q); else renderTableCategories(q);
     }
+    if(currentSection==='bookings') renderBookings(q);
 }
 
 $searchInput.on('input', function(){
@@ -1479,6 +1516,72 @@ function categoryFormHTML(c){
   `;
 }
 
+/* holds the tables being added inside the open Booking form, before Save */
+let bookingDraftTables = [];
+
+function renderBookingTablesTable(){
+    const rows = bookingDraftTables.map((t, idx) => `
+    <tr>
+      <td>${t.id}</td>
+      <td>${t.name}</td>
+      <td>${money(t.price || 0)}</td>
+      <td><span class="booking-table-remove-btn" data-booking-idx="${idx}">Remove</span></td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="4">No tables added yet.</td></tr>`;
+    $('#bookingTablesBody').html(rows);
+    const total = bookingDraftTables.reduce((sum, t) => sum + (t.price || 0), 0);
+    $('#bookingTablesTotal').text(money(total));
+}
+
+function bookingFormHTML(b){
+    b = b || {customer:'', phone:'', date:new Date().toISOString().split('T')[0], slot:'9 – 11 AM', guests:2, status:'Pending'};
+    const slots = ['9 – 11 AM','11 AM – 1 PM','1 – 3 PM','3 – 5 PM','6 – 8 PM'];
+    return `
+    <div class="field-row-2">
+      <div class="field-group"><label>Customer Name</label><input type="text" id="f_customer" value="${b.customer}" placeholder="Customer name"></div>
+      <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${b.phone}" placeholder="+94 77 000 0000"></div>
+    </div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Date</label><input type="date" id="f_date" value="${b.date}"></div>
+      <div class="field-group"><label>Time Slot</label>
+        <select id="f_slot">
+          ${slots.map(s=>`<option ${b.slot===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-group"><label>Guests</label><input type="number" id="f_guests" value="${b.guests}" placeholder="0" min="1"></div>
+ 
+    <div class="field-group">
+      <label>Add Table</label>
+      <div class="restock-add-row restock-add-row-2col">
+        <select id="f_bookingTableSelect">
+          <option value="">Select a table</option>
+          ${tables.map(t=>`<option value="${t.id}">${t.name} — ${money(t.price || 0)}</option>`).join('')}
+        </select>
+        <button type="button" class="add-btn" id="addBookingTableBtn"><span class="plus">+</span> Add</button>
+      </div>
+    </div>
+ 
+    <div class="field-group">
+      <label>Tables for This Booking</label>
+      <div class="restock-table-wrap">
+        <table class="restock-table">
+          <thead><tr><th>Table ID</th><th>Table Name</th><th>Price</th><th></th></tr></thead>
+          <tbody id="bookingTablesBody"></tbody>
+        </table>
+      </div>
+      <div class="restock-total-row">Total: <span id="bookingTablesTotal">Rs. 0</span></div>
+    </div>
+ 
+    <div class="field-group"><label>Status</label>
+      <select id="f_status">
+        ${['Pending','Confirmed','Completed','Cancelled'].map(v=>`<option ${b.status===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+  `;
+    // ${b.stockItems.map(i=>`<option value="${i.stockItemId}">${i.itemName} (${i.unitOfMeasure})</option>`).join('')}
+}
+
 /* dietary badge chips are rendered fresh each time the item modal opens,
    so bind once via delegation instead of re-wiring per open */
 $(document).on('click', '#badgeChips .check-chip', function(){
@@ -1490,6 +1593,25 @@ $(document).on('click', '#getImagesLink', function(e){
     e.preventDefault();
     const query = $('#f_name').val().trim() || $('#f_category').val() || 'bakery pastry';
     window.open('https://unsplash.com/s/photos/' + encodeURIComponent(query), '_blank');
+});
+
+/* booking form: add a table to the booking's tables list */
+$(document).on('click', '#addBookingTableBtn', function(){
+    const tableId = Number($('#f_bookingTableSelect').val());
+    if(!tableId){ showToast('Select a table to add'); return; }
+    if(bookingDraftTables.some(t => t.id === tableId)){ showToast('That table is already added'); return; }
+    const table = tables.find(t => t.id === tableId);
+    if(!table) return;
+    bookingDraftTables.push({id: table.id, name: table.name, price: table.price || 0});
+    renderBookingTablesTable();
+    $('#f_bookingTableSelect').val('');
+});
+
+/* booking form: remove a table row from the booking's tables list */
+$(document).on('click', '.booking-table-remove-btn', function(){
+    const idx = Number($(this).data('booking-idx'));
+    bookingDraftTables.splice(idx, 1);
+    renderBookingTablesTable();
 });
 
 function openForm(type, id){
@@ -1754,9 +1876,16 @@ function openForm(type, id){
             }
         });
     }
+    if(type === 'booking'){
+        const record = isEdit ? bookings.find(b=>b.id===id) : null;
+        bookingDraftTables = record && record.tables ? record.tables.map(t => ({...t})) : [];
+        $modalTitle.text(isEdit ? 'Edit Booking' : 'New Booking');
+        $modalBody.html(bookingFormHTML(record));
+        renderBookingTablesTable();
+    }
 
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');
-    $formModal.toggleClass('modal-wide', type === 'restock' || type === 'order');
+    $formModal.toggleClass('modal-wide', type === 'restock' || type === 'order' || type === 'booking');
 
     if(type === 'restock' && isEdit){
         $modalSave.hide();
@@ -1778,6 +1907,7 @@ $topAddBtn.on('click', function(){
     if(currentSection==='admins') openForm('admin', null);
     if(currentSection==='customers') openForm('customer', null);
     if(currentSection==='tables') openForm(tableSubView === 'tables' ? 'table' : 'category', null);
+    if(currentSection==='bookings') openForm('booking', null);
 });
 
 
@@ -1954,7 +2084,7 @@ $(document).on('click', '[data-print-order]', function(){
 $(document).on('click', '[data-edit]', function(){
     const type = $(this).data('edit');
     let id = $(this).attr('data-id');
-    if(type !== 'order') id = Number(id);
+    if(type !== 'order' && type !== 'restock' && type !== 'booking') id = Number(id);
     openForm(type, id);
 });
 
@@ -2434,6 +2564,27 @@ $modalSave.on('click', function(){
                 $modalSave.prop('disabled', false);
             }
         });
+    }
+
+    if(type === 'booking'){
+        const data = {
+            customer: $('#f_customer').val().trim() || 'Guest Customer',
+            phone: $('#f_phone').val().trim() || '—',
+            date: $('#f_date').val() || new Date().toISOString().split('T')[0],
+            slot: $('#f_slot').val(),
+            guests: Number($('#f_guests').val()) || 1,
+            tables: [...bookingDraftTables],
+            status: $('#f_status').val(),
+        };
+        if(isEdit){
+            const idx = bookings.findIndex(b=>b.id===id);
+            bookings[idx] = {...bookings[idx], ...data};
+            showToast('Booking updated');
+        } else {
+            const newId = 'BK-' + (nextBookingNum++);
+            bookings.unshift({id:newId, ...data});
+            showToast('Booking created');
+        }
     }
     // closeModal();
     // renderAll();

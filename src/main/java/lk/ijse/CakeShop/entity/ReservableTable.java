@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,4 +26,7 @@ public class ReservableTable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "table_category_id")
     private TableCategory tableCategory;
+
+    @OneToMany(mappedBy = "reservableTable", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BookingDetail> bookingDetails;
 }

@@ -590,6 +590,8 @@
             gap:10px;
             align-items:center;
         }
+        .restock-add-row.restock-add-row-3col{grid-template-columns:2fr 1fr auto;}
+        .restock-add-row.restock-add-row-2col{grid-template-columns:1fr auto;}
         .restock-add-row .add-btn{white-space:nowrap;}
         .restock-table-wrap{
             border:1.5px solid var(--line);
@@ -622,6 +624,29 @@
             cursor:pointer;
         }
         .restock-remove-btn:hover{text-decoration:underline;}
+        .restock-total-row{
+            display:flex;
+            justify-content:flex-end;
+            align-items:baseline;
+            gap:8px;
+            margin-top:14px;
+            font-weight:800;
+            font-size:0.95rem;
+        }
+        .order-remove-btn{
+            color:var(--error);
+            font-weight:800;
+            font-size:0.76rem;
+            cursor:pointer;
+        }
+        .order-remove-btn:hover{text-decoration:underline;}
+        .booking-table-remove-btn{
+            color:var(--error);
+            font-weight:800;
+            font-size:0.76rem;
+            cursor:pointer;
+        }
+        .booking-table-remove-btn:hover{text-decoration:underline;}
         .restock-total-row{
             display:flex;
             justify-content:flex-end;
@@ -812,6 +837,11 @@
             Tables
             <span class="nav-count" id="navCountTables">0</span>
         </li>
+        <li class="nav-item" data-section="bookings">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 14l2.2 2.2L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Bookings
+            <span class="nav-count" id="navCountBookings">0</span>
+        </li>
     </ul>
     <div class="sidebar-foot">
         <span class="admin-avatar">A</span>
@@ -991,6 +1021,16 @@
                         <tbody id="tableCategoriesBody"></tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+
+        <!-- ================= BOOKINGS ================= -->
+        <section class="section-panel" id="panel-bookings">
+            <div class="table-card">
+                <table>
+                    <thead><tr><th>Booking ID</th><th>Customer</th><th>Date</th><th>Time</th><th>Guests</th><th>Table</th><th>Status</th><th></th></tr></thead>
+                    <tbody id="bookingsBody"></tbody>
+                </table>
             </div>
         </section>
 
