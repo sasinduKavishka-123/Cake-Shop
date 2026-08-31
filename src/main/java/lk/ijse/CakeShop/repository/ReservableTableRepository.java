@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.repository;
 
+import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.entity.ReservableTable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,5 +21,12 @@ public interface ReservableTableRepository extends JpaRepository<ReservableTable
 
     @Query(value = "SELECT t.tableId FROM ReservableTable t ORDER BY t.tableId DESC LIMIT 1")
     long getLastTableId();
+
+    @Query(value = "SELECT new lk.ijse.CakeShop.dto.ReservableTableDTO" +
+            "( t.tableId, " +
+            "  t.tableCategory.tableCategoryName, " +
+            "  t.seatCount ) " +
+            "FROM ReservableTable t WHERE t.tableCategory.tableCategoryName = ?1")
+    List<ReservableTableDTO> getTablesByCategory(String tableCategory);
 
 }

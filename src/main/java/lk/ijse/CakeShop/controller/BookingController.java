@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.controller;
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 import lk.ijse.CakeShop.service.BookingService;
 import lombok.AllArgsConstructor;
@@ -46,11 +47,17 @@ public class BookingController {
     public CommonResponse filterBookings(
             @RequestParam(value = "booking_id") String bookingId,
             @RequestParam(value = "user_name") String userName,
-            @RequestParam(value = "booking_date") String bookingDate,
-            @RequestParam(value = "booking_statuses") Set<String> statuses
+            @RequestParam(value = "booking_date", required = false) String bookingDate,
+            @RequestParam(value = "booking_statuses", required = false) Set<String> statuses
     ){
         List<BookingDTO> bookingDTOList = bookingService.filterBooking(bookingId, userName, bookingDate, statuses);
         return new CommonResponse(200, bookingDTOList, SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getBookingFormData/{booking_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getBookingFormData(@PathVariable long booking_id){
+        BookingFormDTO formDTO = bookingService.getBookingFormData(booking_id);
+        return new CommonResponse(200, formDTO, SUCCESS_MESSAGE);
     }
 
 }

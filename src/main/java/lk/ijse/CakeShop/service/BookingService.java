@@ -2,6 +2,7 @@ package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 
 import java.util.List;
@@ -16,5 +17,7 @@ public interface BookingService {
     void updateBookingStatus(long bookingId, BookingStatus bookingStatus);
 
     List<BookingDTO> filterBooking(String bookingId, String userName, String date, Set<String> statuses);
+
+    BookingFormDTO getBookingFormData(long bookingId);
 
 }

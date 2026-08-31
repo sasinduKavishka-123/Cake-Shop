@@ -1005,24 +1005,63 @@ function renderTableCategories(filter=''){
    ============================================================ */
 function renderBookings(filter=''){
     const f = filter.toLowerCase();
-    const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f) && (!bookingDateFilter || b.date === bookingDateFilter)));
-    $('#bookingsBody').html(rows.map(b => `
-    <tr>
-      <td class="cell-title">${b.id}</td>
-      <td>${b.customer}</td>
-      <td>${b.date}</td>
-      <td>${b.slot}</td>
-      <td>${b.guests}</td>
-      <td>${b.table || '—'}</td>
-      <td><span class="badge-pill ${statusBadgeClass(b.status)}">${b.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="booking" data-id="${b.id}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn danger" data-delete="booking" data-id="${b.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="8">No bookings match your search.</td></tr>`);
+
+    let obj = {
+        booking_id : f,
+        user_name : f,
+        booking_date : bookingDateFilter,
+        booking_statuses: Array.from(activeStatuses)
+    }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/filterBooking",
+        type: 'GET',
+        data: obj,
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const b of response.body){
+
+                    let status = formatStatus(b.bookingStatus);
+
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${b.bookingId}</td>
+                          <td>${b.userName}</td>
+                          <td>${b.bookingDate}</td>
+                          <td>${b.bookingTime}</td>
+                          <td>${b.seatCount}</td>
+                          <td>${b.tableType}</td>
+                          <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-edit="booking" data-id="${b.bookingId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              <button class="icon-btn danger" data-delete="booking" data-id="${b.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="5">No Booking match your search.</td></tr>`;
+                }
+                $('#bookingsBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#bookingsBody').html(`<tr class="empty-row"><td colspan="5">No Booking match your search.</td></tr>`);
+            }
+        },
+        error: function (){
+            alert("SERVER DOES NOT RESPONDED");
+            $('#bookingsBody').html(`<tr class="empty-row"><td colspan="5">No Booking match your search.</td></tr>`);
+        }
+    });
 }
 
 /* ============================================================
@@ -1200,6 +1239,7 @@ $searchInput.on('input', function(){
     if(currentSection==='tables'){
         if(tableSubView === 'tables') renderTables(q); else renderTableCategories(q);
     }
+    if(currentSection==='bookings') renderBookings(q);
 });
 
 /* ============================================================
@@ -1534,44 +1574,50 @@ function categoryFormHTML(c){
 /* holds the tables being added inside the open Booking form, before Save */
 let bookingDraftTables = [];
 
-function renderBookingTablesTable(){
-    const rows = bookingDraftTables.map((t, idx) => `
-    <tr>
-      <td>${t.id}</td>
-      <td>${t.name}</td>
-      <td>${money(t.price || 0)}</td>
-      <td><span class="booking-table-remove-btn" data-booking-idx="${idx}">Remove</span></td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="4">No tables added yet.</td></tr>`;
+function renderBookingTablesTable(bookingDetailsList){
+    let rows = "";
+
+    if(bookingDetailsList){
+        bookingDraftTables = bookingDetailsList
+    }
+
+    rows = bookingDraftTables.map((t, idx) => `
+           <tr>
+             <td>${t.tableID}</td>
+             <td>${t.tableCategory}</td>
+             <td>${t.seatCount}</td>
+             <td><span class="booking-table-remove-btn" data-booking-idx="${idx}">Remove</span></td>
+           </tr>
+       `).join('') || `<tr class="empty-row"><td colspan="4">No tables added yet.</td></tr>`;
+
     $('#bookingTablesBody').html(rows);
-    const total = bookingDraftTables.reduce((sum, t) => sum + (t.price || 0), 0);
-    $('#bookingTablesTotal').text(money(total));
 }
 
 function bookingFormHTML(b){
     b = b || {customer:'', phone:'', date:new Date().toISOString().split('T')[0], slot:'9 – 11 AM', guests:2, status:'Pending'};
-    const slots = ['9 – 11 AM','11 AM – 1 PM','1 – 3 PM','3 – 5 PM','6 – 8 PM'];
+
     return `
     <div class="field-row-2">
-      <div class="field-group"><label>Customer Name</label><input type="text" id="f_customer" value="${b.customer}" placeholder="Customer name"></div>
-      <div class="field-group"><label>Phone</label><input type="tel" id="f_phone" value="${b.phone}" placeholder="+94 77 000 0000"></div>
+      <div class="field-group"><label>Customer Name</label><input disabled type="text" id="f_customer" value="${b.userName}" placeholder="Customer name"></div>
+      <div class="field-group"><label>Phone</label><input disabled type="tel" id="f_phone" value="${b.contact}" placeholder="+94 77 000 0000"></div>
+    </div>
+    <div class="field-group"><label>Email</label><input disabled type="text" id="f_email" value="${b.email}" placeholder="0" min="1"></div>
+    <div class="field-group"><label>Booking Created Date</label><input disabled type="text" id="f_booked_date" value="${b.bookingCreatedDate}" placeholder="0" min="1"></div>
+    <div class="field-row-2">
+      <div class="field-group"><label>Date</label><input disabled type="date" id="f_date" value="${b.bookingDate}"></div>
+      <div class="field-group"><label>Time Slot</label><input disabled type="text" id="f_slot" value="${b.time}"></div>
     </div>
     <div class="field-row-2">
-      <div class="field-group"><label>Date</label><input type="date" id="f_date" value="${b.date}"></div>
-      <div class="field-group"><label>Time Slot</label>
-        <select id="f_slot">
-          ${slots.map(s=>`<option ${b.slot===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
+        <div class="field-group"><label>Table Category</label><input disabled type="text" id="f_category" value="${b.tableCategory}" placeholder="0" min="1"></div>
+        <div class="field-group"><label>Guests</label><input disabled type="number" id="f_guests" value="${b.seatCount}" placeholder="0" min="1"></div>
     </div>
-    <div class="field-group"><label>Guests</label><input type="number" id="f_guests" value="${b.guests}" placeholder="0" min="1"></div>
  
     <div class="field-group">
       <label>Add Table</label>
       <div class="restock-add-row restock-add-row-2col">
         <select id="f_bookingTableSelect">
           <option value="">Select a table</option>
-          ${tables.map(t=>`<option value="${t.id}">${t.name} — ${money(t.price || 0)}</option>`).join('')}
+          ${b.tableDTOList.map(t=>`<option value="${t.tableId}">${t.tableId} — ${t.tableCategoryName} — ${t.seatCount} Guests</option>`).join('')}
         </select>
         <button type="button" class="add-btn" id="addBookingTableBtn"><span class="plus">+</span> Add</button>
       </div>
@@ -1581,20 +1627,19 @@ function bookingFormHTML(b){
       <label>Tables for This Booking</label>
       <div class="restock-table-wrap">
         <table class="restock-table">
-          <thead><tr><th>Table ID</th><th>Table Name</th><th>Price</th><th></th></tr></thead>
+          <thead><tr><th>Table ID</th><th>Table Name</th><th>Seat Count</th><th></th></tr></thead>
           <tbody id="bookingTablesBody"></tbody>
         </table>
       </div>
-      <div class="restock-total-row">Total: <span id="bookingTablesTotal">Rs. 0</span></div>
+      <div class="restock-total-row">Total: <span id="bookingTablesTotal">${money(b.total)}</span></div>
     </div>
  
     <div class="field-group"><label>Status</label>
       <select id="f_status">
-        ${['Pending','Confirmed','Completed','Cancelled'].map(v=>`<option ${b.status===v?'selected':''}>${v}</option>`).join('')}
+        ${['Pending','Confirmed','Completed','Cancelled'].map(v=>`<option ${formatStatus(b.status)===v?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
   `;
-    // ${b.stockItems.map(i=>`<option value="${i.stockItemId}">${i.itemName} (${i.unitOfMeasure})</option>`).join('')}
 }
 
 /* dietary badge chips are rendered fresh each time the item modal opens,
@@ -1614,19 +1659,45 @@ $(document).on('click', '#getImagesLink', function(e){
 $(document).on('click', '#addBookingTableBtn', function(){
     const tableId = Number($('#f_bookingTableSelect').val());
     if(!tableId){ showToast('Select a table to add'); return; }
-    if(bookingDraftTables.some(t => t.id === tableId)){ showToast('That table is already added'); return; }
-    const table = tables.find(t => t.id === tableId);
-    if(!table) return;
-    bookingDraftTables.push({id: table.id, name: table.name, price: table.price || 0});
-    renderBookingTablesTable();
-    $('#f_bookingTableSelect').val('');
+    if(bookingDraftTables.some(t => t.tableID === tableId)){ showToast('That table is already added'); return; }
+
+    $.ajax({
+        url : "http://localhost:8080/v1/table/getTableFormData/" +tableId,
+        type : "GET",
+        headers:{
+            'Authorization':'Bearer '+localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                bookingDraftTables.push({
+                    tableID: response.body.tableId,
+                    tableCategory: response.body.tableCategoryName,
+                    seatCount: response.body.seatCount
+                });
+                renderBookingTablesTable(null);
+                $('#f_bookingTableSelect').val('');
+            }else{
+                alert(response.message);
+                $modalSave.prop('disabled', false);
+            }
+        },
+        error: function (e){
+            if(e.message){
+                alert(e.message);
+            }else{
+                alert("UNEXPECTED ERROR");
+            }
+            $modalSave.prop('disabled', false);
+        }
+    });
+
 });
 
 /* booking form: remove a table row from the booking's tables list */
 $(document).on('click', '.booking-table-remove-btn', function(){
     const idx = Number($(this).data('booking-idx'));
     bookingDraftTables.splice(idx, 1);
-    renderBookingTablesTable();
+    renderBookingTablesTable(null);
 });
 
 function openForm(type, id){
@@ -1892,11 +1963,30 @@ function openForm(type, id){
         });
     }
     if(type === 'booking'){
-        const record = isEdit ? bookings.find(b=>b.id===id) : null;
-        bookingDraftTables = record && record.tables ? record.tables.map(t => ({...t})) : [];
         $modalTitle.text(isEdit ? 'Edit Booking' : 'New Booking');
-        $modalBody.html(bookingFormHTML(record));
-        renderBookingTablesTable();
+        if(id === null){id = 0;}
+
+        $.ajax({
+            url:'http://localhost:8080/v1/booking/getBookingFormData/' + id,
+            type:'GET',
+            contentType: 'application/json',
+            headers:{
+                'Authorization': 'Bearer '+ localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    $modalBody.html(bookingFormHTML(response.body));
+                    renderBookingTablesTable(response.body.bookingDetailDTOS);
+                }
+                else{
+                    showToast(response.message);
+                }
+            },
+            error: function (){
+                showToast("UNEXPECTED ERROR");
+            }
+        });
+
     }
 
     $saveLabel.text(isEdit ? 'Save Changes' : 'Create');

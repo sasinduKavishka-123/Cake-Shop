@@ -19,4 +19,9 @@ public class ReservableTableDTO {
     private int seatCount;
     private TableStatus tableStatus;
 
+    public ReservableTableDTO(long tableId, String tableCategoryName, int seatCount) {
+        this.tableId = tableId;
+        this.tableCategoryName = tableCategoryName;
+        this.seatCount = seatCount;
+    }
 }

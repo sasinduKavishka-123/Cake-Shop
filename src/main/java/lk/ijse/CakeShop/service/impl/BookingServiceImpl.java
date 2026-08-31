@@ -2,7 +2,10 @@ package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.BookingDetailDTO;
+import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
+import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.entity.Booking;
 import lk.ijse.CakeShop.entity.BookingDetail;
 import lk.ijse.CakeShop.entity.ReservableTable;
@@ -16,7 +19,6 @@ import lk.ijse.CakeShop.repository.UserRepository;
 import lk.ijse.CakeShop.service.BookingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -157,7 +159,7 @@ public class BookingServiceImpl implements BookingService {
         log.info("Executing Method filterBooking()");
 
         String[] statusArr = null;
-        if(!statuses.isEmpty()){
+        if(statuses != null){
             statusArr = statuses.toArray(String[]::new);
         }
 
@@ -177,5 +179,40 @@ public class BookingServiceImpl implements BookingService {
             bookingDTOList.add(bd);
         }
         return bookingDTOList;
+    }
+
+    @Override
+    public BookingFormDTO getBookingFormData(long bookingId) {
+        log.info("Executing Method getBookingFortData()");
+
+        Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+        if(optionalBooking.isEmpty()){
+            log.error("Error in Method getBookingFortData()");
+            throw new CustomException(404, "Booking Not Found");
+        }
+        Booking b = optionalBooking.get();
+        BookingFormDTO bookingFormDTO = new BookingFormDTO();
+
+        bookingFormDTO.setBookingId(b.getBookingId());
+        bookingFormDTO.setUserName(b.getUser().getUserName());
+        bookingFormDTO.setContact(b.getUser().getUserContact());
+        bookingFormDTO.setEmail(b.getUser().getUserEmail());
+        bookingFormDTO.setBookingCreatedDate(b.getBookingCreatedDate());
+        bookingFormDTO.setBookingDate(b.getBookingDate());
+        bookingFormDTO.setTime(b.getBookingTime());
+        bookingFormDTO.setSeatCount(b.getSeatCount());
+        bookingFormDTO.setTableCategory(b.getTableType());
+        bookingFormDTO.setStatus(b.getBookingStatus());
+        bookingFormDTO.setTotal(b.getTotal());
+
+        // get booking details
+        List<BookingDetailFormDTO> bookingDetailsDTOs = bookingDetailRepository.getBookingDetailsByBookingId(bookingId);
+        bookingFormDTO.setBookingDetailDTOS(bookingDetailsDTOs);
+
+        // get tables that in same category
+        List<ReservableTableDTO> tableDTOList = reservableTableRepository.getTablesByCategory(b.getTableType());
+        bookingFormDTO.setTableDTOList(tableDTOList);
+
+        return bookingFormDTO;
     }
 }
