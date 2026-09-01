@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
+import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 
 import java.time.LocalDate;
@@ -16,5 +17,7 @@ public interface OrderService {
     PlaceOrderDTO getOrderDetailById(long orderId);
 
     void updateOrderStatus(long orderID, OrderStatus status);
+
+    OrderPrintDTO getOrderById(long orderId);
 
 }

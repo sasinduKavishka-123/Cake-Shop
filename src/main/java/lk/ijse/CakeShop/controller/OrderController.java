@@ -52,4 +52,9 @@ public class OrderController {
         orderService.updateOrderStatus(orderId, orderStatus);
         return new CommonResponse(200, SUCCESS_MESSAGE);
     }
+
+    @GetMapping(value = "/getOrderById/{order_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getOrderById(@PathVariable long order_id){
+        return new CommonResponse(200, orderService.getOrderById(order_id), SUCCESS_MESSAGE);
+    }
 }

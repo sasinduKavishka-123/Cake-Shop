@@ -2217,24 +2217,49 @@ $modalPrint.on('click', function(){
 /* orders table: print an order receipt directly from the row, no modal needed */
 $(document).on('click', '[data-print-order]', function(){
     const orderId = $(this).data('print-order');
-    const order = orders.find(o => o.id === orderId);
-    if(!order) return;
 
-    const parsedItems = parseOrderItems(order.items);
-    const rowsHtml = parsedItems.map(it => `
-    <tr><td>${it.name}</td><td>${it.qty}</td></tr>
-  `).join('') || `<tr><td colspan="2">No items on this order.</td></tr>`;
+    $.ajax({
+        url:"http://localhost:8080/v1/order/getOrderById/" + orderId,
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT"),
+        },
+        success: function (response){
+            if(response.status === 200){
 
-    const printHtml = `
-    <h1>Order ${order.id}</h1>
-    <p>Customer: ${order.customer}<br>Status: ${order.status}<br>Date: ${order.date}</p>
-    <table>
-      <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
-      <tbody>${rowsHtml}</tbody>
-      <tfoot><tr><td>Total</td><td>${money(order.total)}</td></tr></tfoot>
-    </table>
-  `;
-    openPrintPreview(printHtml);
+                // order items list --------------------------
+                const orderItemList = response.body.orderItems;
+                const rowsHtml = orderItemList.map(it => `
+                  <tr>
+                  <td>${it.foodItemName}</td> <td>${it.qty}</td> <td>${money(it.price)}</td> <td>${money(it.discount)}</td>
+                  <td>${money(it.finalPrice)}</td> <td>${money(it.finalPrice * it.qty)}</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="5">No items on this order.</td></tr>`;
+
+                // order details ---------------------------------
+                const order = response.body;
+                const printHtml = `
+                  <h1>Order ${order.orderId}</h1>
+                  <p>Date: ${order.orderDate} <br> Status: ${order.orderStatus}</p>
+                  <p>${order.user.userRoles}: ${order.user.userName} <br> Contact: ${order.user.userContact} <br> Email: ${order.user.userEmail}
+                  </p>
+                  <table>
+                    <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th><th>Sub Total</th></tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                    <tfoot><tr><td colspan="5">Total</td><td>${money(order.total)}</td></tr></tfoot>
+                  </table>
+                `;
+                openPrintPreview(printHtml);
+            }
+            else{
+                showToast(response.message)
+            }
+        },
+        error: function (response){
+            response.message ? alert(response.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+
 });
 
 /* bookings table: print a booking confirmation directly from the row, no modal needed */

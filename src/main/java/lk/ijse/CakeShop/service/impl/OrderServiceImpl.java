@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.service.impl;
 import lk.ijse.CakeShop.dto.OrderItemsDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
+import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
 import lk.ijse.CakeShop.entity.FoodItem;
 import lk.ijse.CakeShop.entity.Order;
 import lk.ijse.CakeShop.entity.OrderItem;
@@ -201,6 +202,53 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(status);
 
         orderRepository.save(order);
+
+    }
+
+    @Override
+    public OrderPrintDTO getOrderById(long orderId) {
+        log.info("Executing Method getOrderById()");
+
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if(optionalOrder.isEmpty()){
+            log.error("Error in Method getOrderById()");
+            throw new CustomException(404, "Order not Found");
+        }
+        Order o = optionalOrder.get();
+        OrderPrintDTO orderPrintDTO = new OrderPrintDTO();
+
+        orderPrintDTO.setOrderId(o.getOrderId());
+        orderPrintDTO.setOrderDate(o.getOrderDate());
+        orderPrintDTO.setTotal(o.getTotal());
+        orderPrintDTO.setDiscount(o.getDiscount());
+        orderPrintDTO.setSubTotal(o.getSubTotal());
+        orderPrintDTO.setDiscount(o.getDiscount());
+        orderPrintDTO.setOrderStatus(o.getOrderStatus());
+
+        // get Customer data
+        UserDTO user = new UserDTO();
+        user.setUserRoles(o.getUser().getUserRoles());
+        user.setUserName(o.getUser().getUserName());
+        user.setUserContact(o.getUser().getUserContact());
+        user.setUserEmail(o.getUser().getUserEmail());
+
+        orderPrintDTO.setUser(user);
+
+        // get order details
+        List<OrderItemsDTO> orderItemsDTOList = new ArrayList<>();
+        for(OrderItem oi : o.getOrderItem()){
+            OrderItemsDTO dto = new OrderItemsDTO();
+            dto.setFoodItemName(oi.getFoodItem().getFoodItemName());
+            dto.setQty(oi.getQty());
+            dto.setPrice(oi.getPrice());
+            dto.setDiscount(oi.getDiscount());
+            dto.setFinalPrice(oi.getFinalPrice());
+
+            orderItemsDTOList.add(dto);
+        }
+        orderPrintDTO.setOrderItems(orderItemsDTOList);
+
+        return orderPrintDTO;
 
     }
 
