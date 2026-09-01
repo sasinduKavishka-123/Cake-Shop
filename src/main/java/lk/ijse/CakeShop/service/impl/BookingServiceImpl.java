@@ -1,10 +1,13 @@
 package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
+import lk.ijse.CakeShop.dto.BookingDetailDTO;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
+import lk.ijse.CakeShop.dto.printDTOs.BookingPrintDTO;
 import lk.ijse.CakeShop.entity.Booking;
 import lk.ijse.CakeShop.entity.BookingDetail;
 import lk.ijse.CakeShop.entity.ReservableTable;
@@ -217,5 +220,48 @@ public class BookingServiceImpl implements BookingService {
         bookingFormDTO.setTableDTOList(tableDTOList);
 
         return bookingFormDTO;
+    }
+
+    @Override
+    public BookingPrintDTO getBookingById(long bookingId) {
+        log.info("Executing Method getBookingById()");
+
+        Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+        if(optionalBooking.isEmpty()){
+            log.error("Error in Method getBookingById()");
+            throw new CustomException(404, "Booking Not Found");
+        }
+        Booking b = optionalBooking.get();
+
+        BookingPrintDTO bookingPrintDTO = new BookingPrintDTO();
+        bookingPrintDTO.setBookingId(b.getBookingId());
+        bookingPrintDTO.setBookingCreatedDate(b.getBookingCreatedDate());
+        bookingPrintDTO.setBookingDate(b.getBookingDate());
+        bookingPrintDTO.setBookingTime(b.getBookingTime());
+        bookingPrintDTO.setTableType(b.getTableType());
+        bookingPrintDTO.setSeatCount(b.getSeatCount());
+        bookingPrintDTO.setTotal(b.getTotal());
+        bookingPrintDTO.setBookingStatus(b.getBookingStatus());
+
+        // get User details
+        UserDTO user = new UserDTO();
+        user.setUserRoles(b.getUser().getUserRoles());
+        user.setUserName(b.getUser().getUserName());
+        user.setUserContact(b.getUser().getUserContact());
+        user.setUserEmail(b.getUser().getUserEmail());
+        bookingPrintDTO.setUser(user);
+
+        // get Booking Details
+        List<BookingDetailFormDTO> bookingDetailList = new ArrayList<>();
+        for(BookingDetail bd : b.getBookingDetails()){
+            BookingDetailFormDTO dto = new BookingDetailFormDTO();
+            dto.setSeatCount(bd.getReservableTable().getSeatCount());
+            dto.setTableID(bd.getReservableTable().getTableId());
+            dto.setTableCategory(bd.getReservableTable().getTableCategory().getTableCategoryName());
+            bookingDetailList.add(dto);
+        }
+        bookingPrintDTO.setBookingDetailList(bookingDetailList);
+
+        return bookingPrintDTO;
     }
 }

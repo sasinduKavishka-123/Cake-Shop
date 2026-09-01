@@ -1039,7 +1039,7 @@ function renderBookings(filter=''){
                           <td>
                             <div class="row-actions">
                               <button class="icon-btn" data-edit="booking" data-id="${b.bookingId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                              <button class="icon-btn" data-print-booking="${b.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              <button class="icon-btn" data-print-booking="${b.bookingId}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                             </div>
                           </td>
                         </tr>`;
@@ -2265,31 +2265,58 @@ $(document).on('click', '[data-print-order]', function(){
 /* bookings table: print a booking confirmation directly from the row, no modal needed */
 $(document).on('click', '[data-print-booking]', function(){
     const bookingId = $(this).data('print-booking');
-    const booking = bookings.find(b => b.id === bookingId);
-    if(!booking) return;
 
-    const tableRows = (booking.tables && booking.tables.length)
-        ? booking.tables.map(t => `<tr><td>${t.id}</td><td>${t.name}</td><td>${money(t.price || 0)}</td></tr>`).join('')
-        : `<tr><td colspan="3">No tables assigned.</td></tr>`;
-    const total = (booking.tables || []).reduce((sum, t) => sum + (t.price || 0), 0);
+    $.ajax({
+        url:"http://localhost:8080/v1/booking/getBookingById/" + bookingId,
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
 
-    const printHtml = `
-    <h1>Booking ${booking.id}</h1>
-    <p>
-      Customer: ${booking.customer}<br>
-      Phone: ${booking.phone}<br>
-      Date: ${booking.date}<br>
-      Time: ${booking.slot}<br>
-      Guests: ${booking.guests}<br>
-      Status: ${booking.status}
-    </p>
-    <table>
-      <thead><tr><th>Table ID</th><th>Table Name</th><th>Price</th></tr></thead>
-      <tbody>${tableRows}</tbody>
-      <tfoot><tr><td colspan="2">Total</td><td>${money(total)}</td></tr></tfoot>
-    </table>
-  `;
-    openPrintPreview(printHtml);
+                // booking table details ------------------------
+                const detailList = response.body.bookingDetailList;
+                const tableRows = detailList.map(t =>
+                    `<tr><td>${t.tableID}</td><td>${t.tableCategory}</td><td>${t.seatCount}</td></tr>`
+                ).join('') || `<tr><td colspan="3">No tables assigned.</td></tr>`;
+
+                // booking details --------------------------------
+                const booking = response.body;
+                const printHtml = `
+                  <h1>Booking ${booking.bookingId}</h1>
+                  <div class="field-row-2">
+                    <p>
+                      Date: ${booking.bookingDate}<br>
+                      Time: ${booking.bookingTime}<br>
+                      Table Type: ${booking.tableType}<br>
+                      Guests: ${booking.seatCount}<br><br>
+                      Status: <span style="font-weight: bold">${booking.bookingStatus}</span>
+                    </p>
+                    <p>
+                      ${booking.user.userRoles}: ${booking.user.userName}<br>
+                      Phone: ${booking.user.userContact}<br>
+                      Email: ${booking.user.userEmail}<br>
+                      Created Date: ${booking.bookingCreatedDate}
+                    </p>
+                  </div>
+                  <table>
+                    <thead><tr><th>Table ID</th><th>Table Name</th><th>Seate Count</th></tr></thead>
+                    <tbody>${tableRows}</tbody>
+                    <tfoot><tr><td colspan="2">Total</td><td>${money(booking.total)}</td></tr></tfoot>
+                  </table>
+                `;
+                openPrintPreview(printHtml);
+            }
+            else{
+                showToast(response.message);
+            }
+        },
+        error: function (response){
+            response.message ? alert(response.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+
 });
 
 /* delegated edit buttons — bound once on document since rows are re-rendered */

@@ -60,4 +60,9 @@ public class BookingController {
         return new CommonResponse(200, formDTO, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getBookingById/{booking_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getBookingById(@PathVariable long booking_id){
+        return new CommonResponse(200, bookingService.getBookingById(booking_id), SUCCESS_MESSAGE);
+    }
+
 }
