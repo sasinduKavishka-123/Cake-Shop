@@ -5,6 +5,7 @@ import lk.ijse.CakeShop.dto.RestockDetailDTO;
 import lk.ijse.CakeShop.dto.StockItemDTO;
 import lk.ijse.CakeShop.dto.SupplierDTO;
 import lk.ijse.CakeShop.dto.formDTOs.RestockFormDTO;
+import lk.ijse.CakeShop.dto.printDTOs.RestockPrintDTO;
 import lk.ijse.CakeShop.entity.Restock;
 import lk.ijse.CakeShop.entity.RestockDetail;
 import lk.ijse.CakeShop.entity.StockItem;
@@ -189,5 +190,46 @@ public class RestockServiceImpl implements RestockService {
     @Override
     public int getRestockCountForThisMonth() {
         return restockRepository.getThisMonthRestockCount();
+    }
+
+    @Override
+    public RestockPrintDTO getRestockById(long restockId) {
+        log.info("Executing Method getRestockById()");
+        Optional<Restock> optionalRestock = restockRepository.findById(restockId);
+        if(optionalRestock.isEmpty()){
+            log.error("Error in Method getRestockById()");
+            throw new CustomException(404, "Restock not found");
+        }
+        Restock r = optionalRestock.get();
+        RestockPrintDTO restockDTO = new RestockPrintDTO();
+
+        restockDTO.setRestockId(r.getRestockId());
+        restockDTO.setDate(r.getDate());
+        restockDTO.setTotal(r.getTotal());
+        restockDTO.setItemCount(r.getItemsCount());
+
+        // supplier details
+        SupplierDTO supplierDTO = new SupplierDTO();
+        supplierDTO.setSupplierName(r.getSupplier().getSupplierName());
+        supplierDTO.setCompanyName(r.getSupplier().getCompanyName());
+        supplierDTO.setEmail(r.getSupplier().getEmail());
+        supplierDTO.setContact(r.getSupplier().getContact());
+
+        restockDTO.setSupplierDTO(supplierDTO);
+
+        // restock details
+        List<RestockDetailDTO> detailDTOList = new ArrayList<>();
+        for(RestockDetail rd : r.getRestockDetails()){
+            RestockDetailDTO dto = new RestockDetailDTO();
+            dto.setQty(rd.getQty());
+            dto.setPricePerUnit(rd.getPricePerUnit());
+            dto.setUnitOfMeasure(rd.getStockItem().getUnitOfMeasure());
+            dto.setStockItemName(rd.getStockItem().getItemName());
+
+            detailDTOList.add(dto);
+        }
+        restockDTO.setRestockDetailDTOList(detailDTOList);
+
+        return restockDTO;
     }
 }

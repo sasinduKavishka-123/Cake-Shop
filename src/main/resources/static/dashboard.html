@@ -778,6 +778,45 @@
                 pointer-events:none;
             }
         }
+
+        /* ============ PRINT PREVIEW MODAL ============ */
+        .print-modal{
+            position:fixed;
+            top:50%;left:50%;
+            transform:translate(-50%,-46%) scale(0.96);
+            width:fit-content;
+            max-height:88vh;
+            overflow-y:auto;
+            background:var(--cream-warm);
+            border-radius:26px;
+            z-index:95;
+            box-shadow:var(--shadow-lg);
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .3s ease, transform .3s ease;
+        }
+        .print-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+        #printArea{padding:26px 28px;}
+        #printArea h1{font-family:'Fraunces',serif; font-size:1.35rem; margin-bottom:6px; color:var(--espresso);}
+        #printArea p{margin:2px 0 18px; color:var(--espresso-soft); font-size:0.88rem; line-height:1.6;}
+        #printArea table{width:100%; border-collapse:collapse; margin-top:6px;}
+        #printArea th, #printArea td{padding:9px 12px; border:1px solid var(--line); text-align:left; font-size:0.86rem;}
+        #printArea th{background:var(--cream); font-weight:800; color:var(--espresso-soft);}
+        #printArea tfoot td{font-weight:800; color:var(--espresso);}
+        @media print{
+            body > *:not(.print-modal){display:none !important;}
+            .print-modal{
+                position:static !important;
+                transform:none !important;
+                opacity:1 !important;
+                width:100% !important;
+                max-height:none !important;
+                box-shadow:none !important;
+                border-radius:0 !important;
+            }
+            .print-modal-foot{display:none !important;}
+            .modal-close{display:none !important;}
+        }
     </style>
 </head>
 <body>
@@ -1073,6 +1112,19 @@
 
 <div class="scrim" id="modalScrim"></div>
 
+<!-- ================= PRINT PREVIEW MODAL ================= -->
+<div class="modal print-modal" id="printModal">
+    <div class="modal-head">
+        <h3>Print Preview</h3>
+        <button class="modal-close" id="printModalClose">✕</button>
+    </div>
+    <div id="printArea"></div>
+    <div class="modal-foot print-modal-foot">
+        <button class="btn-secondary" id="printModalCancel">Close</button>
+        <button class="btn-primary" id="printModalConfirm">🖨 Print</button>
+    </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 
@@ -1087,6 +1139,7 @@
 
 <!-- ******** dashboard js ******** -->
 <script src="js/dashboard.js"></script>
+
 
 </body>
 </html>

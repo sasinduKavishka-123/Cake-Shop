@@ -1,7 +1,6 @@
 package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
-import lk.ijse.CakeShop.dto.BookingDetailDTO;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
@@ -104,11 +103,6 @@ public class BookingServiceImpl implements BookingService {
             throw new CustomException(402, "Invalid Booking ID");
         }
 
-        if(bookingDTO.getBookingDetailDTOS().isEmpty()){
-            log.error("Error in Method addBookingDetails()");
-            throw new CustomException(402, "Invalid Booking Details");
-        }
-
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingDTO.getBookingId());
         if(optionalBooking.isEmpty()){
             log.error("Error in Method addBookingDetails()");
@@ -116,25 +110,34 @@ public class BookingServiceImpl implements BookingService {
         }
         Booking booking = optionalBooking.get();
 
-        for(BookingDetailDTO bd : bookingDTO.getBookingDetailDTOS()){
-            BookingDetail b = new BookingDetail();
-            b.setBooking(booking);
-            b.setQyt(bd.getQyt());
-            b.setPrice(bd.getPrice());
+        if( ! bookingDTO.getBookingStatus().equals(BookingStatus.CANCELLED)){
 
-            // get table ----------
-            Optional<ReservableTable> tableOptional = reservableTableRepository.findById(bd.getTableId());
-            if(tableOptional.isEmpty()){
+            if(bookingDTO.getBookingDetailDTOS().isEmpty()){
                 log.error("Error in Method addBookingDetails()");
-                throw new CustomException(404, "Table Not Found");
+                throw new CustomException(402, "Invalid Booking Details");
             }
-            ReservableTable table = tableOptional.get();
-            b.setReservableTable(table);
 
-            bookingDetailRepository.save(b);
+            // Delete Current booking details
+            bookingDetailRepository.deleteCurrentBookingDetails(booking.getBookingId());
+
+            for(BookingDetailFormDTO bd : bookingDTO.getBookingDetailDTOS()){
+                BookingDetail b = new BookingDetail();
+                b.setBooking(booking);
+                b.setQyt(bd.getSeatCount());
+                // get table ----------
+                Optional<ReservableTable> tableOptional = reservableTableRepository.findById(bd.getTableID());
+                if(tableOptional.isEmpty()){
+                    log.error("Error in Method addBookingDetails()");
+                    throw new CustomException(404, "Table Not Found");
+                }
+                ReservableTable table = tableOptional.get();
+                b.setReservableTable(table);
+
+                bookingDetailRepository.save(b);
+            }
         }
 
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
+        booking.setBookingStatus(bookingDTO.getBookingStatus());
         bookingRepository.save(booking);
     }
 

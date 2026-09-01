@@ -44,4 +44,9 @@ public class RestockController {
     public CommonResponse getRestockCount(){
         return new CommonResponse(200, restockService.getRestockCountForThisMonth(), SUCCESS_MESSAGE);
     }
+
+    @GetMapping(value = "/getRestockById/{restock_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getRestockById(@PathVariable long restock_id){
+        return new CommonResponse(200, restockService.getRestockById(restock_id), SUCCESS_MESSAGE);
+    }
 }

@@ -1039,7 +1039,7 @@ function renderBookings(filter=''){
                           <td>
                             <div class="row-actions">
                               <button class="icon-btn" data-edit="booking" data-id="${b.bookingId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                              <button class="icon-btn danger" data-delete="booking" data-id="${b.id}" aria-label="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z" stroke="currentColor" stroke-width="1.8"/></svg></button>
+                              <button class="icon-btn" data-print-booking="${b.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                             </div>
                           </td>
                         </tr>`;
@@ -1264,6 +1264,22 @@ function closeModal(){
 }
 $('#modalClose').on('click', closeModal);
 $('#modalCancel').on('click', closeModal);
+
+/* ---- print preview modal: shows the receipt on-screen first, always visible
+   even if the browser's print dialog itself is blocked (e.g. sandboxed preview) ---- */
+const $printModal = $('#printModal');
+function openPrintPreview(html){
+    $('#printArea').html(html);
+    $printModal.addClass('show');
+    $modalScrim.addClass('show');
+}
+function closePrintPreview(){
+    $printModal.removeClass('show');
+    if(!$formModal.hasClass('show') && !$confirmModal.hasClass('show')) $modalScrim.removeClass('show');
+}
+$('#printModalClose').on('click', closePrintPreview);
+$('#printModalCancel').on('click', closePrintPreview);
+$('#printModalConfirm').on('click', function(){ window.print(); });
 
 function orderFormHTML(o){
     o = o || {customer:'', items:'', total:'', status:'Pending', date:new Date().toISOString().split('T')[0]};
@@ -2097,50 +2113,105 @@ $(document).on('click', '.restock-remove-btn', function(){
 });
 
 /* ---- restock: print the current restock order ---- */
+// $modalPrint.on('click', function(){
+//     const restockId = (editContext && editContext.id) || '';
+//     const supplier = $('#f_supplier').val() || '—';
+//     const date = $('#f_date').val() || '—';
+//     const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
+//
+//     const rowsHtml = restockDraftItems.map(it => `
+//     <tr>
+//       <td>${it.name}</td>
+//       <td>${it.qty} ${it.unit}</td>
+//       <td>${money(it.price)}</td>
+//       <td>${money(it.qty * it.price)}</td>
+//     </tr>
+//   `).join('') || `<tr><td colspan="4">No items on this restock order.</td></tr>`;
+//
+//     const printWin = window.open('', '_blank', 'width=800,height=900');
+//     printWin.document.write(`
+//     <html>
+//     <head>
+//       <title>Restock ${restockId}</title>
+//       <style>
+//         body{font-family: Arial, Helvetica, sans-serif; padding:36px; color:#3A2822;}
+//         h1{font-size:1.4rem; margin-bottom:4px;}
+//         p{margin:2px 0 20px; color:#6B5248;}
+//         table{width:100%; border-collapse:collapse; margin-top:10px;}
+//         th, td{padding:9px 12px; border:1px solid #ddd; text-align:left; font-size:0.9rem;}
+//         th{background:#F5EFE4;}
+//         tfoot td{font-weight:bold;}
+//       </style>
+//     </head>
+//     <body>
+//       <h1>Restock Order ${restockId}</h1>
+//       <p>Supplier: ${supplier}<br>Date: ${date}</p>
+//       <table>
+//         <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th></tr></thead>
+//         <tbody>${rowsHtml}</tbody>
+//         <tfoot><tr><td colspan="3">Total</td><td>${money(total)}</td></tr></tfoot>
+//       </table>
+//     </body>
+//     </html>
+//   `);
+//     printWin.document.close();
+//     printWin.focus();
+//     setTimeout(() => printWin.print(), 300);
+// });
+
+
+/* ---- restock: print the current restock order ---- */
 $modalPrint.on('click', function(){
-    const restockId = (editContext && editContext.id) || '';
-    const supplier = $('#f_supplier').val() || '—';
-    const date = $('#f_date').val() || '—';
-    const total = restockDraftItems.reduce((sum, it) => sum + it.qty * it.price, 0);
+    const restockId = (editContext && editContext.id);
 
-    const rowsHtml = restockDraftItems.map(it => `
-    <tr>
-      <td>${it.name}</td>
-      <td>${it.qty} ${it.unit}</td>
-      <td>${money(it.price)}</td>
-      <td>${money(it.qty * it.price)}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="4">No items on this restock order.</td></tr>`;
+    $.ajax({
+        url:"http://localhost:8080/v1/restock/getRestockById/" + restockId,
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function(response) {
+            if(response.status === 200){
 
-    const printWin = window.open('', '_blank', 'width=800,height=900');
-    printWin.document.write(`
-    <html>
-    <head>
-      <title>Restock ${restockId}</title>
-      <style>
-        body{font-family: Arial, Helvetica, sans-serif; padding:36px; color:#3A2822;}
-        h1{font-size:1.4rem; margin-bottom:4px;}
-        p{margin:2px 0 20px; color:#6B5248;}
-        table{width:100%; border-collapse:collapse; margin-top:10px;}
-        th, td{padding:9px 12px; border:1px solid #ddd; text-align:left; font-size:0.9rem;}
-        th{background:#F5EFE4;}
-        tfoot td{font-weight:bold;}
-      </style>
-    </head>
-    <body>
-      <h1>Restock Order ${restockId}</h1>
-      <p>Supplier: ${supplier}<br>Date: ${date}</p>
-      <table>
-        <thead><tr><th>Item Name</th><th>Qty</th><th>Price/Unit</th><th>Subtotal</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-        <tfoot><tr><td colspan="3">Total</td><td>${money(total)}</td></tr></tfoot>
-      </table>
-    </body>
-    </html>
-  `);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => printWin.print(), 300);
+                // detail tabl-----------------------------------
+                let detailList = response.body.restockDetailDTOList;
+                const rowsHtml = detailList.map(it => `
+                  <tr>
+                    <td>${it.stockItemName}</td>
+                    <td>${it.qty} ${it.unitOfMeasure}</td>
+                    <td>${money(it.pricePerUnit)}</td>
+                    <td>${money(it.qty * it.pricePerUnit)}</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="4">No items on this restock order.</td></tr>`;
+
+                // restock details -------------------------------------
+                let r = response.body;
+                const printHtml = `
+                  <h1>Restock Order ${r.restockId}</h1>
+                  <p>Date: ${r.date}</p>
+                  <p>Supplier: ${r.supplierDTO.companyName}<br>
+                        Contact Person: ${r.supplierDTO.supplierName} <br>
+                        Contact: ${r.supplierDTO.contact} <br>
+                        Email: ${r.supplierDTO.email}
+                  </p>
+                  <table>
+                    <thead><tr><th>Item Name</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                    <tfoot><tr><td colspan="3">Total</td><td>${money(r.total)}</td></tr></tfoot>
+                  </table>
+                `;
+                openPrintPreview(printHtml);
+
+            }
+            else{
+                showToast(response.message);
+            }
+        },
+        error: function (response){
+            response.message ? alert(response.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+
 });
 
 /* orders table: print an order receipt directly from the row, no modal needed */
@@ -2154,35 +2225,46 @@ $(document).on('click', '[data-print-order]', function(){
     <tr><td>${it.name}</td><td>${it.qty}</td></tr>
   `).join('') || `<tr><td colspan="2">No items on this order.</td></tr>`;
 
-    const printWin = window.open('', '_blank', 'width=800,height=900');
-    printWin.document.write(`
-    <html>
-    <head>
-      <title>Order ${order.id}</title>
-      <style>
-        body{font-family: Arial, Helvetica, sans-serif; padding:36px; color:#3A2822;}
-        h1{font-size:1.4rem; margin-bottom:4px;}
-        p{margin:2px 0 20px; color:#6B5248;}
-        table{width:100%; border-collapse:collapse; margin-top:10px;}
-        th, td{padding:9px 12px; border:1px solid #ddd; text-align:left; font-size:0.9rem;}
-        th{background:#F5EFE4;}
-        tfoot td{font-weight:bold;}
-      </style>
-    </head>
-    <body>
-      <h1>Order ${order.id}</h1>
-      <p>Customer: ${order.customer}<br>Status: ${order.status}<br>Date: ${order.date}</p>
-      <table>
-        <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-        <tfoot><tr><td>Total</td><td>${money(order.total)}</td></tr></tfoot>
-      </table>
-    </body>
-    </html>
-  `);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => printWin.print(), 300);
+    const printHtml = `
+    <h1>Order ${order.id}</h1>
+    <p>Customer: ${order.customer}<br>Status: ${order.status}<br>Date: ${order.date}</p>
+    <table>
+      <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+      <tfoot><tr><td>Total</td><td>${money(order.total)}</td></tr></tfoot>
+    </table>
+  `;
+    openPrintPreview(printHtml);
+});
+
+/* bookings table: print a booking confirmation directly from the row, no modal needed */
+$(document).on('click', '[data-print-booking]', function(){
+    const bookingId = $(this).data('print-booking');
+    const booking = bookings.find(b => b.id === bookingId);
+    if(!booking) return;
+
+    const tableRows = (booking.tables && booking.tables.length)
+        ? booking.tables.map(t => `<tr><td>${t.id}</td><td>${t.name}</td><td>${money(t.price || 0)}</td></tr>`).join('')
+        : `<tr><td colspan="3">No tables assigned.</td></tr>`;
+    const total = (booking.tables || []).reduce((sum, t) => sum + (t.price || 0), 0);
+
+    const printHtml = `
+    <h1>Booking ${booking.id}</h1>
+    <p>
+      Customer: ${booking.customer}<br>
+      Phone: ${booking.phone}<br>
+      Date: ${booking.date}<br>
+      Time: ${booking.slot}<br>
+      Guests: ${booking.guests}<br>
+      Status: ${booking.status}
+    </p>
+    <table>
+      <thead><tr><th>Table ID</th><th>Table Name</th><th>Price</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+      <tfoot><tr><td colspan="2">Total</td><td>${money(total)}</td></tr></tfoot>
+    </table>
+  `;
+    openPrintPreview(printHtml);
 });
 
 /* delegated edit buttons — bound once on document since rows are re-rendered */
@@ -2672,24 +2754,55 @@ $modalSave.on('click', function(){
     }
 
     if(type === 'booking'){
-        const data = {
-            customer: $('#f_customer').val().trim() || 'Guest Customer',
-            phone: $('#f_phone').val().trim() || '—',
-            date: $('#f_date').val() || new Date().toISOString().split('T')[0],
-            slot: $('#f_slot').val(),
-            guests: Number($('#f_guests').val()) || 1,
-            tables: [...bookingDraftTables],
-            status: $('#f_status').val(),
-        };
-        if(isEdit){
-            const idx = bookings.findIndex(b=>b.id===id);
-            bookings[idx] = {...bookings[idx], ...data};
-            showToast('Booking updated');
-        } else {
-            const newId = 'BK-' + (nextBookingNum++);
-            bookings.unshift({id:newId, ...data});
-            showToast('Booking created');
+//Pending','Confirmed','Completed','Cancelled
+        let seatCount = Number($('#f_guests').val());
+        let status = $('#f_status').val();
+        let count = 0;
+        for(let b of bookingDraftTables){
+            count += b.seatCount;
         }
+
+        if(status !== "Cancelled"){
+            if(seatCount > count){
+                showToast("Selected Seats Are not Enough");
+                $modalSave.prop('disabled', false);
+                return;
+            }
+        }
+
+        const obj = {
+            bookingId: id,
+            bookingDetailDTOS: bookingDraftTables,
+            bookingStatus: status.toUpperCase()
+        };
+
+        $.ajax({
+            url: "http://localhost:8080/v1/booking/addBookingDetails",
+            type:"PUT",
+            contentType:'application/json',
+            data: JSON.stringify(obj),
+            headers:{
+                'Authorization':'Bearer '+localStorage.getItem("JWT")
+            },
+            success: function (response){
+                if(response.status === 200){
+                    showToast("Booking Details Updated");
+                    closeModal();
+                    renderAll();
+                }else{
+                    showToast(response.message);
+                    $modalSave.prop('disabled', false);
+                }
+            },
+            error: function (e){
+                if(e.message){
+                    alert(e.message)
+                }else{
+                    alert("UNEXPECTED ERROR");
+                }
+                $modalSave.prop('disabled', false);
+            }
+        });
     }
     // closeModal();
     // renderAll();

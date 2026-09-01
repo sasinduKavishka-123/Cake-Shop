@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.repository;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.entity.BookingDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -17,5 +18,9 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail,Lon
             "  bd.reservableTable.seatCount ) " +
             "FROM BookingDetail bd WHERE bd.booking.bookingId = ?1")
     List<BookingDetailFormDTO> getBookingDetailsByBookingId(long bookingId);
+
+    @Modifying
+    @Query(value = "DELETE FROM BookingDetail b WHERE b.booking.bookingId = ?1")
+    void deleteCurrentBookingDetails(long bookingId);
 
 }
