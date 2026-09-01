@@ -65,4 +65,9 @@ public class BookingController {
         return new CommonResponse(200, bookingService.getBookingById(booking_id), SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getBookingCountWithinWeek", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getBookingsWithinWeek(){
+        return new CommonResponse(200, bookingService.getBookingCount(), SUCCESS_MESSAGE);
+    }
+
 }

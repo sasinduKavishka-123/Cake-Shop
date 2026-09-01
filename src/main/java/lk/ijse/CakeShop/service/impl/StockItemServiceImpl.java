@@ -150,4 +150,10 @@ public class StockItemServiceImpl implements StockItemService {
 
         return formDTO;
     }
+
+    @Override
+    public int getLowStockItemCount() {
+        log.info("Executing Method getLowStockItemCount()");
+        return stockItemRepository.getLowStockItemCount();
+    }
 }

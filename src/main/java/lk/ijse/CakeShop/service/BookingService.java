@@ -23,4 +23,6 @@ public interface BookingService {
 
     BookingPrintDTO getBookingById(long bookingId);
 
+    int getBookingCount();
+
 }

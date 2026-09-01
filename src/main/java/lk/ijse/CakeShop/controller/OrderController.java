@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Set;
 
@@ -57,4 +58,15 @@ public class OrderController {
     public CommonResponse getOrderById(@PathVariable long order_id){
         return new CommonResponse(200, orderService.getOrderById(order_id), SUCCESS_MESSAGE);
     }
+
+    @GetMapping(value = "/getThisWeekOrderCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getThisWeekOrderCount(){
+        return new CommonResponse(200, orderService.getThisWeekOrderCount(), SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getOrderWeekRevenues", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getOrderWeekRevenues(){
+        return new CommonResponse(200, orderService.getOrderWeekRevenues(), SUCCESS_MESSAGE);
+    }
+
 }

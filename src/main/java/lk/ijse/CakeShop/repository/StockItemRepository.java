@@ -23,4 +23,7 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
     @Query(value = "SELECT new lk.ijse.CakeShop.dto.StockItemDTO(s.stockItemId, s.itemName, s.unitOfMeasure)" +
             "FROM StockItem s")
     List<StockItemDTO> getItemIDAndName();
+
+    @Query(value = "SELECT COUNT(s.stockItemId) FROM StockItem s WHERE s.stockStatus IN ('LOW_STOCK', 'OUT_OF_STOCK')")
+    int getLowStockItemCount();
 }

@@ -47,4 +47,9 @@ public class StockItemController {
         return new CommonResponse(200, formDTO, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getLowStockItemCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getLowStockItemCount(){
+        return new CommonResponse(200, stockItemService.getLowStockItemCount(), SUCCESS_MESSAGE);
+    }
+
 }

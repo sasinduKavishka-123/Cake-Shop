@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.service.impl;
 import lk.ijse.CakeShop.dto.OrderItemsDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
+import lk.ijse.CakeShop.dto.overviewDTOs.OrderOverviewDTO;
 import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
 import lk.ijse.CakeShop.entity.FoodItem;
 import lk.ijse.CakeShop.entity.Order;
@@ -22,6 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -250,6 +255,52 @@ public class OrderServiceImpl implements OrderService {
 
         return orderPrintDTO;
 
+    }
+
+    @Override
+    public int getThisWeekOrderCount() {
+        log.info("Executing Method getThisWeekOrderCount()");
+
+        LocalDate startDate = LocalDate.now().minusDays(7); // seven days ago
+        LocalDate endDate = LocalDate.now();
+
+        return orderRepository.getThisWeekOrderCount(startDate, endDate);
+    }
+
+    @Override
+    public OrderOverviewDTO getOrderWeekRevenues() {
+        log.info("Executing Method getOrderWeekRevenues()");
+
+        OrderOverviewDTO orderOverviewDTO = new OrderOverviewDTO();
+        double thisWeekRevenue = 0.0;
+        double lastWeekRevenue = 1;
+
+        // get this week revenue
+        LocalDate today = LocalDate.now();
+        LocalDate thisWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        Double weekRevenue = orderRepository.getWeekRevenue(thisWeekStart, today);
+        if(weekRevenue != null){
+            thisWeekRevenue = weekRevenue;
+        }
+        orderOverviewDTO.setThisWeekRevenue(new BigDecimal(thisWeekRevenue));
+
+        // get last week revenue
+        LocalDate lastWeekStart = today.minusWeeks(1)
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+        LocalDate lastWeekEnd = today.minusWeeks(1)
+                .with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        weekRevenue = orderRepository.getWeekRevenue(lastWeekStart, lastWeekEnd);
+        if(weekRevenue != null){
+            lastWeekRevenue = weekRevenue;
+        }
+        orderOverviewDTO.setLastWeekRevenue(new BigDecimal(lastWeekRevenue));
+
+        // calculate percentage
+        double percentage = ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100;
+        orderOverviewDTO.setPercentage(percentage);
+
+        return orderOverviewDTO;
     }
 
 }

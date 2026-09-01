@@ -20,5 +20,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "(?4 IS NULL OR str(b.bookingStatus) IN ?4)")
     List<Booking> filterBookings(String bookingId, String userName, String date, String[] statuses);
 
-    String user(User user);
+    @Query(value = "SELECT COUNT(b.bookingId) FROM Booking b WHERE b.bookingDate BETWEEN ?1 AND ?2")
+    int getBookingCount(LocalDate startDate, LocalDate endDate);
+
 }

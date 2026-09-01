@@ -280,6 +280,73 @@
         }
         .date-clear-btn:hover{border-color:var(--gold); color:var(--espresso);}
 
+        /* ============ SMART SUGGESTIONS ============ */
+        .smart-suggestions{
+            display:flex;
+            flex-direction:column;
+            gap:14px;
+            margin-bottom:36px;
+        }
+        .suggestion-card{
+            display:flex;
+            gap:16px;
+            align-items:flex-start;
+            padding:20px 22px;
+            border-radius:20px;
+            background:linear-gradient(135deg, rgba(243,201,208,0.4), rgba(239,221,174,0.4));
+            border:1px solid var(--line);
+        }
+        .suggestion-icon{
+            width:44px;height:44px;
+            border-radius:12px;
+            background:var(--cream-warm);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.3rem;
+            flex:none;
+            box-shadow:var(--shadow-sm);
+        }
+        .suggestion-body{flex:1; min-width:0;}
+        .suggestion-title{
+            font-family:'Fraunces',serif;
+            font-weight:600;
+            font-size:1rem;
+            margin-bottom:6px;
+            color:var(--espresso);
+        }
+        .suggestion-text{
+            font-size:0.86rem;
+            color:var(--espresso-soft);
+            line-height:1.6;
+            margin-bottom:14px;
+        }
+        .suggestion-actions{display:flex; gap:10px; flex-wrap:wrap;}
+        .suggestion-btn{
+            padding:9px 16px;
+            border-radius:100px;
+            font-size:0.8rem;
+            font-weight:800;
+            transition:all .2s ease;
+        }
+        .suggestion-btn.primary{background:var(--espresso); color:var(--cream-warm);}
+        .suggestion-btn.primary:hover{background:var(--gold); color:var(--espresso); transform:translateY(-1px);}
+        .suggestion-btn.secondary{background:var(--cream-warm); border:1.5px solid var(--line); color:var(--espresso-soft);}
+        .suggestion-btn.secondary:hover{border-color:var(--gold); color:var(--espresso);}
+        .suggestion-badge{
+            display:inline-flex;
+            align-items:center;
+            padding:3px 10px;
+            border-radius:100px;
+            font-size:0.66rem;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.04em;
+            margin-left:9px;
+            vertical-align:middle;
+        }
+        .suggestion-badge.up{background:var(--success-bg); color:var(--success);}
+        .suggestion-badge.warn{background:var(--warn-bg); color:#93691F;}
+        .suggestion-badge.risk{background:var(--error-bg); color:var(--error);}
+
         /* ============ TABLES SECTION SUB-VIEW TOGGLE ============ */
         .table-subnav{
             display:flex;
@@ -923,26 +990,53 @@
 
         <!-- ================= OVERVIEW ================= -->
         <section class="section-panel active" id="panel-overview">
+
+            <div class="panel-title">
+                <h3>Smart Suggestions</h3>
+                <span style="font-size:0.78rem; color:var(--espresso-soft); font-weight:600;">Auto-generated from recent order activity</span>
+            </div>
+            <div class="smart-suggestions" id="smartSuggestionsBody"></div>
+
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="s-top"><span class="stat-icon blush">📦</span><span class="stat-trend" id="statOrdersTrend">+12%</span></div>
                     <div class="s-val" id="statOrders">0</div>
-                    <div class="s-lbl">Total Orders</div>
+                    <div class="s-lbl">This Week Orders</div>
                 </div>
                 <div class="stat-card">
-                    <div class="s-top"><span class="stat-icon gold">💰</span><span class="stat-trend">+8%</span></div>
+                    <div class="s-top"><span class="stat-icon gold">💰</span><span class="stat-trend" id="revenuePercentage">+8%</span></div>
                     <div class="s-val" id="statRevenue">Rs. 0</div>
                     <div class="s-lbl">Revenue This Week</div>
                 </div>
                 <div class="stat-card">
                     <div class="s-top"><span class="stat-icon warn">⚠️</span><span class="stat-trend down" id="statLowTrend">Attention</span></div>
                     <div class="s-val" id="statLowStock">0</div>
-                    <div class="s-lbl">Low Stock Items</div>
+                    <div class="s-lbl">Low Stock Ingredients</div>
                 </div>
                 <div class="stat-card">
                     <div class="s-top"><span class="stat-icon green">🚚</span><span class="stat-trend">Active</span></div>
                     <div class="s-val" id="statSuppliers">0</div>
                     <div class="s-lbl">Active Suppliers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="s-top"><span class="stat-icon blush">🔄</span><span class="stat-trend">Logged</span></div>
+                    <div class="s-val" id="statRestocks">0</div>
+                    <div class="s-lbl">This Month Restock Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="s-top"><span class="stat-icon gold">📅</span><span class="stat-trend">Upcoming</span></div>
+                    <div class="s-val" id="statBookings">0</div>
+                    <div class="s-lbl">Table Bookings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="s-top"><span class="stat-icon green">🍽️</span><span class="stat-trend">Available</span></div>
+                    <div class="s-val" id="statTablesAvailable">0</div>
+                    <div class="s-lbl">Available Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="s-top"><span class="stat-icon blush"> 👨‍🤝‍👩 </span><span class="stat-trend">Active</span></div>
+                    <div class="s-val" id="statCustomers">0</div>
+                    <div class="s-lbl">Total Customers</div>
                 </div>
             </div>
 
@@ -954,10 +1048,18 @@
                 </table>
             </div>
 
-            <div class="panel-title"><h3>Low Stock Alerts</h3><a href="#" data-goto="items">Manage items →</a></div>
+            <div class="panel-title"><h3>Upcoming Bookings</h3><a href="#" data-goto="bookings">View all bookings →</a></div>
+            <div class="table-card" style="margin-bottom:34px;">
+                <table>
+                    <thead><tr><th>Booking</th><th>Customer</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+                    <tbody id="upcomingBookingsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="panel-title"><h3>Low Stock Alerts</h3><a href="#" data-goto="stock">Manage stock →</a></div>
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Ingredient</th><th>Category</th><th>Quantity</th><th>Status</th></tr></thead>
                     <tbody id="lowStockBody"></tbody>
                 </table>
             </div>

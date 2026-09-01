@@ -1,7 +1,6 @@
 package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
-import lk.ijse.CakeShop.dto.BookingDetailDTO;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
@@ -25,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -263,5 +263,15 @@ public class BookingServiceImpl implements BookingService {
         bookingPrintDTO.setBookingDetailList(bookingDetailList);
 
         return bookingPrintDTO;
+    }
+
+    @Override
+    public int getBookingCount() {
+        log.info("Executing getBookingCount()");
+
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = LocalDate.now().plusDays(7); // 7 days from today
+
+        return bookingRepository.getBookingCount(startDate, endDate);
     }
 }

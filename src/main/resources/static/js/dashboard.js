@@ -76,17 +76,6 @@ let bookings = [
 
 let tableCategories = [{id:1,name:'Window Seat'}, {id:2,name:'Communal Table'}, {id:3,name:'Quiet Corner'}];
 
-let nextCategoryId = 4;
-let nextOrderNum = 1043;
-let nextItemId = 7;
-let nextSupplierId = 6;
-let nextStockId = 8;
-let nextRestockNum = 1003;
-let nextAdminId = 4;
-let nextCustomerId = 5;
-let nextTableId = 5;
-let nextBookingNum = 1005;
-
 /* holds the line items being built inside the open Restock form, before Save */
 let restockDraftItems = [];
 
@@ -212,6 +201,18 @@ function formatStatus(status) {
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
+/* parses an "items" string (e.g. "2x Butter Croissant, 1x Latte") into {name, qty}
+   rows — used to seed the editable items table when opening an existing order */
+function parseOrderItems(text){
+    return text.split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .map(s => {
+            const match = s.match(/^(\d+)\s*x\s*(.+)$/i);
+            return match ? {qty: Number(match[1]), name: match[2].trim()} : {qty: 1, name: s};
+        });
+}
+
 /* ============================================================
    SET USER DETAILS ON SIDEBAR
    ============================================================ */
@@ -322,16 +323,141 @@ function validateConfirm() {
 }
 
 /* ============================================================
+   SMART SUGGESTIONS
+   Analyzes order history (via the existing parseOrderItems helper)
+   to surface top sellers, sales-velocity spikes, and stockout risk.
+   ============================================================ */
+function generateSmartSuggestions(){
+    const validOrders = orders.filter(o => o.status !== 'Cancelled');
+    if(validOrders.length === 0) return [];
+
+    const sortedByDate = [...validOrders].sort((a,b) => new Date(a.date) - new Date(b.date));
+    const mid = Math.ceil(sortedByDate.length / 2);
+    const olderOrders = sortedByDate.slice(0, mid);
+    const newerOrders = sortedByDate.slice(mid);
+
+    function tally(orderList){
+        const map = {};
+        orderList.forEach(o => {
+            parseOrderItems(o.items).forEach(it => {
+                map[it.name] = (map[it.name] || 0) + it.qty;
+            });
+        });
+        return map;
+    }
+
+    const olderTally = tally(olderOrders);
+    const newerTally = tally(newerOrders);
+    const totalTally = tally(validOrders);
+
+    const ranked = Object.keys(totalTally).map(name => {
+        const older = olderTally[name] || 0;
+        const newer = newerTally[name] || 0;
+        const changePct = older === 0 ? (newer > 0 ? 100 : 0) : Math.round(((newer - older) / older) * 100);
+        return {name, total: totalTally[name], older, newer, changePct};
+    }).sort((a,b) => b.total - a.total);
+
+    const suggestions = [];
+
+    if(ranked.length){
+        const top = ranked[0];
+        suggestions.push({
+            icon:'🏆',
+            title:`Top Seller: ${top.name}`,
+            badge:{label:'Top Performer', cls:'up'},
+            text:`${top.name} is your best-selling item right now, with ${top.total} unit${top.total===1?'':'s'} sold across recent orders.`,
+            actions:[
+                {label:'Adjust Stock', kind:'primary', editItem:top.name},
+                {label:'View Sales Report', kind:'secondary', goto:'orders'},
+            ],
+        });
+    }
+
+    ranked.filter(r => r.changePct >= 30 && r.newer >= 2).slice(0,2).forEach(r => {
+        suggestions.push({
+            icon:'📈',
+            title:`${r.name} is trending up`,
+            badge:{label:`+${r.changePct}%`, cls:'up'},
+            text:`${r.name} has seen a ${r.changePct}% spike in orders this week — consider increasing production or stock levels to prevent stockouts.`,
+            actions:[
+                {label:'Adjust Stock', kind:'primary', editItem:r.name},
+                {label:'View Sales Report', kind:'secondary', goto:'orders'},
+            ],
+        });
+    });
+
+    ranked.slice(0,5).forEach(r => {
+        const menuItem = items.find(i => i.name === r.name);
+        if(menuItem && menuItem.stock <= 8){
+            suggestions.push({
+                icon:'⚠️',
+                title:`Stockout risk: ${r.name}`,
+                badge:{label:'Low Stock', cls:'risk'},
+                text:`${r.name} is selling well but only ${menuItem.stock} unit${menuItem.stock===1?'':'s'} remain in stock. Restock soon to avoid disappointing customers.`,
+                actions:[
+                    {label:'Adjust Stock', kind:'primary', editItem:r.name},
+                    {label:'View Sales Report', kind:'secondary', goto:'orders'},
+                ],
+            });
+        }
+    });
+
+    return suggestions.slice(0,4);
+}
+
+function renderSmartSuggestions(){
+    const suggestions = generateSmartSuggestions();
+    const $wrap = $('#smartSuggestionsBody');
+
+    if(!suggestions.length){
+        $wrap.html(`
+      <div class="suggestion-card">
+        <span class="suggestion-icon">✅</span>
+        <div class="suggestion-body">
+          <div class="suggestion-title">You're all caught up</div>
+          <div class="suggestion-text">No unusual sales trends detected right now — check back once more orders come in.</div>
+        </div>
+      </div>
+    `);
+        return;
+    }
+
+    $wrap.html(suggestions.map(s => `
+    <div class="suggestion-card">
+      <span class="suggestion-icon">${s.icon}</span>
+      <div class="suggestion-body">
+        <div class="suggestion-title">${s.title}<span class="suggestion-badge ${s.badge.cls}">${s.badge.label}</span></div>
+        <div class="suggestion-text">${s.text}</div>
+        <div class="suggestion-actions">
+          ${s.actions.map(a => `<button type="button" class="suggestion-btn ${a.kind}"${a.goto ? ` data-suggestion-goto="${a.goto}"` : ''}${a.editItem ? ` data-suggestion-edit-item="${a.editItem}"` : ''}>${a.label}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join(''));
+}
+
+$(document).on('click', '[data-suggestion-goto]', function(){
+    goToSection($(this).data('suggestion-goto'));
+});
+
+$(document).on('click', '[data-suggestion-edit-item]', function(){
+    const name = $(this).data('suggestion-edit-item');
+    const item = items.find(i => i.name === name);
+    goToSection('items');
+    if(item) openForm('item', item.id);
+});
+
+/* ============================================================
    RENDER: OVERVIEW
    ============================================================ */
 function renderOverview(){
-    $('#statOrders').text(orders.length);
-    const revenue = orders.filter(o=>o.status!=='Cancelled').reduce((s,o)=>s+o.total,0);
-    $('#statRevenue').text(money(revenue));
-    const low = items.filter(i=>i.stock<=8).length;
-    $('#statLowStock').text(low);
-    const activeSup = suppliers.filter(s=>s.status==='Active').length;
-    $('#statSuppliers').text(activeSup);
+
+    renderSmartSuggestions();
+
+    // update order revenue
+    updateOrderRevenue();
+    // update low stock count
+    updateLowStockCount();
 
     $('#recentOrdersBody').html(orders.slice(0,4).map(o => `
     <tr>
@@ -343,17 +469,72 @@ function renderOverview(){
     </tr>
   `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`);
 
-    const lowItems = items.filter(i=>i.stock<=8);
-    $('#lowStockBody').html(lowItems.map(i => {
-        const info = stockInfo(i.stock, 8);
+    $('#upcomingBookingsBody').html(bookings.slice(0,4).map(b => `
+    <tr>
+      <td class="cell-title">${b.id}</td>
+      <td>${b.customer}</td>
+      <td>${b.date}</td>
+      <td>${b.slot}</td>
+      <td><span class="badge-pill ${statusBadgeClass(b.status)}">${b.status}</span></td>
+    </tr>
+  `).join('') || `<tr class="empty-row"><td colspan="5">No bookings yet.</td></tr>`);
+
+    $('#lowStockBody').html(lowStockItems.map(s => {
+        const info = stockLevelInfo(s.quantity, s.reorderLevel);
         return `
     <tr>
-      <td class="cell-main"><img class="cell-thumb" src="${i.img}" alt=""><span class="cell-title">${i.name}</span></td>
-      <td>${i.category}</td>
-      <td>${i.stock} units</td>
+      <td class="cell-title">${s.name}</td>
+      <td>${s.category}</td>
+      <td>${s.quantity} ${s.unit}</td>
       <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
     </tr>`;
-    }).join('') || `<tr class="empty-row"><td colspan="4">All items well stocked 🎉</td></tr>`);
+    }).join('') || `<tr class="empty-row"><td colspan="4">All ingredients well stocked 🎉</td></tr>`);
+}
+
+function updateLowStockCount(){
+    $.ajax({
+        url:"http://localhost:8080/v1/stockItem/getLowStockItemCount",
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                $('#statLowStock').text(r.body);
+            }else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+}
+
+function updateOrderRevenue(){
+    $.ajax({
+        url:"http://localhost:8080/v1/order/getOrderWeekRevenues",
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                $('#statRevenue').text(money(r.body.thisWeekRevenue));
+                $('#revenuePercentage').text(r.body.percentage + "%");
+                if(r.body.percentage < 0){
+                    $('#revenuePercentage').addClass("down");
+                }else{
+                    $('#revenuePercentage').removeClass("down");
+                }
+            }else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
 }
 
 /* ============================================================
@@ -1068,7 +1249,7 @@ function renderBookings(filter=''){
    UPDATE COUNTS
    ============================================================ */
 function updateNavCounts(){
-    $('#navCountOrders').text(orders.length);
+    updateOrderCount();
     updateFoodItemCount();
     updateSupplierCount();
     updateStockItemCount();
@@ -1076,7 +1257,28 @@ function updateNavCounts(){
     updateStaffCount();
     updateCustomerCount();
     updateTableCount();
-    $('#navCountBookings').text(bookings.length);
+    updateBookings();
+}
+
+function updateOrderCount(){
+    const obj = {user_role:"Customer", is_staff:true}
+    $.ajax({
+        url:"http://localhost:8080/v1/order/getThisWeekOrderCount",
+        type:'GET',
+        data:obj,
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success:function (response){
+            if(response.status === 200){
+                $('#navCountOrders').text(response.body);
+                $('#statOrders').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
 }
 
 function updateStaffCount(){
@@ -1091,7 +1293,6 @@ function updateStaffCount(){
         success:function (response){
             if(response.status === 200){
                 $('#navCountAdmins').text(response.body);
-                // document.getElementById('navCountAdmins').textContent = response.body;
             }
             else{
                 alert(response.message);
@@ -1112,6 +1313,7 @@ function updateCustomerCount(){
         success:function (response){
             if(response.status === 200){
                 $('#navCountCustomers').text(response.body);
+                $('#statCustomers').text(response.body);
             }
             else{
                 alert(response.message);
@@ -1130,6 +1332,7 @@ function updateSupplierCount(){
         success:function (response){
             if(response.status === 200){
                 $('#navCountSuppliers').text(response.body);
+                $('#statSuppliers').text(response.body);
             }
             else{
                 alert(response.message);
@@ -1166,6 +1369,7 @@ function updateRestockCount(){
         success: function (response){
             if(response.status === 200){
                 $('#navCountRestock').text(response.body);
+                $('#statRestocks').text(response.body);
             }
             else{
                 alert(response.message);
@@ -1202,6 +1406,26 @@ function updateTableCount(){
         success: function (response){
             if(response.status === 200){
                 $('#navCountTables').text(response.body);
+                $('#statTablesAvailable').text(response.body);
+            }
+            else{
+                alert(response.message);
+            }
+        }
+    });
+}
+
+function updateBookings(){
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/getBookingCountWithinWeek",
+        type: "GET",
+        headers:{
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                $('#navCountBookings').text(response.body);
+                $('#statBookings').text(response.body);
             }
             else{
                 alert(response.message);
@@ -1325,17 +1549,17 @@ function orderFormHTML(o){
   `;
 }
 
-/* parses an "items" string (e.g. "2x Butter Croissant, 1x Latte") into {name, qty}
-   rows — used to seed the editable items table when opening an existing order */
-function parseOrderItems(text){
-    return text.split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 0)
-        .map(s => {
-            const match = s.match(/^(\d+)\s*x\s*(.+)$/i);
-            return match ? {qty: Number(match[1]), name: match[2].trim()} : {qty: 1, name: s};
-        });
-}
+// /* parses an "items" string (e.g. "2x Butter Croissant, 1x Latte") into {name, qty}
+//    rows — used to seed the editable items table when opening an existing order */
+// function parseOrderItems(text){
+//     return text.split(',')
+//         .map(s => s.trim())
+//         .filter(s => s.length > 0)
+//         .map(s => {
+//             const match = s.match(/^(\d+)\s*x\s*(.+)$/i);
+//             return match ? {qty: Number(match[1]), name: match[2].trim()} : {qty: 1, name: s};
+//         });
+// }
 
 function renderOrderItemsTable(itemList){
     const rows = itemList.map((it, idx) => `

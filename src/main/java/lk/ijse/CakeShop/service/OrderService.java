@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
+import lk.ijse.CakeShop.dto.overviewDTOs.OrderOverviewDTO;
 import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 
@@ -19,5 +20,9 @@ public interface OrderService {
     void updateOrderStatus(long orderID, OrderStatus status);
 
     OrderPrintDTO getOrderById(long orderId);
+
+    int getThisWeekOrderCount();
+
+    OrderOverviewDTO getOrderWeekRevenues();
 
 }
