@@ -452,43 +452,64 @@ $(document).on('click', '[data-suggestion-edit-item]', function(){
    ============================================================ */
 function renderOverview(){
 
+    // render suggestions
     renderSmartSuggestions();
-
     // update order revenue
     updateOrderRevenue();
     // update low stock count
     updateLowStockCount();
 
-    $('#recentOrdersBody').html(orders.slice(0,4).map(o => `
-    <tr>
-      <td class="cell-title">${o.id}</td>
-      <td>${o.customer}</td>
-      <td>${money(o.total)}</td>
-      <td><span class="badge-pill ${statusBadgeClass(o.status)}">${o.status}</span></td>
-      <td>${o.date}</td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`);
+    // update tables
+    $.ajax({
+        url:"http://localhost:8080/v1/overview/getOverviewTableData",
+        type:"GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
 
-    $('#upcomingBookingsBody').html(bookings.slice(0,4).map(b => `
-    <tr>
-      <td class="cell-title">${b.id}</td>
-      <td>${b.customer}</td>
-      <td>${b.date}</td>
-      <td>${b.slot}</td>
-      <td><span class="badge-pill ${statusBadgeClass(b.status)}">${b.status}</span></td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="5">No bookings yet.</td></tr>`);
+                // order table ----------------------------------------
+                $('#recentOrdersBody').html(r.body.orderDTOList.map(o => `
+                  <tr>
+                    <td class="cell-title">${o.orderId}</td>
+                    <td>${o.userName}</td>
+                    <td>${money(o.total)}</td>
+                    <td><span class="badge-pill ${statusBadgeClass(formatStatus(o.orderStatus))}">${formatStatus(o.orderStatus)}</span></td>
+                    <td>${o.orderDate}</td>
+                  </tr>
+                `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`);
 
-    $('#lowStockBody').html(lowStockItems.map(s => {
-        const info = stockLevelInfo(s.quantity, s.reorderLevel);
-        return `
-    <tr>
-      <td class="cell-title">${s.name}</td>
-      <td>${s.category}</td>
-      <td>${s.quantity} ${s.unit}</td>
-      <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
-    </tr>`;
-    }).join('') || `<tr class="empty-row"><td colspan="4">All ingredients well stocked 🎉</td></tr>`);
+                // booking table -------------------------------
+                $('#upcomingBookingsBody').html(r.body.bookingDTOList.map(b => `
+                  <tr>
+                    <td class="cell-title">${b.bookingId}</td>
+                    <td>${b.userName}</td>
+                    <td>${b.bookingDate}</td>
+                    <td>${b.bookingTime}</td>
+                    <td><span class="badge-pill ${statusBadgeClass(formatStatus(b.bookingStatus))}">${formatStatus(b.bookingStatus)}</span></td>
+                  </tr>
+                `).join('') || `<tr class="empty-row"><td colspan="5">No bookings yet.</td></tr>`);
+
+                // low stock table ---------------------------------------------------------
+                $('#lowStockBody').html(r.body.stockItemDTOList.map(s => {
+                    const info = stockInfo(s.stockQty, s.reorderLevel);
+                    return `
+                        <tr>
+                          <td class="cell-title">${s.itemName}</td>
+                          <td>${s.stockItemCategoryName}</td>
+                          <td>${s.stockQty} ${s.unitOfMeasure}</td>
+                          <td><span class="badge-pill ${info.cls}">${info.label}</span></td>
+                        </tr>`;
+                }).join('') || `<tr class="empty-row"><td colspan="4">All ingredients well stocked 🎉</td></tr>`);
+
+            }
+            else{
+                showToast(r.message);
+            }
+        }
+    });
+
 }
 
 function updateLowStockCount(){

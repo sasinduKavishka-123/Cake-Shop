@@ -23,4 +23,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = "SELECT COUNT(b.bookingId) FROM Booking b WHERE b.bookingDate BETWEEN ?1 AND ?2")
     int getBookingCount(LocalDate startDate, LocalDate endDate);
 
+    @Query(value = "SELECT b FROM Booking b WHERE b.bookingDate BETWEEN ?1 and ?2 ORDER BY b.bookingDate ASC LIMIT 5")
+    List<Booking> getThisWekBookings(LocalDate starDate, LocalDate endDate);
+
 }

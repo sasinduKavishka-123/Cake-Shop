@@ -25,4 +25,6 @@ public interface OrderService {
 
     OrderOverviewDTO getOrderWeekRevenues();
 
+    List<PlaceOrderDTO> getLatestOrders();
+
 }

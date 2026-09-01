@@ -26,4 +26,7 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
     @Query(value = "SELECT COUNT(s.stockItemId) FROM StockItem s WHERE s.stockStatus IN ('LOW_STOCK', 'OUT_OF_STOCK')")
     int getLowStockItemCount();
+
+    @Query(value = "SELECT i FROM StockItem i WHERE i.stockStatus IN ('LOW_STOCK', 'OUT_OF_STOCK') ORDER BY i.stockQty ASC LIMIT 5")
+    List<StockItem> getLowStockItems();
 }

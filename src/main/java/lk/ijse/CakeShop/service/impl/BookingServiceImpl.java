@@ -274,4 +274,27 @@ public class BookingServiceImpl implements BookingService {
 
         return bookingRepository.getBookingCount(startDate, endDate);
     }
+
+    @Override
+    public List<BookingDTO> getThisWeekBookings() {
+        log.info("Executing Method getThisWeekBookings()");
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(7);
+        List<Booking> thisWekBookings = bookingRepository.getThisWekBookings(today, endDate);
+        List<BookingDTO> bookingDTOS = new ArrayList<>();
+
+        for(Booking b : thisWekBookings){
+            BookingDTO dto = new BookingDTO();
+            dto.setBookingId(b.getBookingId());
+            dto.setUserName(b.getUser().getUserName());
+            dto.setBookingDate(b.getBookingDate());
+            dto.setBookingTime(b.getBookingTime());
+            dto.setBookingStatus(b.getBookingStatus());
+
+            bookingDTOS.add(dto);
+        }
+
+        return bookingDTOS;
+    }
 }

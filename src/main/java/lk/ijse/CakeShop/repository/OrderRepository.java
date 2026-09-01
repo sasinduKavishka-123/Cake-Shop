@@ -24,4 +24,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT SUM(o.total) FROM Order o WHERE o.orderDate BETWEEN ?1 AND ?2")
     Double getWeekRevenue(LocalDate startDate, LocalDate endDate);
 
+    @Query(value = "SELECT o FROM Order o WHERE o.user.userRoles = 'Customer'" +
+            " ORDER BY o.orderDate DESC LIMIT 5")
+    List<Order> getLatestOrders();
+
 }

@@ -303,4 +303,21 @@ public class OrderServiceImpl implements OrderService {
         return orderOverviewDTO;
     }
 
+    @Override
+    public List<PlaceOrderDTO> getLatestOrders() {
+        List<Order> latestOrders = orderRepository.getLatestOrders();
+        List<PlaceOrderDTO> orderDTOList = new ArrayList<>();
+        for(Order o : latestOrders){
+            PlaceOrderDTO dto = new PlaceOrderDTO();
+            dto.setOrderId(o.getOrderId());
+            dto.setUserName(o.getUser().getUserName());
+            dto.setTotal(o.getTotal());
+            dto.setOrderStatus(o.getOrderStatus());
+            dto.setOrderDate(o.getOrderDate());
+
+            orderDTOList.add(dto);
+        }
+        return orderDTOList;
+    }
+
 }

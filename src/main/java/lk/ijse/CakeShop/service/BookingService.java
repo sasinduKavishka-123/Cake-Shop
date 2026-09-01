@@ -25,4 +25,6 @@ public interface BookingService {
 
     int getBookingCount();
 
+    List<BookingDTO> getThisWeekBookings();
+
 }

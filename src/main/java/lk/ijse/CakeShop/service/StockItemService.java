@@ -17,4 +17,6 @@ public interface StockItemService {
     StockItemFormDTO getStockItemFormInfoByID(long id);
 
     int getLowStockItemCount();
+
+    List<StockItemDTO> getLowStockItems();
 }

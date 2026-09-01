@@ -156,4 +156,24 @@ public class StockItemServiceImpl implements StockItemService {
         log.info("Executing Method getLowStockItemCount()");
         return stockItemRepository.getLowStockItemCount();
     }
+
+    @Override
+    public List<StockItemDTO> getLowStockItems() {
+        log.info("Executing Method getLowStockItems()");
+
+        List<StockItem> lowStockItems = stockItemRepository.getLowStockItems();
+        List<StockItemDTO> stockItemDTOS = new ArrayList<>();
+
+        for(StockItem i : lowStockItems){
+            StockItemDTO dto = new StockItemDTO();
+            dto.setItemName(i.getItemName());
+            dto.setStockItemCategoryName(i.getStockItemCategory().getCategoryName());
+            dto.setStockQty(i.getStockQty());
+            dto.setStockStatus(i.getStockStatus());
+            dto.setReorderLevel(i.getReorderLevel());
+            dto.setUnitOfMeasure(i.getUnitOfMeasure());
+            stockItemDTOS.add(dto);
+        }
+        return stockItemDTOS;
+    }
 }
