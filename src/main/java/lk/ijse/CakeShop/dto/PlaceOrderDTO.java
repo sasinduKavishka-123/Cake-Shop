@@ -20,6 +20,7 @@ public class PlaceOrderDTO {
     private String userName;
     private UserDTO user;
     private LocalDate orderDate;
+    private String timeSlot;
     private BigDecimal discount;
     private BigDecimal subTotal;
     private BigDecimal total;

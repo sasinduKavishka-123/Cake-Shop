@@ -18,6 +18,7 @@ public class OrderPrintDTO {
     private long orderId;
     private UserDTO user;
     private LocalDate orderDate;
+    private String timeSlot;
     private BigDecimal discount;
     private BigDecimal subTotal;
     private BigDecimal total;

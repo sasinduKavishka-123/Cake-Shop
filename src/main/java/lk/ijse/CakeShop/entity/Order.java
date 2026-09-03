@@ -32,6 +32,8 @@ public class Order {
     private Delivery delivery;
 
     private LocalDate orderDate;
+    private String timeSlot;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal total;
     @Column(precision = 10, scale = 2)

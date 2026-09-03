@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -167,5 +168,31 @@ public class FoodItemServiceImpl implements FoodItemService {
         log.info("Executing Method getAllFoodItemCategories()");
 
         return foodItemCategoryRepository.getAllCategories();
+    }
+
+    @Override
+    public List<FoodItemDTO> getAllFoodItems() {
+        log.info("Executing Method getAllFoodItems()");
+
+        List<FoodItem> foodItems = foodItemRepository.findAll();
+        List<FoodItemDTO> foodItemDTOs = new ArrayList<>();
+
+        for(FoodItem f : foodItems){
+            FoodItemDTO dto = new FoodItemDTO();
+            dto.setFoodItemId(f.getFoodItemId());
+            dto.setBadges(f.getBadges());
+            dto.setDescription(f.getDescription());
+            dto.setFoodItemName(f.getFoodItemName());
+            dto.setFoodItemCategory(f.getFoodItemCategory().getCategoryName());
+            dto.setImagePath(f.getImagePath());
+            dto.setPrice(f.getPrice());
+
+            // cal discount
+            double price = f.getPrice().doubleValue();
+            double discount = price * f.getDiscount().getDiscountRate().doubleValue() / 100;
+            dto.setDiscount(discount);
+            foodItemDTOs.add(dto);
+        }
+        return foodItemDTOs;
     }
 }

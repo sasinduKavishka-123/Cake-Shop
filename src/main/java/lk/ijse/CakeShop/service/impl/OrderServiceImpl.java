@@ -79,6 +79,7 @@ public class OrderServiceImpl implements OrderService {
 
         // save order ----------------------------------
         order.setOrderDate(placeOrderDTO.getOrderDate());
+        order.setTimeSlot(placeOrderDTO.getTimeSlot());
         order.setDiscount(placeOrderDTO.getDiscount());
         order.setSubTotal(placeOrderDTO.getSubTotal());
         order.setTotal(placeOrderDTO.getTotal());
@@ -127,6 +128,7 @@ public class OrderServiceImpl implements OrderService {
             p.setTotal(o.getTotal());
             p.setUserName(o.getUser().getUserName());
             p.setOrderDate(o.getOrderDate());
+            p.setTimeSlot(o.getTimeSlot());
 
             // fill order items ---------------
             List<OrderItemsDTO> itemList = new ArrayList<>();
@@ -169,6 +171,7 @@ public class OrderServiceImpl implements OrderService {
         placeOrderDTO.setDiscount(o.getDiscount());
         placeOrderDTO.setTotal(o.getTotal());
         placeOrderDTO.setOrderDate(o.getOrderDate());
+        placeOrderDTO.setTimeSlot(o.getTimeSlot());
 
         // user details -----------------------
         UserDTO userDTO = new UserDTO();
@@ -224,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
 
         orderPrintDTO.setOrderId(o.getOrderId());
         orderPrintDTO.setOrderDate(o.getOrderDate());
+        orderPrintDTO.setTimeSlot(o.getTimeSlot());
         orderPrintDTO.setTotal(o.getTotal());
         orderPrintDTO.setDiscount(o.getDiscount());
         orderPrintDTO.setSubTotal(o.getSubTotal());
@@ -314,6 +318,7 @@ public class OrderServiceImpl implements OrderService {
             dto.setTotal(o.getTotal());
             dto.setOrderStatus(o.getOrderStatus());
             dto.setOrderDate(o.getOrderDate());
+            dto.setTimeSlot(o.getTimeSlot());
 
             orderDTOList.add(dto);
         }

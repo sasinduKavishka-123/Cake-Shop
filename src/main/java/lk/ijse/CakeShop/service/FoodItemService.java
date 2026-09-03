@@ -17,4 +17,6 @@ public interface FoodItemService {
     FoodItemFormDTO getFoodItemFormData(long id);
 
     List<FoodItemCategoryDTO> getAllFoodItemCategories();
+
+    List<FoodItemDTO> getAllFoodItems();
 }

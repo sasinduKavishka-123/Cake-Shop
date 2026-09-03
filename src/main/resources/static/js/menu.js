@@ -33,7 +33,7 @@ function getFoodItems(){
     };
 
     $.ajax({
-        url: "http://localhost:8080/v1/foodItems/filterFoodItems",
+        url: "http://localhost:8080/v1/foodItems/getAllFoodItems",
         type: "GET",
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("JWT")
@@ -42,6 +42,7 @@ function getFoodItems(){
         success: function (r){
             if(r.status === 200){
                 products = r.body;
+                console.log(products);
                 renderGrid();
             } else {
                 showToast(r.message);
@@ -76,29 +77,48 @@ function getBadgesList(inputString) {
 }
 
 function renderGrid(){
-    const cards = products.map((p, i) => `
-    <div class="p-card" data-cat="${p.foodItemCategory}" style="animation-delay:${i * 0.05}s">
-      <div class="p-media">
-        <div class="badge-row">${badgesHTML(getBadgesList(p.badges))}</div>
-        <img src="${p.imagePath}" alt="${p.foodItemName}">
-        <div class="p-overlay">
-          <button class="quick-view-btn" data-id="${p.foodItemId}" aria-label="Quick view">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="p-body">
-        <h3>${p.foodItemName}</h3>
-        <p class="desc">${p.description}</p>
-        <div class="p-foot">
-          <span class="price">Rs. ${p.price.toLocaleString()}</span>
-          <button class="add-btn" data-id="${p.foodItemId}"><span class="plus">+</span> Add</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
 
-    $grid.html(cards);
+    let html = "";
+
+    products.map((p, i) => {
+
+        let stylePrice = "";
+        let styleDiscount = "";
+        let finalPrice = 0;
+
+        if(p.discount === 0){
+            styleDiscount = "style=\"display: none\"";
+        }
+        else{
+            stylePrice = "style=\"text-decoration-line: line-through\"";
+            finalPrice = p.price - p.discount;
+        }
+
+        html +=`
+        <div class="p-card" data-cat="${p.foodItemCategory}" style="animation-delay:${i * 0.05}s">
+          <div class="p-media">
+            <div class="badge-row">${badgesHTML(getBadgesList(p.badges))}</div>
+            <img src="${p.imagePath}" alt="${p.foodItemName}">
+            <div class="p-overlay">
+              <button class="quick-view-btn" data-id="${p.foodItemId}" aria-label="Quick view">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="p-body">
+            <h3>${p.foodItemName}</h3>
+            <p class="desc">${p.description}</p>
+            <div class="p-foot">
+              <span class="price" ${stylePrice}>Rs. ${p.price.toLocaleString()}</span>
+              <span class="price" ${styleDiscount}>Rs. ${finalPrice.toLocaleString()}</span>
+              <button class="add-btn" data-id="${p.foodItemId}"><span class="plus">+</span> Add</button>
+            </div>
+          </div>
+        </div>`;
+        }
+    );
+
+    $grid.html(html);
 }
 renderGrid();
 
@@ -178,8 +198,15 @@ function cartCount(){
 
 function subtotal(){
     return Object.entries(cart).reduce((sum, [id, qty]) => {
-        const p = products.find(pr => (pr.foodItemId || pr.id) === id);
+        const p = products.find(pr => (pr.foodItemId) == id);
         return sum + (p ? p.price * qty : 0);
+    }, 0);
+}
+
+function calTotalDiscount(){
+    return Object.entries(cart).reduce((sum, [id, qty]) => {
+        const p = products.find(pr => (pr.foodItemId) == id);
+        return sum + (p ? p.discount * qty : 0);
     }, 0);
 }
 
@@ -199,14 +226,14 @@ function renderCartItems(){
     }
 
     const itemsHtml = ids.map(id => {
-        const p = products.find(pr => (pr.foodItemId || pr.id) === id);
+        const p = products.find(pr => pr.foodItemId == id);
         const qty = cart[id];
         return `
       <div class="cart-item" data-id="${id}">
-        <img src="${p.imagePath || p.img}" alt="${p.foodItemName || p.name}">
+        <img src="${p.imagePath}" alt="${p.foodItemName}">
         <div class="cart-item-info">
-          <h4>${p.foodItemName || p.name}</h4>
-          <div class="unit-price">Rs. ${p.price.toLocaleString()} each</div>
+          <h4>${p.foodItemName}</h4>
+          <div class="unit-price">Rs. ${(p.price - p.discount).toLocaleString()} each</div>
           <div class="qty-stepper" style="margin-top:8px;">
             <button class="qminus" data-id="${id}">−</button>
             <span>${qty}</span>
@@ -214,7 +241,7 @@ function renderCartItems(){
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-          <span class="line-total">Rs. ${(p.price * qty).toLocaleString()}</span>
+          <span class="line-total">Rs. ${((p.price - p.discount) * qty).toLocaleString()}</span>
           <span class="cart-item-remove" data-id="${id}">Remove</span>
         </div>
       </div>
@@ -225,14 +252,17 @@ function renderCartItems(){
 }
 
 function renderSummary(){
+
     const sub = subtotal();
-    const deliveryFee = fulfillment === 'delivery' ? 350 : 0;
-    const addonsFee = candleOn ? 150 : 0;
-    const total = sub + deliveryFee + addonsFee;
+    const totalDiscount = calTotalDiscount();
+    const total = sub - totalDiscount ;
+
+    console.log(sub);
+    console.log(totalDiscount);
+    console.log(total);
 
     $('#sumSubtotal').text(`Rs. ${sub.toLocaleString()}`);
-    $('#sumDelivery').text(deliveryFee ? `Rs. ${deliveryFee}` : 'Free');
-    $('#sumAddons').text(addonsFee ? `Rs. ${addonsFee}` : 'Rs. 0');
+    $('#sumDiscount').text(`Rs. ${totalDiscount.toLocaleString()}`);
     $('#sumTotal').text(`Rs. ${total.toLocaleString()}`);
     $('#checkoutLabel').text(`Proceed to Checkout • Rs. ${total.toLocaleString()}`);
 
@@ -310,14 +340,6 @@ $('#slotGrid').on('click', '.slot', function() {
 const $dateInput = $('#orderDate');
 $dateInput.val(new Date().toISOString().split('T')[0]);
 $dateInput.attr('min', new Date().toISOString().split('T')[0]);
-
-/* ============ CANDLE MODIFIER ============ */
-const $candleModifier = $('#candleModifier');
-$candleModifier.on('click', function() {
-    candleOn = !candleOn;
-    $(this).toggleClass('active', candleOn);
-    renderSummary();
-});
 
 /* ============ CHECKOUT BUTTON ============ */
 const $checkoutBtn = $('#checkoutBtn');

@@ -477,6 +477,7 @@ function renderOverview(){
                     <td>${money(o.total)}</td>
                     <td><span class="badge-pill ${statusBadgeClass(formatStatus(o.orderStatus))}">${formatStatus(o.orderStatus)}</span></td>
                     <td>${o.orderDate}</td>
+                    <td>${o.timeSlot}</td>
                   </tr>
                 `).join('') || `<tr class="empty-row"><td colspan="5">No orders yet.</td></tr>`);
 
@@ -665,6 +666,7 @@ function renderOrders(filter=''){
                           <td class="cell-title">${money(o.total)}</td>
                           <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
                           <td>${o.orderDate}</td>
+                          <td>${o.timeSlot}</td>
                           <td>
                             <div class="row-actions">
                               <button class="icon-btn" data-edit="order" data-id="${o.orderId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -1528,8 +1530,10 @@ $('#printModalConfirm').on('click', function(){ window.print(); });
 
 function orderFormHTML(o){
     o = o || {customer:'', items:'', total:'', status:'Pending', date:new Date().toISOString().split('T')[0]};
+
+    let display = o.timeSlot ? "" : "style=\"display: none\" ";
+
     return `
-    
     <div class="field-group"><label>Customer Name</label><input disabled type="text" id="f_customer" value="${o.user.userName}" placeholder="Customer name"></div>
     <div class="field-row-2">
         <div class="field-group">
@@ -1542,6 +1546,7 @@ function orderFormHTML(o){
  
     <div class="field-row-2">
       <div class="field-group"><label>Date</label><input disabled type="date" id="f_date" value="${o.orderDate}"></div>
+      <div class="field-group" ${display}><label>Pick Up Time</label><input disabled type="text" id="f_date" value="${o.timeSlot}"></div>
     </div>
  
     <div class="field-group">
@@ -1569,18 +1574,6 @@ function orderFormHTML(o){
     </div>
   `;
 }
-
-// /* parses an "items" string (e.g. "2x Butter Croissant, 1x Latte") into {name, qty}
-//    rows — used to seed the editable items table when opening an existing order */
-// function parseOrderItems(text){
-//     return text.split(',')
-//         .map(s => s.trim())
-//         .filter(s => s.length > 0)
-//         .map(s => {
-//             const match = s.match(/^(\d+)\s*x\s*(.+)$/i);
-//             return match ? {qty: Number(match[1]), name: match[2].trim()} : {qty: 1, name: s};
-//         });
-// }
 
 function renderOrderItemsTable(itemList){
     const rows = itemList.map((it, idx) => `
@@ -2485,9 +2478,10 @@ $(document).on('click', '[data-print-order]', function(){
                 const order = response.body;
                 const printHtml = `
                   <h1>Order ${order.orderId}</h1>
-                  <p>Date: ${order.orderDate} <br> Status: ${order.orderStatus}</p>
-                  <p>${order.user.userRoles}: ${order.user.userName} <br> Contact: ${order.user.userContact} <br> Email: ${order.user.userEmail}
-                  </p>
+                  <div class="field-row-2">
+                    <p>Date: ${order.orderDate} <br> Pick Up Time: ${order.timeSlot} <br><br> <span  style="font-weight: bold">Status: ${order.orderStatus}</span></p>
+                    <p>${order.user.userRoles}: ${order.user.userName} <br> Contact: ${order.user.userContact} <br> Email: ${order.user.userEmail}</p>
+                  </div>
                   <table>
                     <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th><th>Sub Total</th></tr></thead>
                     <tbody>${rowsHtml}</tbody>
