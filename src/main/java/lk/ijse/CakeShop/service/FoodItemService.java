@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.service;
 
+import lk.ijse.CakeShop.dto.FoodItemCategoryDTO;
 import lk.ijse.CakeShop.dto.FoodItemDTO;
 import lk.ijse.CakeShop.dto.formDTOs.FoodItemFormDTO;
 
@@ -14,4 +15,6 @@ public interface FoodItemService {
     int getFoodItemCount();
 
     FoodItemFormDTO getFoodItemFormData(long id);
+
+    List<FoodItemCategoryDTO> getAllFoodItemCategories();
 }

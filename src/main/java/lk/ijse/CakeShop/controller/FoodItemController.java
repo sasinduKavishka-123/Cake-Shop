@@ -45,4 +45,9 @@ public class FoodItemController {
         return new CommonResponse(200, foodItemService.getFoodItemFormData(food_item_id), SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getAllFoodItemCategories", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllFoodItemCategories(){
+        return new CommonResponse(200, foodItemService.getAllFoodItemCategories(), SUCCESS_MESSAGE);
+    }
+
 }

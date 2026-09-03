@@ -161,4 +161,11 @@ public class FoodItemServiceImpl implements FoodItemService {
 
         return formDTO;
     }
+
+    @Override
+    public List<FoodItemCategoryDTO> getAllFoodItemCategories() {
+        log.info("Executing Method getAllFoodItemCategories()");
+
+        return foodItemCategoryRepository.getAllCategories();
+    }
 }
