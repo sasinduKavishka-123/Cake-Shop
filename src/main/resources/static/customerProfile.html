@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account — Sugar &amp; Flour</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+        :root{
+            --cream: #FBF3EA;
+            --cream-warm: #FFFDFB;
+            --blush: #F3C9D0;
+            --terracotta: #C97B5F;
+            --terracotta-deep:#B4644B;
+            --espresso: #3A2822;
+            --espresso-soft: #6B5248;
+            --gold: #C79A4B;
+            --gold-light:#EFDDB8;
+            --line: rgba(58,40,34,0.10);
+            --error:#B3452E;
+            --success:#4C7A4A;
+            --shadow-sm: 0 8px 20px -12px rgba(58,40,34,0.22);
+            --shadow-lg: 0 30px 60px -24px rgba(58,40,34,0.32);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:'Manrope',sans-serif;
+            background:var(--cream);
+            color:var(--espresso);
+            -webkit-font-smoothing:antialiased;
+        }
+        img{display:block;max-width:100%;}
+        h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;line-height:1.12;}
+        button{font-family:inherit;cursor:pointer;border:none;background:none;}
+        a{color:inherit;text-decoration:none;}
+        .container{max-width:1100px;margin:0 auto;padding:0 clamp(20px,5vw,56px);}
+
+        /* ============ HEADER ============ */
+        header{
+            padding:22px 0;
+            border-bottom:1px solid var(--line);
+            background:var(--cream-warm);
+        }
+        .nav-wrap{display:flex;align-items:center;justify-content:space-between;}
+        .logo{
+            font-family:'Fraunces', serif;
+            font-size:1.35rem;
+            font-weight:600;
+            display:flex;align-items:center;gap:8px;
+        }
+        .logo-mark{
+            width:34px;height:34px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex;align-items:center;justify-content:center;
+            flex:none;
+        }
+        .amp{font-style:italic;color:var(--gold);font-weight:500;}
+        .nav-links{display:flex;gap:2.2rem;list-style:none;}
+        .nav-links a{font-weight:600;font-size:0.92rem;color:var(--espresso-soft);}
+        .nav-links a:hover{color:var(--espresso);}
+        .nav-links a.active{color:var(--terracotta-deep);}
+        .back-link{
+            display:flex;align-items:center;gap:8px;
+            font-weight:700;font-size:0.88rem;
+            color:var(--espresso-soft);
+        }
+        .back-link:hover{color:var(--terracotta-deep);}
+        @media (max-width:760px){.nav-links{display:none;}}
+
+        /* ============ PAGE HEAD ============ */
+        .page-head{
+            padding:56px 0 8px;
+            text-align:center;
+        }
+        .eyebrow{
+            text-transform:uppercase;
+            letter-spacing:0.18em;
+            font-size:0.72rem;
+            font-weight:800;
+            color:var(--terracotta);
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:16px;
+        }
+        .eyebrow::before,.eyebrow::after{content:'';width:20px;height:1px;background:var(--gold);}
+        .page-head h1{font-size:clamp(2.1rem,4vw,2.9rem);margin-bottom:14px;}
+        .page-head p{color:var(--espresso-soft);max-width:520px;margin:0 auto;line-height:1.7;font-size:1rem;}
+
+        /* ============ ACCOUNT LAYOUT ============ */
+        .account-wrap{
+            padding:46px 0 100px;
+            display:grid;
+            grid-template-columns:0.85fr 1.15fr;
+            gap:32px;
+            align-items:flex-start;
+        }
+
+        .profile-card{
+            background:var(--cream-warm);
+            border:1px solid var(--line);
+            border-radius:28px;
+            padding:36px 32px;
+            text-align:center;
+        }
+        .profile-avatar{
+            width:78px;height:78px;
+            border-radius:50%;
+            background:var(--blush);
+            color:var(--espresso);
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Fraunces',serif;
+            font-weight:600;
+            font-size:1.5rem;
+            margin:0 auto 18px;
+        }
+        .profile-card h3{font-size:1.3rem; margin-bottom:8px;}
+        .profile-tier{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            background:var(--gold-light);
+            color:var(--espresso);
+            padding:7px 16px;
+            border-radius:100px;
+            font-size:0.78rem;
+            font-weight:800;
+            margin-bottom:26px;
+        }
+        .profile-details{
+            list-style:none;
+            text-align:left;
+            border-top:1px solid var(--line);
+            padding-top:20px;
+            margin-bottom:26px;
+        }
+        .profile-details li{
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            font-size:0.86rem;
+            padding:9px 0;
+        }
+        .profile-details li strong{
+            font-weight:700;
+            color:var(--espresso-soft);
+            flex:none;
+        }
+        .profile-details li span:last-child{
+            color:var(--espresso);
+            font-weight:600;
+            text-align:right;
+        }
+
+        .btn-primary{
+            width:100%;
+            padding:15px;
+            border-radius:14px;
+            background:var(--espresso);
+            color:var(--cream-warm);
+            font-weight:800;
+            font-size:0.92rem;
+            display:flex;align-items:center;justify-content:center;
+            position:relative;
+            overflow:hidden;
+            transition:all .2s ease;
+        }
+        .btn-primary:hover{background:var(--gold); color:var(--espresso);}
+        .btn-primary.success{background:var(--success); color:#fff;}
+        .btn-outline{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:100%;
+            padding:14px;
+            border-radius:14px;
+            border:1.5px solid var(--line);
+            font-weight:700;
+            font-size:0.88rem;
+            color:var(--espresso-soft);
+            margin-top:12px;
+            transition:all .2s ease;
+        }
+        .btn-outline:hover{border-color:var(--gold); color:var(--espresso);}
+
+        .account-side{display:flex; flex-direction:column; gap:24px;}
+        .account-stats{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:18px;
+        }
+        .account-stat{
+            background:var(--cream-warm);
+            border:1px solid var(--line);
+            border-radius:20px;
+            padding:22px 18px;
+            text-align:center;
+        }
+        .account-stat .stat-num{
+            display:block;
+            font-family:'Fraunces',serif;
+            font-weight:600;
+            font-size:1.3rem;
+            color:var(--gold);
+            margin-bottom:6px;
+        }
+        .account-stat .stat-lbl{
+            display:block;
+            font-size:0.76rem;
+            color:var(--espresso-soft);
+            font-weight:600;
+        }
+
+        .recent-orders-card{
+            background:var(--cream-warm);
+            border:1px solid var(--line);
+            border-radius:20px;
+            padding:26px 28px;
+        }
+        .recent-orders-card h4{font-size:1.05rem; margin-bottom:16px;}
+        .recent-orders-list{list-style:none; margin-bottom:20px;}
+        .recent-orders-list li{
+            display:flex;
+            justify-content:space-between;
+            gap:14px;
+            padding:12px 0;
+            border-bottom:1px dashed var(--line);
+            font-size:0.86rem;
+            color:var(--espresso);
+        }
+        .recent-orders-list li:last-child{border-bottom:none;}
+        .ro-date{color:var(--espresso-soft); font-weight:600; white-space:nowrap;}
+        .btn-ghost{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-weight:700;
+            font-size:0.88rem;
+            color:var(--terracotta-deep);
+            border-bottom:2px solid var(--terracotta-deep);
+            padding-bottom:3px;
+        }
+        .btn-ghost:hover{color:var(--gold); border-color:var(--gold);}
+
+        /* ============ MODAL ============ */
+        .scrim{
+            position:fixed; inset:0;
+            background:rgba(58,40,34,0.45);
+            backdrop-filter:blur(2px);
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .3s ease;
+            z-index:90;
+        }
+        .scrim.show{opacity:1; pointer-events:auto;}
+        .modal{
+            position:fixed;
+            top:50%; left:50%;
+            transform:translate(-50%,-46%) scale(0.96);
+            width:min(480px,92vw);
+            max-height:88vh;
+            overflow-y:auto;
+            background:var(--cream-warm);
+            border-radius:26px;
+            z-index:95;
+            box-shadow:var(--shadow-lg);
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .3s ease, transform .3s ease;
+        }
+        .modal.show{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
+        .modal-head{
+            display:flex; align-items:center; justify-content:space-between;
+            padding:26px 28px 18px;
+            border-bottom:1px solid var(--line);
+        }
+        .modal-head h3{font-size:1.3rem;}
+        .modal-close{
+            width:34px;height:34px;
+            border-radius:50%;
+            background:var(--cream);
+            display:flex;align-items:center;justify-content:center;
+            color:var(--espresso-soft);
+            transition:all .2s ease;
+        }
+        .modal-close:hover{background:var(--blush); color:var(--espresso);}
+        .modal-body{padding:24px 28px;}
+        .modal-foot{display:flex; gap:12px; padding:18px 28px 26px; border-top:1px solid var(--line);}
+        .field-group{margin-bottom:18px;}
+        .field-group label{
+            display:block;
+            font-size:0.74rem;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.06em;
+            color:var(--espresso-soft);
+            margin-bottom:8px;
+        }
+        .field-group input, .field-group textarea{
+            width:100%;
+            padding:13px 15px;
+            border-radius:13px;
+            border:1.5px solid var(--line);
+            background:var(--cream);
+            font-family:'Manrope',sans-serif;
+            font-size:0.9rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        .field-group textarea{resize:none; min-height:70px;}
+        .field-group input:focus, .field-group textarea:focus{
+            outline:none;
+            border-color:var(--gold);
+            box-shadow:0 0 0 4px rgba(199,154,75,0.15);
+        }
+        .btn-secondary{
+            flex:1;
+            padding:14px;
+            border-radius:13px;
+            border:1.5px solid var(--line);
+            font-weight:700;
+            font-size:0.9rem;
+            transition:all .2s ease;
+            color:var(--espresso);
+        }
+        .btn-secondary:hover{border-color:var(--gold);}
+        .modal .btn-primary{flex:1; width:auto;}
+
+        /* ============ ALL ORDERS SECTION ============ */
+        .orders-section{padding:0 0 100px;}
+        .panel-title{
+            display:flex;
+            align-items:baseline;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-bottom:20px;
+        }
+        .panel-title h3{font-size:1.25rem;}
+        .panel-title span{font-size:0.84rem; color:var(--espresso-soft);}
+
+        .orders-table-card{
+            background:var(--cream-warm);
+            border:1px solid var(--line);
+            border-radius:22px;
+            overflow-x:auto;
+            overflow-y:hidden;
+            -webkit-overflow-scrolling:touch;
+        }
+        .orders-table-card table{width:100%; min-width:640px; border-collapse:collapse;}
+        .orders-table-card thead th{
+            text-align:left;
+            font-size:0.7rem;
+            text-transform:uppercase;
+            letter-spacing:0.07em;
+            font-weight:800;
+            color:var(--espresso-soft);
+            padding:16px 20px;
+            background:var(--cream);
+            border-bottom:1px solid var(--line);
+            white-space:nowrap;
+        }
+        .orders-table-card tbody td{
+            padding:15px 20px;
+            font-size:0.87rem;
+            border-bottom:1px solid var(--line);
+            vertical-align:middle;
+        }
+        .orders-table-card tbody tr:last-child td{border-bottom:none;}
+        .orders-table-card tbody tr:hover{background:rgba(199,154,75,0.05);}
+        .cell-title{font-weight:700;}
+        .cell-sub{font-size:0.82rem; color:var(--espresso-soft);}
+
+        .badge-pill{
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            padding:5px 12px;
+            border-radius:100px;
+            font-size:0.72rem;
+            font-weight:800;
+        }
+        .badge-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+        .badge-pending{background:#F6EBD3; color:#93691F;}
+        .badge-preparing{background:#F6E2DC; color:var(--terracotta-deep);}
+        .badge-ready{background:#E4EFDD; color:var(--success);}
+        .badge-delivered{background:#EFE9E2; color:var(--espresso-soft);}
+        .badge-cancelled{background:#F6E2DC; color:var(--error);}
+
+        .update-btn{
+            padding:8px 16px;
+            border-radius:100px;
+            background:var(--espresso);
+            color:var(--cream-warm);
+            font-weight:800;
+            font-size:0.78rem;
+            transition:all .2s ease;
+        }
+        .update-btn:hover{background:var(--gold); color:var(--espresso);}
+        .update-disabled{color:#B8A99F; font-size:0.8rem;}
+
+        .order-note-display{
+            padding:12px 14px;
+            border-radius:12px;
+            background:var(--cream);
+            border:1px solid var(--line);
+            font-size:0.86rem;
+            color:var(--espresso-soft);
+        }
+
+        .confirm-modal .modal-body{text-align:center; padding:30px 26px 6px;}
+        .confirm-icon{
+            width:52px;height:52px;
+            border-radius:50%;
+            background:#F6E2DC;
+            color:var(--error);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.4rem;
+            margin:0 auto 16px;
+        }
+        .confirm-modal p{color:var(--espresso-soft); font-size:0.9rem; line-height:1.6;}
+        .confirm-modal strong{color:var(--espresso);}
+        .btn-danger{
+            flex:1;
+            padding:14px;
+            border-radius:13px;
+            background:var(--error);
+            color:#fff;
+            font-weight:800;
+            font-size:0.9rem;
+            transition:all .2s ease;
+        }
+        .btn-danger:hover{opacity:0.9;}
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width:900px){
+            .account-wrap{grid-template-columns:1fr;}
+            .account-stats{grid-template-columns:1fr 1fr;}
+        }
+        @media (max-width:520px){
+            .account-stats{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container nav-wrap">
+        <a href="home.html" class="logo">
+      <span class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+      </span>
+            Sugar<span class="amp">&amp;</span>Flour
+        </a>
+        <ul class="nav-links">
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="home.html#about">About</a></li>
+            <li><a href="#" class="active">My Account</a></li>
+            <li><a href="menu.html">Order Online</a></li>
+        </ul>
+        <a href="home.html" class="back-link">← Back to Home</a>
+    </div>
+</header>
+
+<div class="page-head container">
+    <span class="eyebrow">My Account</span>
+    <h1>Welcome back, Amaya.</h1>
+    <p>Manage your profile, track your loyalty points, and revisit your past orders.</p>
+</div>
+
+<div class="container account-wrap">
+
+    <!-- ================= PROFILE CARD ================= -->
+    <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">AR</div>
+        <h3 id="profileName">Amaya Ranasinghe</h3>
+        <span class="profile-tier">🥐 Gold Member · 1,240 pts</span>
+        <ul class="profile-details">
+            <li><strong>Email</strong><span id="profileEmail">amaya.r@gmail.com</span></li>
+            <li><strong>Phone</strong><span id="profilePhone">+94 77 512 3344</span></li>
+            <li><strong>Address</strong><span id="profileAddress">42 Galle Road, Colombo</span></li>
+            <li><strong>Member Since</strong><span>Nov 2025</span></li>
+        </ul>
+        <button class="btn-primary" id="editProfileBtn">Edit Profile</button>
+        <a href="customerLogin.html" class="btn-outline">Sign Out</a>
+    </div>
+
+    <!-- ================= STATS + RECENT ORDERS ================= -->
+    <div class="account-side">
+        <div class="account-stats">
+            <div class="account-stat">
+                <span class="stat-num">14</span>
+                <span class="stat-lbl">Orders Placed</span>
+            </div>
+            <div class="account-stat">
+                <span class="stat-num">Rs. 28,400</span>
+                <span class="stat-lbl">Total Spent</span>
+            </div>
+            <div class="account-stat">
+                <span class="stat-num">Butter Croissant</span>
+                <span class="stat-lbl">Favorite Item</span>
+            </div>
+        </div>
+
+        <div class="recent-orders-card">
+            <h4>Recent Orders</h4>
+            <ul class="recent-orders-list">
+                <li><span>2x Butter Croissant, 1x Rose Cake</span><span class="ro-date">Aug 11</span></li>
+                <li><span>1x Berry Tart, 2x Latte</span><span class="ro-date">Aug 5</span></li>
+                <li><span>6x Macaron Box</span><span class="ro-date">Jul 29</span></li>
+            </ul>
+            <a href="menu.html" class="btn-ghost">Order Again →</a>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= ALL ORDERS ================= -->
+<section class="orders-section container">
+    <div class="panel-title">
+        <h3>All Orders</h3>
+        <span>Full order history — update or cancel orders that haven't shipped yet</span>
+    </div>
+    <div class="orders-table-card">
+        <table>
+            <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+            <tbody id="allOrdersBody"></tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ================= EDIT PROFILE MODAL ================= -->
+<div class="scrim" id="profileScrim"></div>
+<div class="modal" id="editProfileModal">
+    <div class="modal-head">
+        <h3>Edit Profile</h3>
+        <button class="modal-close" id="profileModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+        <div class="field-group"><label for="f_profileName">Full Name</label><input type="text" id="f_profileName"></div>
+        <div class="field-group"><label for="f_profileEmail">Email Address</label><input type="email" id="f_profileEmail"></div>
+        <div class="field-group"><label for="f_profilePhone">Phone Number</label><input type="tel" id="f_profilePhone"></div>
+        <div class="field-group"><label for="f_profileAddress">Delivery Address</label><textarea id="f_profileAddress"></textarea></div>
+    </div>
+    <div class="modal-foot">
+        <button class="btn-secondary" id="profileModalCancel">Cancel</button>
+        <button class="btn-primary" id="profileModalSave"><span id="profileSaveLabel">Save Changes</span></button>
+    </div>
+</div>
+
+<!-- ================= UPDATE ORDER MODAL ================= -->
+<div class="modal" id="updateOrderModal">
+    <div class="modal-head">
+        <h3>Update Order <span id="updateOrderId" style="color:var(--terracotta-deep);"></span></h3>
+        <button class="modal-close" id="orderModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+        <div class="field-group">
+            <label>Items</label>
+            <div class="order-note-display" id="updateOrderItemsDisplay"></div>
+        </div>
+        <div class="field-group">
+            <label>Status</label>
+            <div id="updateOrderStatusBadge"></div>
+        </div>
+        <div class="field-group">
+            <label for="f_orderNote">Special Instructions</label>
+            <textarea id="f_orderNote" placeholder="e.g. Please add a birthday candle, ring the doorbell twice..."></textarea>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <button class="btn-secondary" id="cancelOrderBtn" style="color:var(--error); border-color:var(--error);">Cancel Order</button>
+        <button class="btn-primary" id="saveOrderUpdateBtn">Save Changes</button>
+    </div>
+</div>
+
+<!-- ================= CONFIRM CANCEL MODAL ================= -->
+<div class="modal confirm-modal" id="confirmCancelModal">
+    <div class="modal-body">
+        <div class="confirm-icon">⚠️</div>
+        <h3 style="margin-bottom:8px;">Cancel this order?</h3>
+        <p>This can't be undone. Order <strong id="confirmCancelOrderId"></strong> will be marked as cancelled.</p>
+    </div>
+    <div class="modal-foot">
+        <button class="btn-secondary" id="confirmCancelBack">Keep Order</button>
+        <button class="btn-danger" id="confirmCancelYes">Yes, Cancel Order</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    const $profileScrim = $('#profileScrim');
+    const $editProfileModal = $('#editProfileModal');
+
+    function openProfileModal(){
+        $('#f_profileName').val($('#profileName').text().trim());
+        $('#f_profileEmail').val($('#profileEmail').text().trim());
+        $('#f_profilePhone').val($('#profilePhone').text().trim());
+        $('#f_profileAddress').val($('#profileAddress').text().trim());
+        $editProfileModal.addClass('show');
+        $profileScrim.addClass('show');
+    }
+    function closeProfileModal(){
+        $editProfileModal.removeClass('show');
+        if(!$updateOrderModal.hasClass('show') && !$confirmCancelModal.hasClass('show')) $profileScrim.removeClass('show');
+    }
+
+    $('#editProfileBtn').on('click', openProfileModal);
+    $('#profileModalClose').on('click', closeProfileModal);
+    $('#profileModalCancel').on('click', closeProfileModal);
+    $profileScrim.on('click', closeProfileModal);
+    $(document).on('keydown', function(e){ if(e.key === 'Escape') closeProfileModal(); });
+
+    $('#profileModalSave').on('click', function(){
+        const name = $('#f_profileName').val().trim();
+        const email = $('#f_profileEmail').val().trim();
+        const phone = $('#f_profilePhone').val().trim();
+        const address = $('#f_profileAddress').val().trim();
+
+        if(!name || !email){
+            $('#f_profileName').css('border-color', name ? '' : '#B3452E');
+            $('#f_profileEmail').css('border-color', email ? '' : '#B3452E');
+            return;
+        }
+        $('#f_profileName, #f_profileEmail').css('border-color', '');
+
+        $('#profileName').text(name);
+        $('#profileEmail').text(email);
+        $('#profilePhone').text(phone || '—');
+        $('#profileAddress').text(address || '—');
+        $('#profileAvatar').text(
+            name.split(' ').map(w => w.charAt(0)).join('').slice(0,2).toUpperCase() || 'AR'
+        );
+
+        const $btn = $(this);
+        const $label = $('#profileSaveLabel');
+        const originalText = $label.text();
+        $label.text('Saving...');
+        setTimeout(() => {
+            $btn.addClass('success');
+            $label.text('✓ Saved');
+            setTimeout(() => {
+                $btn.removeClass('success');
+                $label.text(originalText);
+                closeProfileModal();
+            }, 1000);
+        }, 500);
+    });
+
+    /* ============================================================
+       ALL ORDERS — view full history, update notes, cancel orders
+       ============================================================ */
+    let customerOrders = [
+        {id:'ORD-2041', date:'2026-08-11', items:'2x Butter Croissant, 1x Rose Cake', total:4100, status:'Pending', note:''},
+        {id:'ORD-2038', date:'2026-08-05', items:'1x Berry Tart, 2x Latte', total:2190, status:'Preparing', note:''},
+        {id:'ORD-2030', date:'2026-07-29', items:'6x Macaron Box', total:1150, status:'Ready', note:'Please add a candle'},
+        {id:'ORD-2021', date:'2026-07-18', items:'1x Rose Vanilla Cake', total:3200, status:'Delivered', note:''},
+        {id:'ORD-2015', date:'2026-07-02', items:'3x Croissant, 1x Orange Juice', total:1830, status:'Delivered', note:''},
+        {id:'ORD-2002', date:'2026-06-20', items:'1x Chocolate Torte', total:1350, status:'Cancelled', note:''},
+    ];
+
+    function orderStatusClass(status){
+        return {Pending:'badge-pending', Preparing:'badge-preparing', Ready:'badge-ready', Delivered:'badge-delivered', Cancelled:'badge-cancelled'}[status] || 'badge-pending';
+    }
+    /* only orders that haven't shipped yet can be updated or cancelled by the customer */
+    function isOrderEditable(status){
+        return status === 'Pending' || status === 'Preparing';
+    }
+
+    function renderAllOrders(){
+        $('#allOrdersBody').html(customerOrders.map(o => `
+      <tr>
+        <td class="cell-title">${o.id}</td>
+        <td>${o.date}</td>
+        <td><span class="cell-sub">${o.items}</span></td>
+        <td class="cell-title">Rs. ${o.total.toLocaleString()}</td>
+        <td><span class="badge-pill ${orderStatusClass(o.status)}">${o.status}</span></td>
+        <td>${isOrderEditable(o.status)
+            ? `<button type="button" class="update-btn" data-order-id="${o.id}">Update</button>`
+            : `<span class="update-disabled">—</span>`}
+        </td>
+      </tr>
+    `).join(''));
+    }
+
+    let activeOrderId = null;
+    const $orderScrim = $('#profileScrim'); // reuse the same scrim as the Edit Profile modal
+    const $updateOrderModal = $('#updateOrderModal');
+    const $confirmCancelModal = $('#confirmCancelModal');
+
+    function openUpdateModal(orderId){
+        const order = customerOrders.find(o => o.id === orderId);
+        if(!order) return;
+        activeOrderId = orderId;
+        $('#updateOrderId').text(order.id);
+        $('#updateOrderItemsDisplay').text(order.items);
+        $('#updateOrderStatusBadge').html(`<span class="badge-pill ${orderStatusClass(order.status)}">${order.status}</span>`);
+        $('#f_orderNote').val(order.note || '');
+        $updateOrderModal.addClass('show');
+        $orderScrim.addClass('show');
+    }
+    function closeUpdateModal(){
+        $updateOrderModal.removeClass('show');
+        if(!$confirmCancelModal.hasClass('show') && !$editProfileModal.hasClass('show')) $orderScrim.removeClass('show');
+    }
+    function closeConfirmCancel(){
+        $confirmCancelModal.removeClass('show');
+        if(!$updateOrderModal.hasClass('show') && !$editProfileModal.hasClass('show')) $orderScrim.removeClass('show');
+    }
+
+    $(document).on('click', '.update-btn', function(){ openUpdateModal($(this).data('order-id')); });
+    $('#orderModalClose').on('click', closeUpdateModal);
+    $orderScrim.on('click', function(){ closeUpdateModal(); closeConfirmCancel(); });
+    $(document).on('keydown', function(e){ if(e.key === 'Escape'){ closeUpdateModal(); closeConfirmCancel(); } });
+
+    $('#saveOrderUpdateBtn').on('click', function(){
+        const order = customerOrders.find(o => o.id === activeOrderId);
+        if(!order) return;
+        order.note = $('#f_orderNote').val().trim();
+        renderAllOrders();
+
+        const $btn = $(this);
+        const original = $btn.text();
+        $btn.text('✓ Saved');
+        setTimeout(() => {
+            $btn.text(original);
+            closeUpdateModal();
+        }, 900);
+    });
+
+    $('#cancelOrderBtn').on('click', function(){
+        $('#confirmCancelOrderId').text(activeOrderId);
+        $confirmCancelModal.addClass('show');
+    });
+    $('#confirmCancelBack').on('click', closeConfirmCancel);
+    $('#confirmCancelYes').on('click', function(){
+        const order = customerOrders.find(o => o.id === activeOrderId);
+        if(order) order.status = 'Cancelled';
+        renderAllOrders();
+        closeConfirmCancel();
+        closeUpdateModal();
+    });
+
+    renderAllOrders();
+</script>
+
+</body>
+</html>

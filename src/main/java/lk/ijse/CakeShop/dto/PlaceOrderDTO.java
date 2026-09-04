@@ -26,5 +26,6 @@ public class PlaceOrderDTO {
     private BigDecimal total;
     private OrderStatus orderStatus;
     private List<OrderItemsDTO> orderItems;
+    private String orderNote;
 
 }

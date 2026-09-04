@@ -44,4 +44,6 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    private String orderNote;
+
 }

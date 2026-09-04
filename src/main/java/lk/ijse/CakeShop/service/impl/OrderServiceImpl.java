@@ -71,7 +71,6 @@ public class OrderServiceImpl implements OrderService {
             throw new CustomException(402, "INVALID SUB TOTAL");
         }
 
-
         Order order = new Order();
 
         // validate order status ---------------------
@@ -85,6 +84,12 @@ public class OrderServiceImpl implements OrderService {
         order.setTotal(placeOrderDTO.getTotal());
         order.setOrderStatus(status);
         order.setUser(user);
+
+        if(placeOrderDTO.getOrderNote() == null){
+            order.setOrderNote("None");
+        }else{
+            order.setOrderNote(placeOrderDTO.getOrderNote());
+        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -172,6 +177,7 @@ public class OrderServiceImpl implements OrderService {
         placeOrderDTO.setTotal(o.getTotal());
         placeOrderDTO.setOrderDate(o.getOrderDate());
         placeOrderDTO.setTimeSlot(o.getTimeSlot());
+        placeOrderDTO.setOrderNote(o.getOrderNote());
 
         // user details -----------------------
         UserDTO userDTO = new UserDTO();
@@ -233,6 +239,7 @@ public class OrderServiceImpl implements OrderService {
         orderPrintDTO.setSubTotal(o.getSubTotal());
         orderPrintDTO.setDiscount(o.getDiscount());
         orderPrintDTO.setOrderStatus(o.getOrderStatus());
+        orderPrintDTO.setOrderNote(o.getOrderNote());
 
         // get Customer data
         UserDTO user = new UserDTO();

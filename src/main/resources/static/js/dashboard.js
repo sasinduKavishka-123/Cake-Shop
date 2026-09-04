@@ -1558,6 +1558,9 @@ function orderFormHTML(o){
         </table>
       </div>
     </div>
+    
+    <div class="field-group"> <lable>Order Note</lable> <input disabled type="text" id="f_note" value="${o.orderNote}" placeholder="Order Note"> </div>
+    
     <div class="field-row-2">
       <div class="field-group"><label>Sub Total (Rs.)</label><input disabled type="text" id="f_total" value="${money(o.subTotal)}" placeholder="0"></div>
       <div class="field-group"><label>Discount (Rs.)</label><input disabled type="text" id="f_total" value="${money(o.discount)}" placeholder="0"></div>
@@ -2487,6 +2490,7 @@ $(document).on('click', '[data-print-order]', function(){
                     <tbody>${rowsHtml}</tbody>
                     <tfoot><tr><td colspan="5">Total</td><td>${money(order.total)}</td></tr></tfoot>
                   </table>
+                  <div> <br> <span style="font-weight: bold">Order Note:</span> ${order.orderNote}</div>
                 `;
                 openPrintPreview(printHtml);
             }

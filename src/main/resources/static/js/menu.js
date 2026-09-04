@@ -16,11 +16,17 @@ let pr = [
 
 let products = [];
 
+/* ============ HELPERS ============ */
+function showToast(msg){
+    $('#toastMsg').text(msg);
+    $('#toast').addClass('show');
+    setTimeout(()=> $('#toast').removeClass('show'), 2200);
+}
+
 /* ============ STATE ============ */
 let cart = {};
 let fulfillment = 'pickup';
 let selectedSlot = '9-11';
-let candleOn = false;
 let currentModalProduct = null;
 let modalQty = 1;
 
@@ -42,14 +48,21 @@ function getFoodItems(){
         success: function (r){
             if(r.status === 200){
                 products = r.body;
-                console.log(products);
                 renderGrid();
-            } else {
+            }
+            else if(r.status === 401){
+                showToast("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "customerLogin.html";
+                }, 2000);
+            }
+            else {
                 showToast(r.message);
             }
         },
         error: function (r){
             r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+            console.log(r);
         }
     });
 }
@@ -120,7 +133,6 @@ function renderGrid(){
 
     $grid.html(html);
 }
-renderGrid();
 
 /* ============ FILTER BAR ============ */
 
@@ -256,10 +268,6 @@ function renderSummary(){
     const sub = subtotal();
     const totalDiscount = calTotalDiscount();
     const total = sub - totalDiscount ;
-
-    console.log(sub);
-    console.log(totalDiscount);
-    console.log(total);
 
     $('#sumSubtotal').text(`Rs. ${sub.toLocaleString()}`);
     $('#sumDiscount').text(`Rs. ${totalDiscount.toLocaleString()}`);
