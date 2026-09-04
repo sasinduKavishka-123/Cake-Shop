@@ -85,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(status);
         order.setUser(user);
 
-        if(placeOrderDTO.getOrderNote() == null){
+        if(placeOrderDTO.getOrderNote() == null || placeOrderDTO.getOrderNote().isEmpty()){
             order.setOrderNote("None");
         }else{
             order.setOrderNote(placeOrderDTO.getOrderNote());
@@ -102,11 +102,17 @@ public class OrderServiceImpl implements OrderService {
                 log.error("Error in Method saveOrder()");
                 throw new CustomException(404, "FOOD ITEM NOT FOUND");
             }
-            oi.setFoodItem(optionalFoodItem.get());
+
+            FoodItem item = optionalFoodItem.get();
+
+            double discount = (item.getPrice().multiply(item.getDiscount().getDiscountRate()).doubleValue() / 100) * oiDTO.getQty();
+            double finalPrice = item.getPrice().doubleValue() * oiDTO.getQty() - discount;
+
+            oi.setFoodItem(item);
             oi.setQty(oiDTO.getQty());
-            oi.setDiscount(oiDTO.getDiscount());
-            oi.setPrice(oiDTO.getPrice());
-            oi.setFinalPrice(oiDTO.getFinalPrice());
+            oi.setDiscount(new BigDecimal(discount));
+            oi.setPrice(item.getPrice());
+            oi.setFinalPrice(new BigDecimal(finalPrice));
             oi.setOrder(savedOrder);
 
             orderItemRepository.save(oi);

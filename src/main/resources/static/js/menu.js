@@ -368,17 +368,81 @@ $checkoutBtn.on('click', function(e) {
     $(this).append($ripple);
     setTimeout(() => $ripple.remove(), 650);
 
+    createOrder();
+});
+
+function createOrder(){
+    const userId = localStorage.getItem("UserID");
+    const orderDate = new Date().toISOString().split('T')[0];
+    const timeSlot = $('.slot.active').text();
+    const orderNote = $('#f_orderNote').val();
+    const subTotal = subtotal();
+    const totalDiscount = calTotalDiscount();
+    const total = subTotal - totalDiscount ;
+
+    if(!userId){ showToast("User Not Found"); return ; }
+
+    // make a list from cart
+    const itemList = Object.entries(cart).map(([foodItemId, qty]) => ({
+        orderItemId:0,
+        orderID:0,
+        foodItemId: Number(foodItemId),
+        qty: qty
+    }));
+
+    const obj = {
+        orderId : 0,
+        userId : userId,
+        orderDate : orderDate,
+        timeSlot : timeSlot,
+        orderNote : orderNote,
+        orderItems : itemList,
+        subTotal : subTotal,
+        discount : totalDiscount,
+        total : total
+    }
+
+    $.ajax({
+        url:"http://localhost:8080/v1/order/saveOrder",
+        type:"POST",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function (r){
+            if(r.status === 200){
+                clearOrderList();
+                showToast("Order Created");
+            }else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+}
+
+function clearOrderList(){
+    cart = {};
+    renderCartItems();
+    renderSummary();
+    $cartCountEl.text(0);
+
+    // button effects
     const $label = $('#checkoutLabel');
     const originalText = $label.text();
 
-    $(this).addClass('success');
+    $checkoutBtn.addClass('success');
     $label.text('✓ Order Confirmed');
 
     setTimeout(() => {
-        $(this).removeClass('success');
+        $checkoutBtn.removeClass('success');
         $label.text(originalText);
+        cart = {};
     }, 1800);
-});
+}
 
 /* ============ QUICK VIEW MODAL ============ */
 const $modal = $('#quickViewModal');
