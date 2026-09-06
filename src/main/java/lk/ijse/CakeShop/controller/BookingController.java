@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.controller;
 import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 import lk.ijse.CakeShop.service.BookingService;
@@ -10,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -68,6 +70,15 @@ public class BookingController {
     @GetMapping(value = "/getBookingCountWithinWeek", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getBookingsWithinWeek(){
         return new CommonResponse(200, bookingService.getBookingCount(), SUCCESS_MESSAGE);
+    }
+
+    @GetMapping(value = "/getBookingsByDateAndCat", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getBookingsByDateAndCat(
+            @RequestParam(value = "date",required = false)LocalDate date,
+            @RequestParam("category") String category
+    ){
+        TimeSlotFilterDTO dtos = bookingService.getBookingsByDateAndCat(date, category);
+        return new CommonResponse(200, dtos, SUCCESS_MESSAGE);
     }
 
 }

@@ -3,6 +3,7 @@ package lk.ijse.CakeShop.service.impl;
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
@@ -13,12 +14,10 @@ import lk.ijse.CakeShop.entity.ReservableTable;
 import lk.ijse.CakeShop.entity.User;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 import lk.ijse.CakeShop.exception.CustomException;
-import lk.ijse.CakeShop.repository.BookingDetailRepository;
-import lk.ijse.CakeShop.repository.BookingRepository;
-import lk.ijse.CakeShop.repository.ReservableTableRepository;
-import lk.ijse.CakeShop.repository.UserRepository;
+import lk.ijse.CakeShop.repository.*;
 import lk.ijse.CakeShop.service.BookingService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,13 +31,13 @@ import java.util.Set;
 
 @Service
 @Slf4j
-@AllArgsConstructor
-public class BookingServiceImpl implements BookingService {
+@RequiredArgsConstructor public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
     private final ReservableTableRepository reservableTableRepository;
+    private final TableCategoryRepository tableCategoryRepository;
 
     @Override
     public long saveBooking(BookingDTO bookingDTO) {
@@ -303,5 +302,27 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return bookingDTOS;
+    }
+
+    @Override
+    public TimeSlotFilterDTO getBookingsByDateAndCat(LocalDate bookingDate, String category) {
+        log.info("Executing Method getBookingsByDateAndCat()");
+
+        if(bookingDate == null){
+            log.error("Error in Method getBookingsByDateAndCat");
+            throw new CustomException(402, "Select a Date");
+        }
+
+        // get booking details
+        List<BookingDTO> dtos = bookingRepository.findBookingsByDateAndCat(bookingDate, category);
+
+        // get table count
+        int tableCount = reservableTableRepository.getTableSeatCountByCatName(category);
+
+        TimeSlotFilterDTO timeSlotFilterDTO = new TimeSlotFilterDTO();
+        timeSlotFilterDTO.setBookingDTOList(dtos);
+        timeSlotFilterDTO.setSetaCount(tableCount);
+
+        return timeSlotFilterDTO;
     }
 }

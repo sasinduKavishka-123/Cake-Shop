@@ -1,7 +1,9 @@
 package lk.ijse.CakeShop.repository;
 
+import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.entity.Booking;
 import lk.ijse.CakeShop.entity.User;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -26,4 +28,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = "SELECT b FROM Booking b WHERE b.bookingDate BETWEEN ?1 and ?2 ORDER BY b.bookingDate ASC LIMIT 5")
     List<Booking> getThisWekBookings(LocalDate starDate, LocalDate endDate);
 
+    @Query(value = "SELECT " +
+            "new lk.ijse.CakeShop.dto.BookingDTO(" + "b.bookingId, b.bookingTime, b.seatCount) " +
+            "FROM Booking b " +
+            "WHERE b.bookingDate = ?1 AND b.tableType = ?2 AND b.bookingStatus != 'CANCELLED'")
+    List<BookingDTO> findBookingsByDateAndCat(LocalDate bookingDate, String category);
 }

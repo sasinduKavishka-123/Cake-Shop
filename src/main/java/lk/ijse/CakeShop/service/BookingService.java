@@ -2,10 +2,12 @@ package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
+import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.dto.printDTOs.BookingPrintDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -26,5 +28,7 @@ public interface BookingService {
     int getBookingCount();
 
     List<BookingDTO> getThisWeekBookings();
+
+    TimeSlotFilterDTO getBookingsByDateAndCat(LocalDate bookingDate, String category);
 
 }

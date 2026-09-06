@@ -25,4 +25,10 @@ public class BookingDTO {
 
     private long userId;
     private String userName;
+
+    public BookingDTO(long bookingId, String bookingTime, int seatCount) {
+        this.bookingId = bookingId;
+        this.bookingTime = bookingTime;
+        this.seatCount = seatCount;
+    }
 }

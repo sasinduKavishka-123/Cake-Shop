@@ -29,4 +29,8 @@ public interface ReservableTableRepository extends JpaRepository<ReservableTable
             "FROM ReservableTable t WHERE t.tableCategory.tableCategoryName = ?1")
     List<ReservableTableDTO> getTablesByCategory(String tableCategory);
 
+
+    @Query(value = "SELECT SUM(r.seatCount) FROM ReservableTable r WHERE r.tableCategory.tableCategoryName = ?1")
+    int getTableSeatCountByCatName(String category);
+
 }

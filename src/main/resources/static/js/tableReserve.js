@@ -8,9 +8,16 @@ let selectedSlot = null;
 let partyCount = 1;
 let selectedSeat = 1;
 let selectedSeatPrice = 1;
+let categorySeatCount = 0;
+let maxSeatCount = 1;
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const dowNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+const allSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'];
+let unavailableSlots = [];
+let slotsWithSeatCount = [];
+
 
 
 /* ============ HELPERS ============ */
@@ -51,13 +58,16 @@ function renderCalendar() {
         if (thisDate <= today) {
             $day.addClass('disabled');
             if (thisDate.getTime() === today.getTime()) $day.addClass('today');
-        } else {
+        }
+        else {
             if (selectedDate && thisDate.getTime() === selectedDate.getTime()) $day.addClass('selected');
 
             $day.on('click', () => {
                 selectedDate = thisDate;
                 renderCalendar();
-                updateSummary();
+
+                // filter time slots
+                filterTimeSlots();
             });
         }
         $calGrid.append($day);
@@ -145,14 +155,84 @@ $seatGrid.on('click', '.seat-card', function () {
     $seatGrid.find('.seat-card').removeClass('active');
     $card.addClass('active');
     selectedSeat = $card.data('seat');
-    updateSummary();
+
+    // filter time slots
+    filterTimeSlots();
+
 });
+
+
+/* ============ Filter Time Slots ============ */
+function filterTimeSlots(){
+
+    let selectedCategory = '';
+    seatCategories.map((tc) =>{
+        if(tc.tableCategoryId === selectedSeat){
+            selectedCategory = tc.tableCategoryName;
+        }
+    });
+
+    let date = selectedDate ? selectedDate.toLocaleDateString('sv-SE') : "";
+
+    const obj = { date : date, category : selectedCategory }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/getBookingsByDateAndCat",
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (r){
+            if(r.status === 200){
+                renderTimeSlots(r.body);
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? showToast(r.message) : showToast("UNEXPECTED ERROR");
+        }
+    });
+}
+
+function renderTimeSlots(details){
+    // reset values
+    partyCount = 1;
+    $partyCount.text(partyCount);
+    categorySeatCount = details.setaCount;
+    selectedSlot = '';
+    $slotSelectedLabel.text("No time selected");
+    updateSummary();
+
+    slotsWithSeatCount = allSlots.map(slot => {
+        // Find all bookings matching this time slot and sum their seats
+        const totalSeats = details.bookingDTOList
+            .filter(booking => booking.bookingTime === slot)
+            .reduce((sum, booking) => sum + booking.seatCount, 0);
+
+        return {
+            time: slot,
+            seatCount: totalSeats
+        };
+    });
+
+    // rerender slots --------------------
+    unavailableSlots = [];
+
+    slotsWithSeatCount.map((t)=>{
+        if(t.seatCount >= categorySeatCount){
+            unavailableSlots.push(t.time);
+        }
+    });
+
+    renderSlots();
+}
 
 /* ============ TIME SLOTS ============ */
 const $slotGrid = $('#slotGrid');
 const $slotSelectedLabel = $('#slotSelectedLabel');
-const allSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'];
-const unavailableSlots = ['12:00 PM', '1:00 PM', '6:00 PM'];
 
 function renderSlots() {
     const slotsHtml = allSlots.map(s => {
@@ -171,6 +251,15 @@ $slotGrid.on('click', '.slot', function () {
     selectedSlot = $slot.data('slot');
     renderSlots();
     $slotSelectedLabel.text(selectedSlot);
+
+    slotsWithSeatCount.map(t=>{
+        if(t.time === selectedSlot){
+            maxSeatCount = categorySeatCount - t.seatCount;
+        }
+    });
+
+    partyCount = 1;
+    $partyCount.text(partyCount);
     updateSummary();
 });
 
@@ -184,7 +273,7 @@ $('#partyMinus').on('click', () => {
 });
 
 $('#partyPlus').on('click', () => {
-    partyCount = Math.min(9, partyCount + 1);
+    partyCount = Math.min(maxSeatCount, partyCount + 1);
     $partyCount.text(partyCount);
     updateSummary();
 });
