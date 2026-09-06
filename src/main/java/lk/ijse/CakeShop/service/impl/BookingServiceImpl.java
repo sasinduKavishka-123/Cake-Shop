@@ -72,6 +72,9 @@ public class BookingServiceImpl implements BookingService {
             log.error("Error in Method saveBooking()");
             throw new CustomException(402, "Invalid User ID");
         }
+        if(bookingDTO.getBookingNote() == null || bookingDTO.getBookingNote().isEmpty()){
+            bookingDTO.setBookingNote("None");
+        }
 
         Optional<User> optionalUser = userRepository.findById(bookingDTO.getUserId());
         if(optionalUser.isEmpty()){
@@ -89,6 +92,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setSeatCount(bookingDTO.getSeatCount());
         booking.setTotal(bookingDTO.getTotal());
         booking.setTableType(bookingDTO.getTableType());
+        booking.setBookingNote(bookingDTO.getBookingNote());
 
         // setting booking status to pending when creating it
         booking.setBookingStatus(BookingStatus.PENDING);
@@ -210,6 +214,7 @@ public class BookingServiceImpl implements BookingService {
         bookingFormDTO.setTableCategory(b.getTableType());
         bookingFormDTO.setStatus(b.getBookingStatus());
         bookingFormDTO.setTotal(b.getTotal());
+        bookingFormDTO.setBookingNote(b.getBookingNote());
 
         // get booking details
         List<BookingDetailFormDTO> bookingDetailsDTOs = bookingDetailRepository.getBookingDetailsByBookingId(bookingId);
@@ -241,6 +246,7 @@ public class BookingServiceImpl implements BookingService {
         bookingPrintDTO.setTableType(b.getTableType());
         bookingPrintDTO.setSeatCount(b.getSeatCount());
         bookingPrintDTO.setTotal(b.getTotal());
+        bookingPrintDTO.setBookingNote(b.getBookingNote());
         bookingPrintDTO.setBookingStatus(b.getBookingStatus());
 
         // get User details

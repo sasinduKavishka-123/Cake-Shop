@@ -38,4 +38,9 @@ public class TableCategoryController {
         return new CommonResponse(200, tableCategory, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getAllTableCategories", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllTableCategories(){
+        return new CommonResponse(200, tableCategoryService.getAllTableCategories(), SUCCESS_MESSAGE);
+    }
+
 }

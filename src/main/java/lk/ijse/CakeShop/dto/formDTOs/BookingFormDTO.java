@@ -24,6 +24,7 @@ public class BookingFormDTO {
     private String time;
     private int seatCount;
     private String tableCategory;
+    private String bookingNote;
 
     private List<BookingDetailFormDTO> bookingDetailDTOS;
     private BigDecimal total;

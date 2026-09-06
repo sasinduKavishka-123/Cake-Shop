@@ -19,6 +19,7 @@ public class BookingDTO {
     private String bookingTime;
     private int seatCount;
     private String tableType;
+    private String bookingNote;
     private BigDecimal total;
     private BookingStatus bookingStatus;
 

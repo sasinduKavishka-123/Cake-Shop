@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,6 +81,25 @@ public class TableCategoryServiceImpl implements TableCategoryService {
         }
 
         return categoryDTO;
+    }
+
+    @Override
+    public List<TableCategoryDTO> getAllTableCategories() {
+        log.info("ExecutingMethod getAllTableCategories()");
+
+        List<TableCategory> categories = tableCategoryRepository.findAll();
+        List<TableCategoryDTO> categoryDTOS = new ArrayList<>();
+
+        for(TableCategory t : categories){
+            TableCategoryDTO dto = new TableCategoryDTO();
+            dto.setTableCategoryId(t.getTableCategoryId());
+            dto.setTableCategoryName(t.getTableCategoryName());
+            dto.setPricePerSeat(t.getPricePerSeat());
+
+            categoryDTOS.add(dto);
+        }
+
+        return categoryDTOS;
     }
 
 

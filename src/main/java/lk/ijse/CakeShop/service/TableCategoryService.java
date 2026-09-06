@@ -12,4 +12,6 @@ public interface TableCategoryService {
 
     TableCategoryDTO getTableCategoryDataById(long categoryId);
 
+    List<TableCategoryDTO> getAllTableCategories();
+
 }

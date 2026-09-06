@@ -1891,6 +1891,10 @@ function bookingFormHTML(b){
       <div class="restock-total-row">Total: <span id="bookingTablesTotal">${money(b.total)}</span></div>
     </div>
  
+    <div class="field-group"><label>Special Requests</label>
+        <input disabled type="text" id="f_note" value="${b.bookingNote}" placeholder="note">
+    </div>
+ 
     <div class="field-group"><label>Status</label>
       <select id="f_status">
         ${['Pending','Confirmed','Completed','Cancelled'].map(v=>`<option ${formatStatus(b.status)===v?'selected':''}>${v}</option>`).join('')}
@@ -2548,6 +2552,7 @@ $(document).on('click', '[data-print-booking]', function(){
                     <tbody>${tableRows}</tbody>
                     <tfoot><tr><td colspan="2">Total</td><td>${money(booking.total)}</td></tr></tfoot>
                   </table>
+                  <div> <br> <span style="font-weight: bold">Special Requests:</span> ${booking.bookingNote}</div>
                 `;
                 openPrintPreview(printHtml);
             }

@@ -485,7 +485,7 @@
         }
         .strip-inner{
             display:grid;
-            grid-template-columns:repeat(4,1fr);
+            grid-template-columns:repeat(3,1fr);
             gap:40px;
             text-align:center;
         }
@@ -586,15 +586,6 @@
 
         /* ================= RESPONSIVE ================= */
         @media (max-width:980px){
-            .hero-grid{grid-template-columns:1fr;}
-            .hero-visual{height:420px; margin-top:20px;}
-            .card-grid{grid-template-columns:repeat(2,1fr);}
-            .about-grid{grid-template-columns:1fr; gap:50px;}
-            .about-visual{height:380px;}
-            .strip-inner{grid-template-columns:repeat(2,1fr); gap:36px;}
-            .footer-grid{grid-template-columns:1fr 1fr; gap:36px;}
-        }
-        @media (max-width:720px){
             .nav-links{
                 position:fixed;
                 top:0; right:0;
@@ -612,12 +603,21 @@
             }
             .nav-links.open{transform:translateX(0);}
             .nav-links a{font-size:1.2rem;}
+            .hero-grid{grid-template-columns:1fr;}
+            .hero-visual{height:420px; margin-top:20px;}
+            .card-grid{grid-template-columns:repeat(2,1fr);}
+            .about-grid{grid-template-columns:1fr; gap:50px;}
+            .about-visual{height:380px;}
+            .footer-grid{grid-template-columns:1fr 1fr; gap:36px;}
+        }
+        @media (max-width:720px){
             .burger{display:flex;}
             .order-btn{display:none;}
             .card-grid{grid-template-columns:1fr;}
             .hero-badge{display:none;}
             .hero-stats{right:6px;}
             .hero{padding-top:100px;}
+            .strip-inner{grid-template-columns:repeat(1,1fr); gap:36px;}
         }
     </style>
 </head>
@@ -636,7 +636,8 @@
                 <li><a href="#menu">Menu</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
-                <li><a href="#order">Order Online</a></li>
+                <li><a href="menu.html">Order Online</a></li>
+                <li><a href="reserveTable.html">Reserve Tables</a></li>
             </ul>
         </nav>
         <div class="nav-right">
@@ -670,8 +671,8 @@
             </div>
             <div class="hero-badge">Fresh<span>DAILY BAKE</span></div>
             <div class="hero-stats">
-                <span class="num">12k+</span>
-                <span class="lbl">Pastries boxed &amp; delivered this year</span>
+                <span class="num">5k+</span>
+                <span class="lbl">Pastries boxed &amp; served this year</span>
             </div>
         </div>
     </div>
@@ -700,7 +701,6 @@
                     <p>72-hour laminated dough, baked golden and shatteringly flaky.</p>
                     <div class="p-card-foot">
                         <span class="price">Rs. 450</span>
-                        <span class="add-btn">+</span>
                     </div>
                 </div>
             </div>
@@ -715,7 +715,6 @@
                     <p>Soft vanilla sponge, whipped cream, and candied rose petals.</p>
                     <div class="p-card-foot">
                         <span class="price">Rs. 3,200</span>
-                        <span class="add-btn">+</span>
                     </div>
                 </div>
             </div>
@@ -730,7 +729,6 @@
                     <p>Crisp shortcrust, silky custard, and glazed seasonal berries.</p>
                     <div class="p-card-foot">
                         <span class="price">Rs. 890</span>
-                        <span class="add-btn">+</span>
                     </div>
                 </div>
             </div>
@@ -745,7 +743,6 @@
                     <p>Crisp shells, chewy centers, six flavors hand-piped daily.</p>
                     <div class="p-card-foot">
                         <span class="price">Rs. 1,150</span>
-                        <span class="add-btn">+</span>
                     </div>
                 </div>
             </div>
@@ -801,19 +798,6 @@
             <h4>We Bake</h4>
             <p>Small batches, low and slow, straight from our stone-deck ovens.</p>
         </div>
-        <div>
-            <span class="strip-num">04</span>
-            <h4>We Deliver</h4>
-            <p>Boxed warm and brought to your door across Colombo, same day.</p>
-        </div>
-    </div>
-</section>
-
-<!-- ================= TESTIMONIAL ================= -->
-<section class="testimonial">
-    <div class="container">
-        <blockquote>"Every box from Sugar &amp; Flour feels like a little celebration — the croissants alone are worth crossing town for."</blockquote>
-        <cite>— Amaya R., regular customer</cite>
     </div>
 </section>
 

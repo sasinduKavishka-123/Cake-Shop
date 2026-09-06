@@ -25,6 +25,7 @@ public class Booking {
     private String bookingTime;
     private int seatCount;
     private String tableType;
+    private String bookingNote;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal total;
