@@ -11,7 +11,7 @@ import java.util.Set;
 
 public interface BookingService {
 
-    void saveBooking(BookingDTO bookingDTO);
+    long saveBooking(BookingDTO bookingDTO);
 
     void addBookingDetails(AddBookingDetailDTO bookingDTO);
 

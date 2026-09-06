@@ -24,8 +24,8 @@ public class BookingController {
 
     @PostMapping(value = "/saveBooking", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse createBooking(@RequestBody BookingDTO bookingDTO){
-        bookingService.saveBooking(bookingDTO);
-        return new CommonResponse(200, SUCCESS_MESSAGE);
+        long savedId = bookingService.saveBooking(bookingDTO);
+        return new CommonResponse(200, savedId, SUCCESS_MESSAGE);
     }
 
     @PutMapping(value = "/addBookingDetails", produces = MediaType.APPLICATION_JSON_VALUE)

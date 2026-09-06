@@ -213,7 +213,7 @@ function updateSummary() {
     $('#sumSeat').text(seatCategory);
 
     const $sumTotal = $('#sumTotal');
-    $sumTotal.text(selectedSeatPrice * partyCount);
+    $sumTotal.text("Rs. " + (selectedSeatPrice * partyCount));
 }
 
 
@@ -248,31 +248,71 @@ $confirmBtn.on('click', function (e) {
     if (!valid) {
         if (!selectedDate || !selectedSlot) {
             $('html, body').animate({ scrollTop: $('#formCard').offset().top }, 'smooth');
-        } else {
-            const $card = $nameInput.closest('.card');
-            if ($card.length) {
-                $('html, body').animate({ scrollTop: $card.offset().top - ($(window).height() / 2) }, 'smooth');
-            }
         }
         return;
     }
 
-    $confirmBtn.addClass('loading').prop('disabled', true);
-
-    setTimeout(() => {
-        $confirmBtn.removeClass('loading').prop('disabled', false);
-        $('#summaryBody').hide();
-        const code = 'SF-' + Math.floor(100000 + Math.random() * 900000);
-        $('#confCode').text(code);
-        $('#successWrap').addClass('show');
-    }, 1400);
+    saveBooking();
 });
 
-$('#editBtn').on('click', (e) => {
-    e.preventDefault();
-    $('#successWrap').removeClass('show');
-    $('#summaryBody').show();
-});
+function saveBooking(){
+    let date = selectedDate.toLocaleDateString('sv-SE');
+    let time = selectedSlot;
+    let createdDate = new Date().toLocaleDateString('sv-SE');
+    let userId = localStorage.getItem("UserID");
+    let seatCount = partyCount;
+    let category = '';
+    seatCategories.map((tc)=>{
+       if(tc.tableCategoryId === selectedSeat){
+           category = tc.tableCategoryName;
+       }
+    });
+    let total = selectedSeatPrice * partyCount;
+    let note = $('#notes').val();
+
+    const obj = {
+        bookingId : 0,
+        userId : userId,
+        bookingCreatedDate : createdDate,
+        bookingDate : date,
+        bookingTime : time,
+        seatCount : seatCount,
+        tableType : category,
+        total : total,
+        bookingNote : note
+    }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/saveBooking",
+        type: "POST",
+        contentType: 'application/json',
+        headers:{
+            "Authorization": "Bearer " + localStorage.getItem("JWT"),
+        },
+        data: JSON.stringify(obj),
+        success: function (r){
+
+            if(r.status === 200){
+                $confirmBtn.addClass('loading').prop('disabled', true);
+
+                setTimeout(() => {
+                    $confirmBtn.removeClass('loading').prop('disabled', false);
+                    $('#summaryBody').hide();
+                    const code = 'RT-' + r.body;
+                    $('#confCode').text(code);
+                    $('#successWrap').addClass('show');
+                }, 1000);
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+}
+
 
 /* ---- clear error highlight on interaction ---- */
 $calGrid.on('click', () => { $calSelectedLabel.css('color', ''); });

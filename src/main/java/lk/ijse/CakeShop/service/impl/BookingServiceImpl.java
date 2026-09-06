@@ -41,7 +41,7 @@ public class BookingServiceImpl implements BookingService {
     private final ReservableTableRepository reservableTableRepository;
 
     @Override
-    public void saveBooking(BookingDTO bookingDTO) {
+    public long saveBooking(BookingDTO bookingDTO) {
         log.info("Executing Method saveBooking()");
 
         if(bookingDTO.getBookingDate() == null){
@@ -97,7 +97,8 @@ public class BookingServiceImpl implements BookingService {
         // setting booking status to pending when creating it
         booking.setBookingStatus(BookingStatus.PENDING);
 
-        bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        return savedBooking.getBookingId();
     }
 
     @Override
