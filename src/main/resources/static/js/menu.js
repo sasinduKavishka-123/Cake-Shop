@@ -49,6 +49,7 @@ function getFoodItems(){
             if(r.status === 200){
                 products = r.body;
                 renderGrid();
+                console.log(products);
             }
             else if(r.status === 401){
                 showToast("Please Login First");
@@ -100,10 +101,9 @@ function renderGrid(){
         let finalPrice = 0;
 
         if(p.discount === 0){
-            styleDiscount = "style=\"display: none\"";
+            finalPrice = p.price;
         }
         else{
-            stylePrice = "style=\"text-decoration-line: line-through\"";
             finalPrice = p.price - p.discount;
         }
 
@@ -111,6 +111,7 @@ function renderGrid(){
         <div class="p-card" data-cat="${p.foodItemCategory}" style="animation-delay:${i * 0.05}s">
           <div class="p-media">
             <div class="badge-row">${badgesHTML(getBadgesList(p.badges))}</div>
+            ${p.discountPercentage ? `<span class="discount-tag">-${p.discountPercentage}%</span>` : ''}
             <img src="${p.imagePath}" alt="${p.foodItemName}">
             <div class="p-overlay">
               <button class="quick-view-btn" data-id="${p.foodItemId}" aria-label="Quick view">
@@ -122,8 +123,10 @@ function renderGrid(){
             <h3>${p.foodItemName}</h3>
             <p class="desc">${p.description}</p>
             <div class="p-foot">
-              <span class="price" ${stylePrice}>Rs. ${p.price.toLocaleString()}</span>
-              <span class="price" ${styleDiscount}>Rs. ${finalPrice.toLocaleString()}</span>
+                <div class="price-group">
+                    ${p.discountPercentage ? `<span class="price-original">Rs. ${p.price.toLocaleString()}</span>` : ''}
+                    <span class="price">Rs. ${finalPrice.toLocaleString()}</span>
+                </div>
               <button class="add-btn" data-id="${p.foodItemId}"><span class="plus">+</span> Add</button>
             </div>
           </div>

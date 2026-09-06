@@ -191,6 +191,7 @@ public class FoodItemServiceImpl implements FoodItemService {
             double price = f.getPrice().doubleValue();
             double discount = price * f.getDiscount().getDiscountRate().doubleValue() / 100;
             dto.setDiscount(discount);
+            dto.setDiscountPercentage(f.getDiscount().getDiscountRate());
             foodItemDTOs.add(dto);
         }
         return foodItemDTOs;

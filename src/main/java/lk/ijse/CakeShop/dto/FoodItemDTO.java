@@ -21,6 +21,7 @@ public class FoodItemDTO {
     private long foodItemCategoryId;
     private long discountId;
     private Double discount;
+    private BigDecimal discountPercentage;
     private String foodItemCategory;
     private String badges;
     private List<String> badgesList;
