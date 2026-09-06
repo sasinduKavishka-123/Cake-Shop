@@ -26,7 +26,7 @@ public class UserController {
     @PostMapping(value = "/saveCustomer", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveCustomer(@RequestBody UserDTO userDTO) {
         userService.saveUser(userDTO);
-        return new CommonResponse(200, "UserSaved!");
+        return new CommonResponse(200, "User Saved!");
     }
 
     @PatchMapping(value = "/updateUserStatus", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -41,7 +41,7 @@ public class UserController {
     @PostMapping(value = "/saveStaff", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveStaff(@RequestBody UserDTO userDTO) {
         userService.saveUser(userDTO);
-        return new CommonResponse(200, "UserSaved!");
+        return new CommonResponse(200, "User Saved!");
     }
 
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -55,7 +55,7 @@ public class UserController {
                 token
         );
 
-        return new CommonResponse(200, userDetailDTO, "LOGIN_SUCCESSFUL");
+        return new CommonResponse(200, userDetailDTO, "LOGIN SUCCESSFUL");
     }
 
     @GetMapping(value = "/getUsers", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -92,7 +92,7 @@ const sections = {
     admins: {title:'Admins', sub:'Manage staff accounts and permission levels.', addLabel:'New Staff', showSearch:true},
     customers: {title:'Customers', sub:'View and manage customer accounts.', addLabel:null, showSearch:true},
     tables: {title:'Tables', sub:'Manage reservable tables and seating capacity.', addLabel:'New Table', showSearch:true},
-    bookings: {title:'Bookings', sub:'View and manage customer table reservations.', addLabel:'New Booking', showSearch:true},
+    bookings: {title:'Bookings', sub:'View and manage customer table reservations.', addLabel:null, showSearch:true},
 };
 let currentSection = 'overview';
 
@@ -174,7 +174,7 @@ function statusBadgeClass(status){
 }
 
 function roleBadgeClass(role){
-    return {Admin:'badge-admin', Manager:'badge-manager', Driver:'badge-staff'}[role] || 'badge-staff';
+    return {Admin:'badge-admin', Manager:'badge-manager', Cashier:'badge-staff'}[role] || 'badge-staff';
 }
 
 function stockInfo(stock, reorderLevel){
@@ -1122,7 +1122,6 @@ function renderTables(filter=''){
                           <td class="cell-title">${t.tableId}</td>
                           <td class="cell-title">${t.tableCategoryName}</td>
                           <td>${t.seatCount} guests</td>
-                          <td>${money(t.price)}</td>
                           <td><span class="badge-pill ${statusBadgeClass(status)}">${status}</span></td>
                           <td>
                             <div class="row-actions">
@@ -1733,7 +1732,7 @@ function restockFormHTML(r, isEdit){
 
 function adminFormHTML(a, isEdit){
     if(!a){
-        a = {userName: '', userEmail: '', userContact:'', userRoles: 'Driver', userStatus: 'Active'};
+        a = {userName: '', userEmail: '', userContact:'', userRoles: 'Cashier', userStatus: 'Active'};
     }
 
     let html =
@@ -1743,7 +1742,7 @@ function adminFormHTML(a, isEdit){
              <div class="field-row-2">
                <div class="field-group"><label>Role</label>
                  <select id="f_role">
-                   ${['Admin','Driver'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
+                   ${['Admin','Cashier'].map(r=>`<option ${a.userRoles===r?'selected':''}>${r}</option>`).join('')}
                  </select>
                </div>
                <div class="field-group"><label>Status</label>
@@ -2912,7 +2911,7 @@ $modalSave.on('click', function(){
                 }
             },
             error: function (e){
-                alert("UNEXPECTED ERROR");
+                e.message ? alert(e.message) : alert("UNEXPECTED ERROR");
                 $modalSave.prop('disabled', false);
             }
         });

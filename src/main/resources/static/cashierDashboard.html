@@ -173,6 +173,23 @@
         .icon-btn:hover{background:var(--gold-light); color:var(--espresso);}
         .icon-btn.print-icon:hover{background:var(--blush); color:var(--espresso);}
 
+        /* ============ PAYMENTS SUB-VIEW TOGGLE ============ */
+        .table-subnav{display:flex; gap:10px; margin-bottom:22px;}
+        .subnav-btn{
+            padding:10px 20px; border-radius:100px; border:1.5px solid var(--line);
+            background:var(--cream-warm); font-weight:800; font-size:0.86rem; color:var(--espresso-soft);
+            cursor:pointer; transition:all .2s ease;
+        }
+        .subnav-btn:hover{border-color:var(--gold); color:var(--espresso);}
+        .subnav-btn.active{background:var(--espresso); color:var(--cream-warm); border-color:var(--espresso);}
+        .badge-paid{background:var(--success-bg); color:var(--success);}
+        .badge-unpaid{background:var(--warn-bg); color:#93691F;}
+        .pay-btn{
+            padding:8px 16px; border-radius:100px; background:var(--espresso); color:var(--cream-warm);
+            font-weight:800; font-size:0.78rem; transition:all .2s ease;
+        }
+        .pay-btn:hover{background:var(--gold); color:var(--espresso);}
+
         /* ============ MODAL + SCRIM ============ */
         .scrim{
             position:fixed; inset:0; background:rgba(58,40,34,0.45); backdrop-filter:blur(2px);
@@ -206,6 +223,24 @@
             background:var(--cream); font-size:0.88rem; color:var(--espresso); cursor:pointer;
         }
         .field-group select:focus{outline:none; border-color:var(--gold);}
+        .field-group input[type="number"]{
+            width:100%; padding:12px 14px; border-radius:13px; border:1.5px solid var(--line);
+            background:var(--cream); font-size:0.88rem; color:var(--espresso);
+        }
+        .field-group input[type="number"]:focus{outline:none; border-color:var(--gold);}
+        .pm-toggle{display:flex; gap:8px;}
+        .pm-toggle button{
+            flex:1; padding:11px; border-radius:12px; border:1.5px solid var(--line);
+            background:var(--cream); font-weight:700; font-size:0.82rem; color:var(--espresso-soft);
+            transition:all .2s ease;
+        }
+        .pm-toggle button.active{background:var(--espresso); color:var(--cream-warm); border-color:var(--espresso);}
+        .change-display{
+            margin-top:10px; padding:12px 14px; border-radius:12px; background:var(--cream);
+            font-size:0.85rem; font-weight:700; display:flex; justify-content:space-between;
+        }
+        .change-display.short{color:var(--error);}
+        .change-display.ok{color:var(--success);}
         .btn-secondary{
             flex:1; padding:14px; border-radius:13px; border:1.5px solid var(--line);
             font-weight:700; font-size:0.9rem; color:var(--espresso); transition:all .2s ease;
@@ -313,6 +348,13 @@
 
         .op-total-row{display:flex; justify-content:space-between; align-items:baseline; padding-top:14px; border-top:1px solid var(--line); margin-bottom:16px;}
         .op-total-row span:last-child{font-family:'Fraunces',serif; font-weight:600; font-size:1.3rem; color:var(--terracotta-deep);}
+        .summary-row{
+            display:flex;
+            justify-content:space-between;
+            font-size:0.86rem;
+            color:var(--espresso-soft);
+            margin-bottom:10px;
+        }
         .place-order-btn{
             width:100%; padding:16px; border-radius:14px; background:var(--espresso); color:var(--cream-warm);
             font-weight:800; font-size:0.95rem; transition:all .2s ease; position:relative; overflow:hidden;
@@ -384,6 +426,11 @@
             Bookings
             <span class="nav-count" id="navCountBookings">0</span>
         </li>
+        <li class="nav-item" data-section="payments">
+            <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20" stroke="currentColor" stroke-width="1.8"/><path d="M6 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            Payments
+            <span class="nav-count" id="navCountPayments">0</span>
+        </li>
         <li class="nav-item" data-section="menuitems">
             <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
             Menu Items
@@ -426,33 +473,16 @@
         <section class="section-panel active" id="panel-placeorder">
             <div class="pos-layout">
                 <div>
-                    <div class="pos-filter-bar" id="posFilterBar">
-                        <button class="pos-pill active" data-cat="all">All</button>
-                        <button class="pos-pill" data-cat="cakes">Signature Cakes</button>
-                        <button class="pos-pill" data-cat="tarts">Tarts</button>
-                        <button class="pos-pill" data-cat="croissants">Croissants</button>
-                        <button class="pos-pill" data-cat="gf">Gluten-Free</button>
-                        <button class="pos-pill" data-cat="drinks">Drinks</button>
-                    </div>
                     <div class="pos-grid" id="posGrid"></div>
                 </div>
 
                 <div class="order-panel">
                     <h3>Current Order</h3>
-                    <div class="op-field">
-                        <label>Customer Name</label>
-                        <input type="text" id="posCustomerName" placeholder="Walk-in customer">
-                    </div>
-                    <div class="op-field">
-                        <label>Fulfillment</label>
-                        <div class="op-toggle" id="posFulfillToggle">
-                            <button type="button" class="active" data-fulfil="Dine-in">Dine-in</button>
-                            <button type="button" data-fulfil="Takeaway">Takeaway</button>
-                        </div>
-                    </div>
 
                     <div class="op-cart" id="posCartBody"></div>
 
+                    <div class="summary-row"><span>Subtotal</span><span id="posSubtotal">Rs. 0</span></div>
+                    <div class="summary-row"><span>Discount</span><span id="posDiscount">Rs. 0</span></div>
                     <div class="op-total-row"><span>Total</span><span id="posTotal">Rs. 0</span></div>
                     <button class="place-order-btn" id="placeOrderBtn" disabled><span id="placeOrderLabel">Place Order</span></button>
                 </div>
@@ -481,6 +511,32 @@
             </div>
         </section>
 
+        <!-- ================= PAYMENTS ================= -->
+        <section class="section-panel" id="panel-payments">
+            <div class="table-subnav" id="paymentsSubnav">
+                <button class="subnav-btn active" data-payview="orders">Orders</button>
+                <button class="subnav-btn" data-payview="bookings">Bookings</button>
+            </div>
+
+            <div id="paymentsOrdersView">
+                <div class="table-card">
+                    <table>
+                        <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+                        <tbody id="paymentsOrdersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="paymentsBookingsView" style="display:none;">
+                <div class="table-card">
+                    <table>
+                        <thead><tr><th>Booking ID</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+                        <tbody id="paymentsBookingsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- ================= MENU ITEMS (view only) ================= -->
         <section class="section-panel" id="panel-menuitems">
             <div class="menu-grid" id="menuItemsGrid"></div>
@@ -506,6 +562,19 @@
     </div>
 </div>
 
+<!-- ================= PAYMENT MODAL ================= -->
+<div class="modal" id="paymentModal">
+    <div class="modal-head">
+        <h3 id="paymentModalTitle">Take Payment</h3>
+        <button class="modal-close" id="paymentModalClose">✕</button>
+    </div>
+    <div class="modal-body" id="paymentModalBody"></div>
+    <div class="modal-foot">
+        <button class="btn-secondary" id="paymentModalCancel">Cancel</button>
+        <button class="btn-primary-modal" id="paymentModalConfirm"><span id="paymentConfirmLabel">Complete Payment</span></button>
+    </div>
+</div>
+
 <!-- ================= PRINT PREVIEW MODAL ================= -->
 <div class="modal print-modal" id="printModal">
     <div class="modal-head">
@@ -519,494 +588,10 @@
     </div>
 </div>
 
+
+<!-- ********************* SCRIPTS ********************* -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script>
-    /* ============================================================
-       MOCK DATA
-       ============================================================ */
-    let menuItems = [
-        {id:1, name:'Pistachio & Rose Water Tart', category:'Tarts', price:980, stock:14, img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80'},
-        {id:2, name:'Classic Butter Croissant', category:'Croissants', price:450, stock:6, img:'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=400&q=80'},
-        {id:3, name:'Rose Vanilla Layer Cake', category:'Signature Cakes', price:3200, stock:3, img:'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80'},
-        {id:4, name:'Salted Caramel Cake Slice', category:'Signature Cakes', price:650, stock:18, img:'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&w=400&q=80'},
-        {id:5, name:'Berry Fruit Tart', category:'Tarts', price:890, stock:9, img:'https://images.unsplash.com/photo-1519915028121-7d3463d5b1ff?auto=format&fit=crop&w=400&q=80'},
-        {id:6, name:'Flourless Chocolate Torte', category:'Gluten-Free', price:1350, stock:0, img:'https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?auto=format&fit=crop&w=400&q=80'},
-        {id:7, name:'Almond Gluten-Free Cake', category:'Gluten-Free', price:1200, stock:5, img:'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?auto=format&fit=crop&w=400&q=80'},
-        {id:8, name:'Iced Vanilla Latte', category:'Drinks', price:650, stock:40, img:'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=400&q=80'},
-        {id:9, name:'Fresh Orange Juice', category:'Drinks', price:480, stock:22, img:'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80'},
-        {id:10, name:'Chocolate Hazelnut Croissant', category:'Croissants', price:520, stock:11, img:'https://images.unsplash.com/photo-1620921575084-1e29a9dab7e3?auto=format&fit=crop&w=400&q=80'},
-        {id:11, name:'Macaron Box (6)', category:'Gluten-Free', price:1150, stock:5, img:'https://images.unsplash.com/photo-1558326567-98ae2405596b?auto=format&fit=crop&w=400&q=80'},
-        {id:12, name:'Lemon Meringue Tart', category:'Tarts', price:820, stock:8, img:'https://images.unsplash.com/photo-1519869491415-1e5f9b2f4b7a?auto=format&fit=crop&w=400&q=80'},
-    ];
-
-    let orders = [
-        {id:'ORD-1042', customer:'Nadeesha Perera', items:'2x Butter Croissant, 1x Rose Cake', total:4100, status:'Pending', date:'2026-08-11'},
-        {id:'ORD-1041', customer:'Kavindu Silva', items:'1x Berry Tart, 2x Latte', total:2190, status:'Preparing', date:'2026-08-11'},
-        {id:'ORD-1040', customer:'Ishara Fernando', items:'6x Macaron Box', total:1150, status:'Ready', date:'2026-08-10'},
-        {id:'ORD-1039', customer:'Tharindu Jayasuriya', items:'1x Chocolate Torte', total:1350, status:'Delivered', date:'2026-08-10'},
-        {id:'ORD-1038', customer:'Amaya Ranasinghe', items:'3x Croissant, 1x Orange Juice', total:1830, status:'Cancelled', date:'2026-08-09'},
-    ];
-
-    let bookings = [
-        {id:'BK-1001', customer:'Nadeesha Perera', date:'2026-08-31', slot:'11 AM – 1 PM', guests:2, tables:[{id:1,name:'Window Booth A'}], status:'Confirmed'},
-        {id:'BK-1002', customer:'Kavindu Rathnayake', date:'2026-08-31', slot:'6 – 8 PM', guests:6, tables:[{id:2,name:'Communal Table'}], status:'Pending'},
-        {id:'BK-1003', customer:'Ishara Wickramasinghe', date:'2026-08-30', slot:'1 – 3 PM', guests:3, tables:[{id:3,name:'Quiet Corner B'}], status:'Completed'},
-        {id:'BK-1004', customer:'Tharindu Jayasuriya', date:'2026-08-29', slot:'9 – 11 AM', guests:2, tables:[{id:4,name:'Window Booth C'}], status:'Cancelled'},
-    ];
-
-    let nextOrderNum = 1043;
-
-    /* ============================================================
-       NAVIGATION
-       ============================================================ */
-    const sections = {
-        placeorder: {title:'Place Order', sub:'Build an order for a walk-in or phone customer.', showSearch:false},
-        orders: {title:'Orders', sub:'View and update order status.', showSearch:true},
-        bookings: {title:'Table Bookings', sub:'View and update booking status.', showSearch:true},
-        menuitems: {title:'Menu Items', sub:'Browse all items currently on the menu.', showSearch:true},
-    };
-    const statusOptionsMap = {
-        orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
-        bookings: ['Pending','Confirmed','Completed','Cancelled'],
-    };
-    let currentSection = 'placeorder';
-    let activeStatuses = new Set();
-
-    const $navItems = $('.nav-item');
-    const $searchWrap = $('#searchWrap');
-    const $searchInput = $('#searchInput');
-
-    function statusAllowed(label){ return activeStatuses.size === 0 || activeStatuses.has(label); }
-    function statusClass(status){
-        return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
-            Cancelled:'badge-cancelled',Confirmed:'badge-confirmed',Completed:'badge-completed'}[status] || 'badge-pending';
-    }
-    function money(n){ return 'Rs. ' + n.toLocaleString(); }
-    function showToast(msg){
-        $('#toastMsg').text(msg);
-        $('#toast').addClass('show');
-        setTimeout(()=> $('#toast').removeClass('show'), 2200);
-    }
-
-    function goToSection(name){
-        currentSection = name;
-        $navItems.each(function(){ $(this).toggleClass('active', $(this).data('section') === name); });
-        $('.section-panel').removeClass('active');
-        $('#panel-'+name).addClass('active');
-        $('#topbarTitle').text(sections[name].title);
-        $('#topbarSub').text(sections[name].sub);
-        $searchWrap.toggleClass('sw-hidden', !sections[name].showSearch);
-        $searchInput.val('');
-        activeStatuses = new Set();
-        renderStatusFilter();
-        closeSidebar();
-        renderAll();
-    }
-    $navItems.on('click', function(){ goToSection($(this).data('section')); });
-
-    /* ============ SIDEBAR (mobile) ============ */
-    const $sidebar = $('#sidebar');
-    const $sidebarScrim = $('#sidebarScrim');
-    $('#hamburgerBtn').on('click', function(){ $sidebar.addClass('open'); $sidebarScrim.css({opacity:1,pointerEvents:'auto'}); });
-    $('#sidebarClose').on('click', closeSidebar);
-    $sidebarScrim.on('click', closeSidebar);
-    function closeSidebar(){ $sidebar.removeClass('open'); $sidebarScrim.css({opacity:0,pointerEvents:'none'}); }
-
-    /* ============ STATUS FILTER CHIPS (Orders / Bookings) ============ */
-    function renderStatusFilter(){
-        const options = statusOptionsMap[currentSection];
-        const filterId = currentSection === 'orders' ? '#orderStatusFilter' : currentSection === 'bookings' ? '#bookingStatusFilter' : null;
-        $('.status-filter').empty().hide();
-        if(!options || !filterId) return;
-        $(filterId).css('display','flex').html(options.map(s => `
-    <label class="status-chip">
-      <input type="checkbox" value="${s}">
-      ${s}
-    </label>
-  `).join(''));
-    }
-    $(document).on('change', '.status-filter input[type="checkbox"]', function(){
-        const val = $(this).val();
-        const checked = $(this).is(':checked');
-        $(this).closest('.status-chip').toggleClass('active', checked);
-        if(checked) activeStatuses.add(val); else activeStatuses.delete(val);
-        renderAll();
-    });
-
-    /* ============================================================
-       ORDERS — view + inline status update
-       ============================================================ */
-    function renderOrders(filter=''){
-        const f = filter.toLowerCase();
-        const rows = orders.filter(o => (!f || o.id.toLowerCase().includes(f) || o.customer.toLowerCase().includes(f)) && statusAllowed(o.status));
-        $('#ordersBody').html(rows.map(o => `
-    <tr>
-      <td class="cell-title">${o.id}</td>
-      <td>${o.customer}</td>
-      <td><span class="cell-sub">${o.items}</span></td>
-      <td class="cell-title">${money(o.total)}</td>
-      <td>${o.date}</td>
-      <td><span class="badge-pill ${statusClass(o.status)}">${o.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-update-order="${o.id}" aria-label="Update status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn print-icon" data-print-order="${o.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
-        $('#navCountOrders').text(orders.length);
-    }
-
-    /* ============================================================
-       BOOKINGS — view + status update via modal
-       ============================================================ */
-    function renderBookings(filter=''){
-        const f = filter.toLowerCase();
-        const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f)) && statusAllowed(b.status));
-        $('#bookingsBody').html(rows.map(b => `
-    <tr>
-      <td class="cell-title">${b.id}</td>
-      <td>${b.customer}</td>
-      <td>${b.date}</td>
-      <td>${b.slot}</td>
-      <td>${b.guests}</td>
-      <td>${(b.tables && b.tables.length) ? b.tables.map(t=>t.name).join(', ') : '—'}</td>
-      <td><span class="badge-pill ${statusClass(b.status)}">${b.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-update-booking="${b.id}" aria-label="Update status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn print-icon" data-print-booking="${b.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="8">No bookings match your search.</td></tr>`);
-        $('#navCountBookings').text(bookings.length);
-    }
-
-    /* ============================================================
-       UPDATE STATUS MODAL — cashier can only change status;
-       every other field is shown read-only for reference.
-       ============================================================ */
-    const $modalScrim = $('#modalScrim');
-    const $updateModal = $('#updateModal');
-    const $printModal = $('#printModal');
-    let activeUpdate = null; // {type: 'order'|'booking', id}
-
-    function openUpdateModal(type, id){
-        activeUpdate = {type, id};
-        const orderStatuses = ['Pending','Preparing','Ready','Delivered','Cancelled'];
-        const bookingStatuses = ['Pending','Confirmed','Completed','Cancelled'];
-
-        if(type === 'order'){
-            const o = orders.find(x => x.id === id);
-            if(!o) return;
-            $('#updateModalTitle').text('Update Order ' + o.id);
-            $('#updateModalBody').html(`
-      <div class="detail-row"><span>Customer</span><strong>${o.customer}</strong></div>
-      <div class="detail-row"><span>Items</span><strong>${o.items}</strong></div>
-      <div class="detail-row"><span>Total</span><strong>${money(o.total)}</strong></div>
-      <div class="detail-row"><span>Date</span><strong>${o.date}</strong></div>
-      <div class="field-group">
-        <label>Status</label>
-        <select id="f_updateStatus">
-          ${orderStatuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    `);
-        } else {
-            const b = bookings.find(x => x.id === id);
-            if(!b) return;
-            $('#updateModalTitle').text('Update Booking ' + b.id);
-            $('#updateModalBody').html(`
-      <div class="detail-row"><span>Customer</span><strong>${b.customer}</strong></div>
-      <div class="detail-row"><span>Date</span><strong>${b.date}</strong></div>
-      <div class="detail-row"><span>Time</span><strong>${b.slot}</strong></div>
-      <div class="detail-row"><span>Guests</span><strong>${b.guests}</strong></div>
-      <div class="detail-row"><span>Table(s)</span><strong>${(b.tables && b.tables.length) ? b.tables.map(t=>t.name).join(', ') : '—'}</strong></div>
-      <div class="field-group">
-        <label>Status</label>
-        <select id="f_updateStatus">
-          ${bookingStatuses.map(s => `<option value="${s}" ${b.status===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    `);
-        }
-
-        $updateModal.addClass('show');
-        $modalScrim.addClass('show');
-    }
-    function closeUpdateModal(){
-        $updateModal.removeClass('show');
-        if(!$printModal.hasClass('show')) $modalScrim.removeClass('show');
-    }
-
-    $(document).on('click', '[data-update-order]', function(){ openUpdateModal('order', $(this).data('update-order')); });
-    $(document).on('click', '[data-update-booking]', function(){ openUpdateModal('booking', $(this).data('update-booking')); });
-    $('#updateModalClose').on('click', closeUpdateModal);
-    $('#updateModalCancel').on('click', closeUpdateModal);
-
-    $('#updateModalSave').on('click', function(){
-        if(!activeUpdate) return;
-        const newStatus = $('#f_updateStatus').val();
-
-        if(activeUpdate.type === 'order'){
-            const o = orders.find(x => x.id === activeUpdate.id);
-            if(o) o.status = newStatus;
-        } else {
-            const b = bookings.find(x => x.id === activeUpdate.id);
-            if(b) b.status = newStatus;
-        }
-
-        const $btn = $(this);
-        const $label = $('#updateSaveLabel');
-        const original = $label.text();
-        $label.text('✓ Saved');
-        $btn.addClass('success');
-        setTimeout(() => {
-            $btn.removeClass('success');
-            $label.text(original);
-            closeUpdateModal();
-            showToast(`${activeUpdate.id} marked as ${newStatus}`);
-            renderAll();
-        }, 700);
-    });
-
-    /* ============================================================
-       PRINT PREVIEW — order / booking details
-       ============================================================ */
-    function openPrintPreview(html){
-        $('#printArea').html(html);
-        $printModal.addClass('show');
-        $modalScrim.addClass('show');
-    }
-    function closePrintPreview(){
-        $printModal.removeClass('show');
-        if(!$updateModal.hasClass('show')) $modalScrim.removeClass('show');
-    }
-    $('#printModalClose').on('click', closePrintPreview);
-    $('#printModalCancel').on('click', closePrintPreview);
-    $('#printModalConfirm').on('click', function(){ window.print(); });
-    $modalScrim.on('click', function(){ closeUpdateModal(); closePrintPreview(); });
-    $(document).on('keydown', function(e){ if(e.key === 'Escape'){ closeUpdateModal(); closePrintPreview(); } });
-
-    $(document).on('click', '[data-print-order]', function(){
-        const o = orders.find(x => x.id === $(this).data('print-order'));
-        if(!o) return;
-        const rowsHtml = o.items.split(',').map(s => s.trim()).filter(Boolean).map(s => {
-            const m = s.match(/^(\d+)\s*x\s*(.+)$/i);
-            return m ? `<tr><td>${m[2]}</td><td>${m[1]}</td></tr>` : `<tr><td>${s}</td><td>1</td></tr>`;
-        }).join('') || `<tr><td colspan="2">No items.</td></tr>`;
-        openPrintPreview(`
-    <h1>Order ${o.id}</h1>
-    <p>Customer: ${o.customer}<br>Status: ${o.status}<br>Date: ${o.date}</p>
-    <div class="print-table-wrap">
-      <table>
-        <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-        <tfoot><tr><td>Total</td><td>${money(o.total)}</td></tr></tfoot>
-      </table>
-    </div>
-  `);
-    });
-
-    $(document).on('click', '[data-print-booking]', function(){
-        const b = bookings.find(x => x.id === $(this).data('print-booking'));
-        if(!b) return;
-        const tableRows = (b.tables && b.tables.length)
-            ? b.tables.map(t => `<tr><td>${t.name}</td></tr>`).join('')
-            : `<tr><td>No tables assigned.</td></tr>`;
-        openPrintPreview(`
-    <h1>Booking ${b.id}</h1>
-    <p>
-      Customer: ${b.customer}<br>
-      Date: ${b.date}<br>
-      Time: ${b.slot}<br>
-      Guests: ${b.guests}<br>
-      Status: ${b.status}
-    </p>
-    <div class="print-table-wrap">
-      <table>
-        <thead><tr><th>Table</th></tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-    </div>
-  `);
-    });
-
-    /* ============================================================
-       MENU ITEMS — view only
-       ============================================================ */
-    function renderMenuItems(filter=''){
-        const f = filter.toLowerCase();
-        const rows = menuItems.filter(i => !f || i.name.toLowerCase().includes(f) || i.category.toLowerCase().includes(f));
-        $('#menuItemsGrid').html(rows.map(i => `
-    <div class="menu-card">
-      <div class="menu-card-img"><img src="${i.img}" alt="${i.name}"></div>
-      <div class="menu-card-body">
-        <h4>${i.name}</h4>
-        <div class="cat">${i.category}</div>
-        <div class="menu-card-foot">
-          <span class="menu-price">${money(i.price)}</span>
-          <span class="badge-pill ${i.stock===0?'badge-outofstock':i.stock<=8?'badge-lowstock':'badge-instock'}">${i.stock===0?'Out of Stock':i.stock<=8?'Low Stock':'In Stock'}</span>
-        </div>
-      </div>
-    </div>
-  `).join('') || `<p style="text-align:center;color:var(--espresso-soft);padding:40px;">No items match your search.</p>`);
-        $('#navCountMenuItems').text(menuItems.length);
-    }
-
-    /* ============================================================
-       PLACE ORDER (POS)
-       ============================================================ */
-    let posCart = {}; // itemId -> qty
-    let posCategory = 'all';
-    let posFulfillment = 'Dine-in';
-
-    const catKeyMap = {'Signature Cakes':'cakes','Tarts':'tarts','Croissants':'croissants','Gluten-Free':'gf','Drinks':'drinks'};
-
-    function renderPosGrid(){
-        const filtered = menuItems.filter(i => posCategory === 'all' || catKeyMap[i.category] === posCategory);
-        $('#posGrid').html(filtered.map(i => `
-    <div class="pos-card" data-item-id="${i.id}" style="${i.stock===0?'opacity:0.5;pointer-events:none;':''}">
-      <div class="pos-card-img"><img src="${i.img}" alt="${i.name}"></div>
-      <div class="pos-card-body">
-        <h4>${i.name}</h4>
-        ${i.stock===0 ? `<span class="pos-out-badge">Out of Stock</span>` : `<div class="pos-card-foot"><span class="pos-price">${money(i.price)}</span><span class="pos-add-icon">+</span></div>`}
-      </div>
-    </div>
-  `).join(''));
-    }
-
-    $('#posFilterBar').on('click', '.pos-pill', function(){
-        posCategory = $(this).data('cat');
-        $('.pos-pill').removeClass('active');
-        $(this).addClass('active');
-        renderPosGrid();
-    });
-
-    $('#posGrid').on('click', '.pos-card', function(){
-        const id = Number($(this).data('item-id'));
-        const item = menuItems.find(i => i.id === id);
-        if(!item || item.stock === 0) return;
-        posCart[id] = (posCart[id] || 0) + 1;
-        renderPosCart();
-    });
-
-    $('#posFulfillToggle').on('click', 'button', function(){
-        posFulfillment = $(this).data('fulfil');
-        $('#posFulfillToggle button').removeClass('active');
-        $(this).addClass('active');
-    });
-
-    function posSubtotal(){
-        return Object.entries(posCart).reduce((sum,[id,qty]) => {
-            const item = menuItems.find(i => i.id === Number(id));
-            return sum + (item ? item.price * qty : 0);
-        }, 0);
-    }
-
-    function renderPosCart(){
-        const ids = Object.keys(posCart);
-        if(ids.length === 0){
-            $('#posCartBody').html(`<div class="op-cart-empty">🥐 No items added yet.<br>Tap a menu item to add it.</div>`);
-        } else {
-            $('#posCartBody').html(ids.map(id => {
-                const item = menuItems.find(i => i.id === Number(id));
-                const qty = posCart[id];
-                return `
-        <div class="op-item" data-item-id="${id}">
-          <div class="op-item-info">
-            <h5>${item.name}</h5>
-            <span>${money(item.price)} each</span>
-          </div>
-          <div class="op-qty">
-            <button class="op-qminus" data-item-id="${id}">−</button>
-            <span>${qty}</span>
-            <button class="op-qplus" data-item-id="${id}">+</button>
-          </div>
-          <span class="op-remove" data-item-id="${id}">✕</span>
-        </div>
-      `;
-            }).join(''));
-        }
-        const total = posSubtotal();
-        $('#posTotal').text(money(total));
-        $('#placeOrderBtn').prop('disabled', ids.length === 0);
-    }
-
-    $('#posCartBody').on('click', '.op-qplus', function(){
-        const id = $(this).data('item-id');
-        posCart[id] = (posCart[id] || 0) + 1;
-        renderPosCart();
-    });
-    $('#posCartBody').on('click', '.op-qminus', function(){
-        const id = $(this).data('item-id');
-        posCart[id] = (posCart[id] || 0) - 1;
-        if(posCart[id] <= 0) delete posCart[id];
-        renderPosCart();
-    });
-    $('#posCartBody').on('click', '.op-remove', function(){
-        const id = $(this).data('item-id');
-        delete posCart[id];
-        renderPosCart();
-    });
-
-    $('#placeOrderBtn').on('click', function(){
-        const ids = Object.keys(posCart);
-        if(ids.length === 0) return;
-
-        const customerName = $('#posCustomerName').val().trim() || 'Walk-in Customer';
-        const itemsSummary = ids.map(id => {
-            const item = menuItems.find(i => i.id === Number(id));
-            return `${posCart[id]}x ${item.name}`;
-        }).join(', ');
-        const total = posSubtotal();
-        const newId = 'ORD-' + (nextOrderNum++);
-
-        orders.unshift({
-            id:newId,
-            customer: customerName + ` (${posFulfillment})`,
-            items: itemsSummary,
-            total,
-            status:'Pending',
-            date:new Date().toISOString().split('T')[0],
-        });
-
-        const $btn = $(this);
-        const $label = $('#placeOrderLabel');
-        $label.text('Placing order...');
-        setTimeout(() => {
-            $btn.addClass('success');
-            $label.text(`✓ Order ${newId} placed`);
-            setTimeout(() => {
-                $btn.removeClass('success');
-                $label.text('Place Order');
-                posCart = {};
-                $('#posCustomerName').val('');
-                renderPosCart();
-                renderAll();
-            }, 1400);
-        }, 500);
-    });
-
-    /* ============================================================
-       SEARCH + INIT
-       ============================================================ */
-    function renderAll(){
-        if(currentSection === 'orders') renderOrders($searchInput.val());
-        if(currentSection === 'bookings') renderBookings($searchInput.val());
-        if(currentSection === 'menuitems') renderMenuItems($searchInput.val());
-        $('#navCountOrders').text(orders.length);
-        $('#navCountBookings').text(bookings.length);
-        $('#navCountMenuItems').text(menuItems.length);
-    }
-    $searchInput.on('input', function(){ renderAll(); });
-
-    renderPosGrid();
-    renderPosCart();
-    goToSection('placeorder');
-</script>
+<script src="js/cashierDashboard.js"></script>
 
 </body>
 </html>

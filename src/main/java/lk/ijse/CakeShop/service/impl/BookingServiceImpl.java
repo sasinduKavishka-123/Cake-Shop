@@ -37,7 +37,6 @@ import java.util.Set;
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
     private final ReservableTableRepository reservableTableRepository;
-    private final TableCategoryRepository tableCategoryRepository;
 
     @Override
     public long saveBooking(BookingDTO bookingDTO) {

@@ -26,7 +26,7 @@ public interface ReservableTableRepository extends JpaRepository<ReservableTable
             "( t.tableId, " +
             "  t.tableCategory.tableCategoryName, " +
             "  t.seatCount ) " +
-            "FROM ReservableTable t WHERE t.tableCategory.tableCategoryName = ?1")
+            "FROM ReservableTable t WHERE t.tableCategory.tableCategoryName = ?1 AND t.tableStatus = 'AVAILABLE'")
     List<ReservableTableDTO> getTablesByCategory(String tableCategory);
 
 

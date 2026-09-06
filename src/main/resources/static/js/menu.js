@@ -95,9 +95,6 @@ function renderGrid(){
     let html = "";
 
     products.map((p, i) => {
-
-        let stylePrice = "";
-        let styleDiscount = "";
         let finalPrice = 0;
 
         if(p.discount === 0){
