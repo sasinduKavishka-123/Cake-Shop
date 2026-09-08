@@ -4,6 +4,7 @@ import lk.ijse.CakeShop.constatns.CommonResponse;
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
+import lk.ijse.CakeShop.dto.UpdatingDTOs.UpdateBookingPaymentDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 import lk.ijse.CakeShop.service.BookingService;
@@ -79,6 +80,13 @@ public class BookingController {
     ){
         TimeSlotFilterDTO dtos = bookingService.getBookingsByDateAndCat(date, category);
         return new CommonResponse(200, dtos, SUCCESS_MESSAGE);
+    }
+
+    @PatchMapping(value = "/addPaymentDetails", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse addPaymentDetails(@RequestBody UpdateBookingPaymentDTO paymentDTO){
+
+        bookingService.addPaymentDetails(paymentDTO.getId(), paymentDTO.getStatus(), paymentDTO.getPaymentDTO());
+        return new CommonResponse(200, SUCCESS_MESSAGE);
     }
 
 }

@@ -1,7 +1,6 @@
 package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
-import lk.ijse.CakeShop.dto.OrderPaymentDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.UpdateOrderPaymentDTO;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
@@ -73,7 +72,7 @@ public class OrderController {
     public CommonResponse addPaymentDetails(@RequestBody UpdateOrderPaymentDTO orderDTO){
 
         orderService.addPaymentDetails(orderDTO.getId(), orderDTO.getStatus(), orderDTO.getPaymentDTO());
-        return new CommonResponse(200, orderDTO, SUCCESS_MESSAGE);
+        return new CommonResponse(200, SUCCESS_MESSAGE);
     }
 
 }

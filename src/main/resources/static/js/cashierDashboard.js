@@ -504,34 +504,87 @@ function openOrderPaymentModal(type, id){
 }
 
 function openBookingPaymentModal(type, id){
-    activePayment = {type, id};
+    let total = 0;
+    activePayment = {type, id, total};
     paymentMethod = 'Cash';
-    const record = type === 'order' ? orders.find(x => x.id === id) : bookings.find(x => x.id === id);
-    if(!record) return;
-    const total = type === 'order' ? record.total : (record.total || 0);
 
-    $('#paymentModalTitle').text('Take Payment — ' + record.id);
-    $('#paymentModalBody').html(`
-    <div class="detail-row"><span>Customer</span><strong>${record.customer}</strong></div>
-    <div class="detail-row"><span>Amount Due</span><strong>${money(total)}</strong></div>
-    <div class="field-group">
-      <label>Payment Method</label>
-      <div class="pm-toggle" id="pmMethodToggle">
-        <button type="button" class="active" data-method="Cash">Cash</button>
-        <button type="button" data-method="Card">Card</button>
-        <button type="button" data-method="Online">Online</button>
-      </div>
-    </div>
-    <div class="field-group" id="cashFieldWrap">
-      <label>Amount Received</label>
-      <input type="number" id="f_amountReceived" placeholder="${total}" value="${total}">
-      <div class="change-display ok" id="changeDisplay"><span>Change</span><span>Rs. 0</span></div>
-    </div>
-  `);
+    $.ajax({
+        url:"http://localhost:8080/v1/booking/getBookingFormData/" + id,
+        type: "GET",
+        headers: {
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                const b = r.body;
+                activePayment.total = b.total;
 
-    updateChangeDisplay(total);
-    $paymentModal.addClass('show');
-    $modalScrim.addClass('show');
+                const rows = b.bookingDetailDTOS.map((t)=>
+                    `<tr><td>${t.tableID}</td> <td>${t.tableCategory}</td> <td>${t.seatCount}</td></tr>`
+                ).join('');
+
+                $('#paymentModalTitle').text('Take Payment — ' + id);
+                $('#paymentModalBody').html(`
+                  <div class="field-row-2">
+                    <div class="field-group"><label>Customer Name</label><input disabled type="text" id="f_customer" value="${b.userName}" placeholder="Customer name"></div>
+                    <div class="field-group"><label>Phone</label><input disabled type="tel" id="f_phone" value="${b.contact}" placeholder="+94 77 000 0000"></div>
+                  </div>
+                  <div class="field-group"><label>Email</label><input disabled type="text" id="f_email" value="${b.email}" placeholder="0" min="1"></div>
+                  <div class="field-group"><label>Booking Created Date</label><input disabled type="text" id="f_booked_date" value="${b.bookingCreatedDate}" placeholder="0" min="1"></div>
+                  <div class="field-row-2">
+                    <div class="field-group"><label>Date</label><input disabled type="date" id="f_date" value="${b.bookingDate}"></div>
+                    <div class="field-group"><label>Time Slot</label><input disabled type="text" id="f_slot" value="${b.time}"></div>
+                  </div>
+                  <div class="field-row-2">
+                      <div class="field-group"><label>Table Category</label><input disabled type="text" id="f_category" value="${b.tableCategory}" placeholder="0" min="1"></div>
+                      <div class="field-group"><label>Guests</label><input disabled type="number" id="f_guests" value="${b.seatCount}" placeholder="0" min="1"></div>
+                  </div>
+                  <div class="field-group">
+                    <label>Tables for This Booking</label>
+                    <div class="restock-table-wrap">
+                      <table class="restock-table">
+                        <thead><tr><th>Table ID</th><th>Table Name</th><th>Seat Count</th></tr></thead>
+                        <tbody id="bookingTablesBody"> ${rows} </tbody>
+                      </table>
+                    </div>
+                    <br>
+                    <div class="restock-total-row">Total: <span id="bookingTablesTotal">${money(b.total)}</span></div>
+                  </div>
+                
+                  <div class="field-group"><label>Special Requests</label>
+                      <input disabled type="text" id="f_note" value="${b.bookingNote}" placeholder="note">
+                  </div>
+                
+                  <div class="field-group"><label>Status</label><input disabled type="text" value="${formatStatus(b.status)}"></div>
+                  
+                  <div class="field-group">
+                    <label>Payment Method</label>
+                    <div class="pm-toggle" id="pmMethodToggle">
+                      <button type="button" class="active" data-method="Cash">Cash</button>
+                      <button type="button" data-method="Card">Card</button>
+                    </div>
+                  </div>
+                  
+                  <div class="field-group" id="cashFieldWrap">
+                    <label>Amount Received</label>
+                    <input type="number" id="f_amountReceived" placeholder="${b.total}">
+                    <div class="change-display ok" id="changeDisplay"><span>Change</span><span>Rs. 0</span></div>
+                  </div>
+                `);
+
+                updateChangeDisplay(b.total);
+                $paymentModal.addClass('show');
+                $modalScrim.addClass('show');
+
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
 }
 
 function closePaymentModal(){
@@ -634,24 +687,25 @@ $('#paymentModalConfirm').on('click', function(){
         });
     }
     else{
-        // $.ajax({
-        //     url: "http://localhost:8080/v1/booking/",
-        //     type: "PATCH",
-        //     headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
-        //     data: obj,
-        //     success: function (r){
-        //         if(r.status === 200){
-        //             showToast("Payment Updated Successfully");
-        //             animatePaymentBtn(isOrder);
-        //         }
-        //         else{
-        //             showToast(r.message);
-        //         }
-        //     },
-        //     error: function (r){
-        //         r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
-        //     }
-        // });
+        $.ajax({
+            url: "http://localhost:8080/v1/booking/addPaymentDetails",
+            type: "PATCH",
+            headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+            data: JSON.stringify(obj),
+            contentType: 'application/json',
+            success: function (r){
+                if(r.status === 200){
+                    showToast("Payment Updated Successfully");
+                    animatePaymentBtn(isOrder);
+                }
+                else{
+                    showToast(r.message);
+                }
+            },
+            error: function (r){
+                r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+            }
+        });
     }
 });
 

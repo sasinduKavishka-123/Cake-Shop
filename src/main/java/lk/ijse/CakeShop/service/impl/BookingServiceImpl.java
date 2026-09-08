@@ -1,11 +1,8 @@
 package lk.ijse.CakeShop.service.impl;
 
-import lk.ijse.CakeShop.dto.BookingDTO;
-import lk.ijse.CakeShop.dto.ReservableTableDTO;
-import lk.ijse.CakeShop.dto.TablePaymentDTO;
+import lk.ijse.CakeShop.dto.*;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
-import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.dto.printDTOs.BookingPrintDTO;
@@ -36,6 +33,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingDetailRepository bookingDetailRepository;
     private final UserRepository userRepository;
     private final ReservableTableRepository reservableTableRepository;
+    private final TablePaymentRepository tablePaymentRepository;
 
     @Override
     public long saveBooking(BookingDTO bookingDTO) {
@@ -334,6 +332,37 @@ public class BookingServiceImpl implements BookingService {
         timeSlotFilterDTO.setSetaCount(tableCount);
 
         return timeSlotFilterDTO;
+    }
+
+    @Override
+    public void addPaymentDetails(long id, BookingStatus status, BookingPaymentDTO paymentDTO) {
+        log.info("Executing Method addPaymentDetails()");
+        if(paymentDTO == null ||
+        paymentDTO.getPayAmount().doubleValue() < 0 ||
+        paymentDTO.getDueAmount().doubleValue() < 0){
+            log.error("Error in Method addPaymentDetails()");
+            throw new CustomException(402, "Invalid payment details");
+        }
+
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+        if(optionalBooking.isEmpty()){
+            log.error("Error in Method addPaymentDetails()");
+            throw new CustomException(404, "Booking not Found");
+        }
+        Booking booking = optionalBooking.get();
+        booking.setBookingStatus(status);
+
+        TablePayment payment = new TablePayment();
+        payment.setPayType(paymentDTO.getPayType());
+        payment.setPayAmount(paymentDTO.getPayAmount());
+        payment.setDueAmount(paymentDTO.getDueAmount());
+        payment.setPayDate(paymentDTO.getPayDate());
+        payment.setBooking(booking);
+
+        booking.setTablePayment(payment);
+
+        tablePaymentRepository.save(payment);
+        bookingRepository.save(booking);
     }
 
 }

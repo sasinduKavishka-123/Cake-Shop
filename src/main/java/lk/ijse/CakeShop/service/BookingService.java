@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.service;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
+import lk.ijse.CakeShop.dto.BookingPaymentDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
@@ -30,5 +31,7 @@ public interface BookingService {
     List<BookingDTO> getThisWeekBookings();
 
     TimeSlotFilterDTO getBookingsByDateAndCat(LocalDate bookingDate, String category);
+
+    void addPaymentDetails(long id, BookingStatus status, BookingPaymentDTO paymentDTO);
 
 }
