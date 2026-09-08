@@ -29,7 +29,8 @@ import java.util.Set;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor public class BookingServiceImpl implements BookingService {
+@RequiredArgsConstructor
+public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
@@ -334,4 +335,5 @@ import java.util.Set;
 
         return timeSlotFilterDTO;
     }
+
 }

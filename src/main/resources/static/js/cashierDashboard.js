@@ -328,12 +328,22 @@ $('#paymentsSubnav').on('click', '.subnav-btn', function(){
 
 function renderPaymentsOrders(){
 
+    const f = $searchInput.val().toLowerCase();
+
+    const obj = {
+        order_id : f,
+        user_name : f,
+        order_date : '',
+        status_list : ['READY']
+    }
+
     $.ajax({
-        url: "http://localhost:8080/v1/order/getReadyOrders",
+        url: "http://localhost:8080/v1/order/filterOrders",
         type: "GET",
         headers:{
             "Authorization" : "Bearer " + localStorage.getItem("JWT")
         },
+        data: obj,
         success: function (r){
             if(r.status === 200){
                 $('#paymentsOrdersBody').html(r.body.map(o => `
@@ -357,22 +367,42 @@ function renderPaymentsOrders(){
 }
 
 function renderPaymentsBookings(){
-    const rows = bookings.filter(b => b.status !== 'Cancelled');
-    $('#paymentsBookingsBody').html(rows.map(b => `
-    <tr>
-      <td class="cell-title">${b.id}</td>
-      <td>${b.customer}</td>
-      <td>${b.date}</td>
-      <td class="cell-title">${money(b.total || 0)}</td>
-      <td><span class="badge-pill ${statusClass(b.status)}">${b.status}</span></td>
-      <td><span class="badge-pill ${b.paid ? 'badge-paid' : 'badge-unpaid'}">${b.paid ? 'Paid' : 'Unpaid'}</span></td>
-      <td>
-        ${b.paid
-        ? `<span class="update-disabled">—</span>`
-        : `<button class="pay-btn" data-pay-booking="${b.id}">Take Payment</button>`}
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="7">No bookings to pay.</td></tr>`);
+    const f = $searchInput.val().toLowerCase();
+
+    const obj = {
+        booking_id : f,
+        user_name : f,
+        booking_date : '',
+        booking_statuses : ['CONFIRMED']
+    }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/filterBooking",
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (r){
+            if(r.status === 200){
+                $('#paymentsBookingsBody').html(r.body.map(b => `
+                  <tr>
+                    <td class="cell-title">${b.bookingId}</td>
+                    <td>${b.userName}</td>
+                    <td>${b.bookingDate}</td>
+                    <td>${b.bookingTime}</td>
+                    <td class="cell-title">${money(b.total || 0)}</td>
+                    <td><span class="badge-pill ${statusClass(formatStatus(b.bookingStatus))}">${formatStatus(b.bookingStatus)}</span></td>
+                    <td>
+                      <button class="pay-btn" data-pay-booking="${b.bookingId}">Take Payment</button>
+                    </td>
+                  </tr>
+                `).join('') || `<tr class="empty-row"><td colspan="7">No bookings to pay.</td></tr>`);
+            }
+            else{ showToast(r.message); }
+        },
+        error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR"); }
+    });
 }
 
 /* ============================================================

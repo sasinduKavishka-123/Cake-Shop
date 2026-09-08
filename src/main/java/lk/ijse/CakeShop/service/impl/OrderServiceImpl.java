@@ -378,23 +378,4 @@ public class OrderServiceImpl implements OrderService {
         return orderDTOList;
     }
 
-    @Override
-    public List<PlaceOrderDTO> getReadyOrders() {
-        List<Order> readyOrders = orderRepository.getReadyOrders(OrderStatus.READY);
-        List<PlaceOrderDTO> dtoList = new ArrayList<>();
-
-        for(Order o : readyOrders){
-            PlaceOrderDTO p = new PlaceOrderDTO();
-            p.setOrderId(o.getOrderId());
-            p.setUserName(o.getUser().getUserName());
-            p.setTotal(o.getTotal());
-            p.setOrderStatus(o.getOrderStatus());
-            p.setOrderDate(o.getOrderDate());
-            p.setTimeSlot(o.getTimeSlot());
-
-            dtoList.add(p);
-        }
-        return dtoList;
-    }
-
 }

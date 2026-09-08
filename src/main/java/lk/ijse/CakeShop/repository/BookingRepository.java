@@ -2,8 +2,7 @@ package lk.ijse.CakeShop.repository;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.entity.Booking;
-import lk.ijse.CakeShop.entity.User;
-import org.springframework.cglib.core.Local;
+import lk.ijse.CakeShop.enumerations.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -33,4 +32,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "FROM Booking b " +
             "WHERE b.bookingDate = ?1 AND b.tableType = ?2 AND b.bookingStatus != 'CANCELLED'")
     List<BookingDTO> findBookingsByDateAndCat(LocalDate bookingDate, String category);
+
 }

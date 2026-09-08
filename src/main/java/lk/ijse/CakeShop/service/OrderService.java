@@ -27,6 +27,4 @@ public interface OrderService {
 
     List<PlaceOrderDTO> getLatestOrders();
 
-    List<PlaceOrderDTO> getReadyOrders();
-
 }
