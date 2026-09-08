@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.repository;
 
 import lk.ijse.CakeShop.entity.Order;
+import lk.ijse.CakeShop.enumerations.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -27,5 +28,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT o FROM Order o WHERE o.user.userRoles = 'Customer'" +
             " ORDER BY o.orderDate DESC LIMIT 5")
     List<Order> getLatestOrders();
+
+    @Query(value = "SELECT o FROM Order o WHERE o.orderStatus = ?1")
+    List<Order> getReadyOrders(OrderStatus status);
 
 }

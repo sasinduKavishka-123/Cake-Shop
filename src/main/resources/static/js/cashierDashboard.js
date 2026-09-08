@@ -32,7 +32,7 @@ const sections = {
     menuitems: {title:'Menu Items', sub:'Browse all items currently on the menu.', showSearch:true},
 };
 const statusOptionsMap = {
-    orders: ['Pending','Preparing','Ready','Cancelled'],
+    orders: ['Pending','Preparing','Ready','Cancelled','Done'],
     bookings: ['Pending','Confirmed','Completed','Cancelled'],
 };
 let currentSection = 'placeorder';
@@ -48,7 +48,7 @@ const $searchInput = $('#searchInput');
 
 function statusAllowed(label){ return activeStatuses.size === 0 || activeStatuses.has(label); }
 function statusClass(status){
-    return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
+    return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Done:'badge-delivered',
         Cancelled:'badge-cancelled',Confirmed:'badge-confirmed',Completed:'badge-completed'}[status] || 'badge-pending';
 }
 
@@ -327,21 +327,33 @@ $('#paymentsSubnav').on('click', '.subnav-btn', function(){
 });
 
 function renderPaymentsOrders(){
-    const rows = orders.filter(o => o.status !== 'Cancelled');
-    $('#paymentsOrdersBody').html(rows.map(o => `
-    <tr>
-      <td class="cell-title">${o.id}</td>
-      <td>${o.customer}</td>
-      <td class="cell-title">${money(o.total)}</td>
-      <td><span class="badge-pill ${statusClass(o.status)}">${o.status}</span></td>
-      <td><span class="badge-pill ${o.paid ? 'badge-paid' : 'badge-unpaid'}">${o.paid ? 'Paid' : 'Unpaid'}</span></td>
-      <td>
-        ${o.paid
-        ? `<span class="update-disabled">—</span>`
-        : `<button class="pay-btn" data-pay-order="${o.id}">Take Payment</button>`}
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="6">No orders to pay.</td></tr>`);
+
+    $.ajax({
+        url: "http://localhost:8080/v1/order/getReadyOrders",
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                $('#paymentsOrdersBody').html(r.body.map(o => `
+                  <tr>
+                    <td class="cell-title">${o.orderId}</td>
+                    <td>${o.userName}</td>
+                    <td>${o.orderDate}</td>
+                    <td>${o.timeSlot}</td>
+                    <td class="cell-title">${money(o.total)}</td>
+                    <td><span class="badge-pill ${statusClass(formatStatus(o.orderStatus))}">${formatStatus(o.orderStatus)}</span></td>
+                    <td>
+                      <button class="pay-btn" data-pay-order="${o.orderId}">Take Payment</button>
+                    </td>
+                  </tr>
+                `).join('') || `<tr class="empty-row"><td colspan="6">No orders to pay.</td></tr>`);
+            }
+            else{ showToast(r.message); }
+        },
+        error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR"); }
+    });
 }
 
 function renderPaymentsBookings(){
@@ -758,7 +770,7 @@ function buildOrderReceiptHtml(id){
     });
 }
 
-function buildBookingReceiptHtml(b){
+function buildBookingReceiptHtml(id){
 
     $.ajax({
         url: "http://localhost:8080/v1/booking/getBookingById/" + id,
@@ -774,11 +786,12 @@ function buildBookingReceiptHtml(b){
                     ? b.bookingDetailList.map(t => `<tr><td>${t.tableID}</td><td>${t.tableCategory}</td></tr>`).join('')
                     : `<tr><td>No tables assigned.</td></tr>`;
 
-                const paymentInfo = b.paid
-                    ? `<p>Payment Method: ${b.paymentMethod}<br>Amount Paid: ${money(b.amountPaid)}${b.change > 0 ? `<br>Change Given: ${money(b.change)}` : ''}</p>`
+                const p = b.tablePaymentDTO;
+                const paymentInfo = p
+                    ? `<p>Payment Method: ${p.payType}<br>Amount Paid: ${money(p.payAmount)}${p.dueAmount > 0 ? `<br>Change Given: ${money(p.dueAmount)}` : ''}</p>`
                     : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
 
-                return `
+                const html =  `
                   <h1>Booking ${b.bookingId}</h1>
                   <p>
                     Customer: ${b.user.userName}<br>
@@ -797,6 +810,8 @@ function buildBookingReceiptHtml(b){
                   </div>
                   ${paymentInfo}
                 `;
+
+                openPrintPreview(html);
             }
             else{ showToast(r.message) }
         },
@@ -810,9 +825,8 @@ $(document).on('click', '[data-print-order]', function(){
 });
 
 $(document).on('click', '[data-print-booking]', function(){
-    const b = bookings.find(x => x.id === $(this).data('print-booking'));
-    if(!b) return;
-    openPrintPreview(buildBookingReceiptHtml(b));
+    const id = $(this).data('print-booking');
+    buildBookingReceiptHtml(id);
 });
 
 /* ============================================================

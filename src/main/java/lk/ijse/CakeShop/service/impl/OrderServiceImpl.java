@@ -11,7 +11,6 @@ import lk.ijse.CakeShop.enumerations.OrderStatus;
 import lk.ijse.CakeShop.exception.CustomException;
 import lk.ijse.CakeShop.repository.*;
 import lk.ijse.CakeShop.service.OrderService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -377,6 +376,25 @@ public class OrderServiceImpl implements OrderService {
             orderDTOList.add(dto);
         }
         return orderDTOList;
+    }
+
+    @Override
+    public List<PlaceOrderDTO> getReadyOrders() {
+        List<Order> readyOrders = orderRepository.getReadyOrders(OrderStatus.READY);
+        List<PlaceOrderDTO> dtoList = new ArrayList<>();
+
+        for(Order o : readyOrders){
+            PlaceOrderDTO p = new PlaceOrderDTO();
+            p.setOrderId(o.getOrderId());
+            p.setUserName(o.getUser().getUserName());
+            p.setTotal(o.getTotal());
+            p.setOrderStatus(o.getOrderStatus());
+            p.setOrderDate(o.getOrderDate());
+            p.setTimeSlot(o.getTimeSlot());
+
+            dtoList.add(p);
+        }
+        return dtoList;
     }
 
 }

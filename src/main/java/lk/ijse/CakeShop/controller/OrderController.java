@@ -67,4 +67,9 @@ public class OrderController {
         return new CommonResponse(200, orderService.getOrderWeekRevenues(), SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getReadyOrders", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getReadyOrders(){
+        return new CommonResponse(200, orderService.getReadyOrders(), SUCCESS_MESSAGE);
+    }
+
 }
