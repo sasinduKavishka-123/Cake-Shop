@@ -624,8 +624,6 @@ $('#tableSubnav').on('click', '.subnav-btn', function(){
    ============================================================ */
 function renderOrders(filter=''){
     const f = filter.toLowerCase();
-    const rows = orders.filter(o => !f || o.id.toLowerCase().includes(f) ||
-        o.customer.toLowerCase().includes(f) && (!orderDateFilter || o.date === orderDateFilter));
 
     const obj = {
         order_id: f,
@@ -1533,7 +1531,7 @@ function orderFormHTML(o){
     let display = o.timeSlot ? "" : "style=\"display: none\" ";
 
     return `
-    <div class="field-group"><label>Customer Name</label><input disabled type="text" id="f_customer" value="${o.user.userName}" placeholder="Customer name"></div>
+    <div class="field-group"><label>${o.user.userRoles} Name</label><input disabled type="text" id="f_customer" value="${o.user.userName}" placeholder="Customer name"></div>
     <div class="field-row-2">
         <div class="field-group">
             <label>Contact</label> <input disabled type="text" id="f_customer_contact" value="${o.user.userContact}" placeholder="contact">

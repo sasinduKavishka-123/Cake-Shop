@@ -31,6 +31,9 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Delivery delivery;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private OrderPayment orderPayment;
+
     private LocalDate orderDate;
     private String timeSlot;
 

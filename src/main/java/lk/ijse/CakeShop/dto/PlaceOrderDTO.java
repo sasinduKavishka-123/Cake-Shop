@@ -28,4 +28,6 @@ public class PlaceOrderDTO {
     private List<OrderItemsDTO> orderItems;
     private String orderNote;
 
+    private OrderPaymentDTO paymentDTO;
+
 }

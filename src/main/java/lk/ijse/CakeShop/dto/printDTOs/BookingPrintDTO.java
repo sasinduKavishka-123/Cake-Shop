@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.dto.printDTOs;
 
+import lk.ijse.CakeShop.dto.TablePaymentDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
@@ -27,4 +28,5 @@ public class BookingPrintDTO {
 
     private UserDTO user;
     private List<BookingDetailFormDTO> bookingDetailList;
+    private TablePaymentDTO tablePaymentDTO;
 }

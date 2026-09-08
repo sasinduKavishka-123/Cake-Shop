@@ -1,6 +1,7 @@
 package lk.ijse.CakeShop.dto.printDTOs;
 
 import lk.ijse.CakeShop.dto.OrderItemsDTO;
+import lk.ijse.CakeShop.dto.OrderPaymentDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 import lombok.AllArgsConstructor;
@@ -25,4 +26,5 @@ public class OrderPrintDTO {
     private OrderStatus orderStatus;
     private List<OrderItemsDTO> orderItems;
     private String orderNote;
+    private OrderPaymentDTO orderPaymentDTO;
 }

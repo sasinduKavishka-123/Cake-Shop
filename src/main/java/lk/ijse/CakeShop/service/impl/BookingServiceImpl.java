@@ -2,16 +2,14 @@ package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.BookingDTO;
 import lk.ijse.CakeShop.dto.ReservableTableDTO;
+import lk.ijse.CakeShop.dto.TablePaymentDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.AddBookingDetailDTO;
 import lk.ijse.CakeShop.dto.UpdatingDTOs.TimeSlotFilterDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingDetailFormDTO;
 import lk.ijse.CakeShop.dto.formDTOs.BookingFormDTO;
 import lk.ijse.CakeShop.dto.printDTOs.BookingPrintDTO;
-import lk.ijse.CakeShop.entity.Booking;
-import lk.ijse.CakeShop.entity.BookingDetail;
-import lk.ijse.CakeShop.entity.ReservableTable;
-import lk.ijse.CakeShop.entity.User;
+import lk.ijse.CakeShop.entity.*;
 import lk.ijse.CakeShop.enumerations.BookingStatus;
 import lk.ijse.CakeShop.exception.CustomException;
 import lk.ijse.CakeShop.repository.*;
@@ -266,6 +264,18 @@ import java.util.Set;
             bookingDetailList.add(dto);
         }
         bookingPrintDTO.setBookingDetailList(bookingDetailList);
+
+        // get booking payments ///////////////
+        TablePaymentDTO tablePaymentDTO = new TablePaymentDTO();
+        if(b.getTablePayment() == null){
+            tablePaymentDTO = null;
+        }else{
+            tablePaymentDTO.setDueAmount(b.getTablePayment().getDueAmount());
+            tablePaymentDTO.setPayAmount(b.getTablePayment().getPayAmount());
+            tablePaymentDTO.setPayType(b.getTablePayment().getPayType());
+            tablePaymentDTO.setPayDate(b.getTablePayment().getPayDate());
+        }
+        bookingPrintDTO.setTablePaymentDTO(tablePaymentDTO);
 
         return bookingPrintDTO;
     }

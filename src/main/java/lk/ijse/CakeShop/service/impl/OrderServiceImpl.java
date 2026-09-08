@@ -1,22 +1,18 @@
 package lk.ijse.CakeShop.service.impl;
 
 import lk.ijse.CakeShop.dto.OrderItemsDTO;
+import lk.ijse.CakeShop.dto.OrderPaymentDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
 import lk.ijse.CakeShop.dto.UserDTO;
 import lk.ijse.CakeShop.dto.overviewDTOs.OrderOverviewDTO;
 import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
-import lk.ijse.CakeShop.entity.FoodItem;
-import lk.ijse.CakeShop.entity.Order;
-import lk.ijse.CakeShop.entity.OrderItem;
-import lk.ijse.CakeShop.entity.User;
+import lk.ijse.CakeShop.entity.*;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 import lk.ijse.CakeShop.exception.CustomException;
-import lk.ijse.CakeShop.repository.FoodItemRepository;
-import lk.ijse.CakeShop.repository.OrderItemRepository;
-import lk.ijse.CakeShop.repository.OrderRepository;
-import lk.ijse.CakeShop.repository.UserRepository;
+import lk.ijse.CakeShop.repository.*;
 import lk.ijse.CakeShop.service.OrderService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
@@ -34,13 +30,14 @@ import java.util.Set;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final FoodItemRepository foodItemRepository;
+    private final OrderPaymentRepository orderPaymentRepository;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -72,9 +69,15 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
+        OrderStatus status = null;
 
         // validate order status ---------------------
-        OrderStatus status = OrderStatus.PENDING;
+        if(user.getUserRoles().contains("Customer")){
+            status = OrderStatus.PENDING;
+        }
+        else{
+            status = OrderStatus.DONE;
+        }
 
         // save order ----------------------------------
         order.setOrderDate(placeOrderDTO.getOrderDate());
@@ -118,6 +121,19 @@ public class OrderServiceImpl implements OrderService {
             orderItemRepository.save(oi);
         }
 
+        // save Payment Details ------------------------
+        if(placeOrderDTO.getPaymentDTO() != null){
+            OrderPaymentDTO pDto = placeOrderDTO.getPaymentDTO();
+            OrderPayment p = new OrderPayment();
+
+            p.setPayAmount(pDto.getPayAmount());
+            p.setDueAmount(pDto.getDueAmount());
+            p.setPayDate(LocalDate.now());
+            p.setPayType(pDto.getPayType());
+            p.setOrder(savedOrder);
+
+            orderPaymentRepository.save(p);
+        }
     }
 
     @Override
@@ -125,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("Executing Method filterOrders()");
 
         String[] statusList = null;
-        if(statuses != null){
+        if(statuses != null && !statuses.isEmpty()){
             statusList = statuses.toArray(String[]::new);
         }
 
@@ -190,6 +206,7 @@ public class OrderServiceImpl implements OrderService {
         userDTO.setUserName(o.getUser().getUserName());
         userDTO.setUserContact(o.getUser().getUserContact());
         userDTO.setUserEmail(o.getUser().getUserEmail());
+        userDTO.setUserRoles(o.getUser().getUserRoles());
         placeOrderDTO.setUser(userDTO);
 
         // order item details --------------------------
@@ -205,6 +222,19 @@ public class OrderServiceImpl implements OrderService {
             itemList.add(dto);
         }
         placeOrderDTO.setOrderItems(itemList);
+
+        // payment details ----------------------
+        OrderPaymentDTO paymentDTO = new OrderPaymentDTO();
+        if(o.getOrderPayment() != null){
+            paymentDTO.setPayAmount(o.getOrderPayment().getPayAmount());
+            paymentDTO.setDueAmount(o.getOrderPayment().getDueAmount());
+            paymentDTO.setPayType(o.getOrderPayment().getPayType());
+            paymentDTO.setPayDate(o.getOrderPayment().getPayDate());
+        }
+        else {
+            paymentDTO = null;
+        }
+        placeOrderDTO.setPaymentDTO(paymentDTO);
 
         return placeOrderDTO;
     }
@@ -270,8 +300,19 @@ public class OrderServiceImpl implements OrderService {
         }
         orderPrintDTO.setOrderItems(orderItemsDTOList);
 
-        return orderPrintDTO;
+        OrderPaymentDTO paymentDTO = new OrderPaymentDTO();
+        if(o.getOrderPayment() != null){
+            paymentDTO.setPayAmount(o.getOrderPayment().getPayAmount());
+            paymentDTO.setDueAmount(o.getOrderPayment().getDueAmount());
+            paymentDTO.setPayType(o.getOrderPayment().getPayType());
+            paymentDTO.setPayDate(o.getOrderPayment().getPayDate());
+        }
+        else {
+            paymentDTO = null;
+        }
+        orderPrintDTO.setOrderPaymentDTO(paymentDTO);
 
+        return orderPrintDTO;
     }
 
     @Override

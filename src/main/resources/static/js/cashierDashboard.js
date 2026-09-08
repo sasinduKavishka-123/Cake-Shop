@@ -32,12 +32,15 @@ const sections = {
     menuitems: {title:'Menu Items', sub:'Browse all items currently on the menu.', showSearch:true},
 };
 const statusOptionsMap = {
-    orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
+    orders: ['Pending','Preparing','Ready','Cancelled'],
     bookings: ['Pending','Confirmed','Completed','Cancelled'],
 };
 let currentSection = 'placeorder';
 let activeStatuses = new Set();
 let paymentsSubView = 'orders'; // 'orders' or 'bookings'
+
+let orderDateFilter = ''; // yyyy-mm-dd, empty means "show all dates"
+let bookingDateFilter = '';
 
 const $navItems = $('.nav-item');
 const $searchWrap = $('#searchWrap');
@@ -48,12 +51,26 @@ function statusClass(status){
     return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Delivered:'badge-delivered',
         Cancelled:'badge-cancelled',Confirmed:'badge-confirmed',Completed:'badge-completed'}[status] || 'badge-pending';
 }
+
+/// HELPER FUNCTION *****************************
 function money(n){ return 'Rs. ' + n.toLocaleString(); }
+
+function finalPrice(item){
+    return item.discountPercentage ? Math.round(item.price * (1 - item.discountPercentage / 100)) : item.price;
+}
+
 function showToast(msg){
     $('#toastMsg').text(msg);
     $('#toast').addClass('show');
     setTimeout(()=> $('#toast').removeClass('show'), 2200);
 }
+
+// make status name to normal (only first letter is uppercase)
+function formatStatus(status) {
+    if (!status) return '';
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 
 function goToSection(name){
     currentSection = name;
@@ -71,6 +88,10 @@ function goToSection(name){
     $('.subnav-btn[data-payview="orders"]').addClass('active');
     $('#paymentsOrdersView').show();
     $('#paymentsBookingsView').hide();
+    orderDateFilter = '';
+    $('#orderDateFilter').val('');
+    bookingDateFilter = '';
+    $('#bookingDateFilter').val('');
     closeSidebar();
     renderAll();
 }
@@ -135,30 +156,99 @@ function getAllFoodItems(){
     });
 }
 
+/* ---- orders: filter by date ---- */
+$('#orderDateFilter').on('change', function(){
+    orderDateFilter = $(this).val();
+    renderAll();
+});
+$('#clearOrderDateFilter').on('click', function(){
+    orderDateFilter = '';
+    $('#orderDateFilter').val('');
+    renderAll();
+});
+
+/* ---- bookings: filter by date ---- */
+$('#bookingDateFilter').on('change', function(){
+    bookingDateFilter = $(this).val();
+    renderAll();
+});
+$('#clearBookingDateFilter').on('click', function(){
+    bookingDateFilter = '';
+    $('#bookingDateFilter').val('');
+    renderAll();
+});
 
 /* ============================================================
    ORDERS — view + inline status update
    ============================================================ */
 function renderOrders(filter=''){
     const f = filter.toLowerCase();
-    const rows = orders.filter(o => (!f || o.id.toLowerCase().includes(f) || o.customer.toLowerCase().includes(f)) && statusAllowed(o.status));
-    $('#ordersBody').html(rows.map(o => `
-    <tr>
-      <td class="cell-title">${o.id}</td>
-      <td>${o.customer}</td>
-      <td><span class="cell-sub">${o.items}</span></td>
-      <td class="cell-title">${money(o.total)}</td>
-      <td>${o.date}</td>
-      <td><span class="badge-pill ${statusClass(o.status)}">${o.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-update-order="${o.id}" aria-label="Update status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn print-icon" data-print-order="${o.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`);
-    $('#navCountOrders').text(orders.length);
+
+    const obj = {
+        order_id: f,
+        user_name : f,
+        order_date : orderDateFilter,
+        status_list : Array.from(activeStatuses)
+    }
+
+    $.ajax({
+        url:"http://localhost:8080/v1/order/filterOrders",
+        type: "GET",
+        headers: {
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        data: obj,
+        success: function (r){
+            if(r.status === 200){
+                let html = "";
+                for(const o of r.body){
+
+                    let itemList = '';
+                    o.orderItems.forEach( (item, index) =>{
+                        if(index === o.orderItems.length-1){
+                            itemList += item.qty + "x" + item.foodItemName;
+                        }else{
+                            itemList += item.qty + "x" + item.foodItemName + ", ";
+                        }
+                    });
+
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${o.orderId}</td>
+                          <td>${o.userName}</td>
+                          <td><span class="cell-sub">${itemList}</span></td>
+                          <td class="cell-title">${money(o.total)}</td>
+                          <td>${o.orderDate}</td>
+                          <td>${o.timeSlot}</td>
+                          <td><span class="badge-pill ${statusClass(formatStatus(o.orderStatus))}">${formatStatus(o.orderStatus)}</span></td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-update-order="${o.orderId}" aria-label="Update status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              <button class="icon-btn print-icon" data-print-order="${o.orderId}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(r.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="7">No orders match your search.</td></tr>`;
+                }
+                $('#ordersBody').html(html);
+
+            }
+            else if(r.status === 401){
+                showToast("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "staffLogin.html";
+                }, 2000);
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
 }
 
 /* ============================================================
@@ -166,25 +256,62 @@ function renderOrders(filter=''){
    ============================================================ */
 function renderBookings(filter=''){
     const f = filter.toLowerCase();
-    const rows = bookings.filter(b => (!f || b.id.toLowerCase().includes(f) || b.customer.toLowerCase().includes(f)) && statusAllowed(b.status));
-    $('#bookingsBody').html(rows.map(b => `
-    <tr>
-      <td class="cell-title">${b.id}</td>
-      <td>${b.customer}</td>
-      <td>${b.date}</td>
-      <td>${b.slot}</td>
-      <td>${b.guests}</td>
-      <td>${(b.tables && b.tables.length) ? b.tables.map(t=>t.name).join(', ') : '—'}</td>
-      <td><span class="badge-pill ${statusClass(b.status)}">${b.status}</span></td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn" data-update-booking="${b.id}" aria-label="Update status"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="icon-btn print-icon" data-print-booking="${b.id}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        </div>
-      </td>
-    </tr>
-  `).join('') || `<tr class="empty-row"><td colspan="8">No bookings match your search.</td></tr>`);
-    $('#navCountBookings').text(bookings.length);
+    let obj = {
+        booking_id : f,
+        user_name : f,
+        booking_date : bookingDateFilter,
+        booking_statuses: Array.from(activeStatuses)
+    }
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/filterBooking",
+        type: 'GET',
+        data: obj,
+        headers: {
+            'Authorization' : 'Bearer ' + localStorage.getItem("JWT")
+        },
+        success: function (response){
+            if(response.status === 200){
+                let html = "";
+                for(const b of response.body){
+
+                    let status = formatStatus(b.bookingStatus);
+
+                    html +=
+                        `<tr>
+                          <td class="cell-title">${b.bookingId}</td>
+                          <td>${b.userName}</td>
+                          <td>${b.bookingDate}</td>
+                          <td>${b.bookingTime}</td>
+                          <td>${b.seatCount}</td>
+                          <td>${b.tableType}</td>
+                          <td><span class="badge-pill ${statusClass(status)}">${status}</span></td>
+                          <td>
+                            <div class="row-actions">
+                              <button class="icon-btn" data-update-booking="${b.bookingId}" aria-label="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                              <button class="icon-btn" data-print-booking="${b.bookingId}" aria-label="Print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                          </td>
+                        </tr>`;
+                }
+                if(response.body.length === 0){
+                    html += `<tr class="empty-row"><td colspan="8">No Booking match your search.</td></tr>`;
+                }
+                $('#bookingsBody').html(html);
+                $(window).on('load', function (){
+                    alert(response.message);
+                })
+            }
+            else{
+                alert(response.message);
+                $('#bookingsBody').html(`<tr class="empty-row"><td colspan="5">No Booking match your search.</td></tr>`);
+            }
+        },
+        error: function (){
+            alert("SERVER DOES NOT RESPONDED");
+            $('#bookingsBody').html(`<tr class="empty-row"><td colspan="5">No Booking match your search.</td></tr>`);
+        }
+    });
 }
 
 /* ============================================================
@@ -346,7 +473,7 @@ $('#paymentModalConfirm').on('click', function(){
         showToast(`${record.id} marked as paid`);
         // automatically open the print preview for the receipt
         if(isOrder){
-            openPrintPreview(buildOrderReceiptHtml(record));
+            buildOrderReceiptHtml(record);
         } else {
             openPrintPreview(buildBookingReceiptHtml(record));
         }
@@ -364,47 +491,169 @@ let activeUpdate = null; // {type: 'order'|'booking', id}
 
 function openUpdateModal(type, id){
     activeUpdate = {type, id};
-    const orderStatuses = ['Pending','Preparing','Ready','Delivered','Cancelled'];
+    const orderStatuses = ['Pending','Preparing','Ready','Cancelled'];
     const bookingStatuses = ['Pending','Confirmed','Completed','Cancelled'];
 
     if(type === 'order'){
-        const o = orders.find(x => x.id === id);
-        if(!o) return;
-        $('#updateModalTitle').text('Update Order ' + o.id);
-        $('#updateModalBody').html(`
-      <div class="detail-row"><span>Customer</span><strong>${o.customer}</strong></div>
-      <div class="detail-row"><span>Items</span><strong>${o.items}</strong></div>
-      <div class="detail-row"><span>Total</span><strong>${money(o.total)}</strong></div>
-      <div class="detail-row"><span>Date</span><strong>${o.date}</strong></div>
-      <div class="field-group">
-        <label>Status</label>
-        <select id="f_updateStatus">
-          ${orderStatuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    `);
-    } else {
-        const b = bookings.find(x => x.id === id);
-        if(!b) return;
-        $('#updateModalTitle').text('Update Booking ' + b.id);
-        $('#updateModalBody').html(`
-      <div class="detail-row"><span>Customer</span><strong>${b.customer}</strong></div>
-      <div class="detail-row"><span>Date</span><strong>${b.date}</strong></div>
-      <div class="detail-row"><span>Time</span><strong>${b.slot}</strong></div>
-      <div class="detail-row"><span>Guests</span><strong>${b.guests}</strong></div>
-      <div class="detail-row"><span>Table(s)</span><strong>${(b.tables && b.tables.length) ? b.tables.map(t=>t.name).join(', ') : '—'}</strong></div>
-      <div class="field-group">
-        <label>Status</label>
-        <select id="f_updateStatus">
-          ${bookingStatuses.map(s => `<option value="${s}" ${b.status===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    `);
+        $.ajax({
+            url:"http://localhost:8080/v1/order/getOrderFormDetail/" + id,
+            type: "GET",
+            headers: {
+                "Authorization" : "Bearer " + localStorage.getItem("JWT")
+            },
+            success: function (r){
+                if(r.status === 200){
+                    const o = r.body;
+                    const user = r.body.user;
+                    let display = o.timeSlot ? "" : "style=\"display: none\" ";
+
+                    const rows = o.orderItems.map((i) =>
+                        `<tr><td>${i.foodItemName}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.discount}</td><td>${i.finalPrice}</td></tr>`
+                    ).join("")
+
+                    // pay details
+                    let payDetail = '';
+                    if(o.paymentDTO){
+                        const p = o.paymentDTO;
+                        payDetail = `
+                            <div class="field-row-2">
+                              <div class="field-group"><label>Payment</label><input disabled type="text" value="${money(p.payAmount)}" placeholder="0"></div>
+                              <div class="field-group"><label>Change</label><input disabled type="text" value="${money(p.dueAmount)}" placeholder="0"></div>
+                            </div>
+                            <div class="field-row-2">
+                              <div class="field-group"><label>Payment Date</label><input disabled type="text" value="${money(p.payDate)}" placeholder="0"></div>
+                              <div class="field-group"><label>Payment Type</label><input disabled type="text" value="${money(p.payType)}" placeholder="0"></div>
+                            </div>
+                            `;
+                    }
+
+                    $('#updateModalTitle').text('Update Order ' + o.orderId);
+                    $('#updateModalBody').html(`
+                    <div class="field-group"><label>${user.userRoles} Name</label><input disabled type="text" value="${user.userName}" placeholder="Customer name"></div>
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <label>Contact</label> <input disabled type="text" value="${user.userContact}" placeholder="contact">
+                        </div>
+                        <div class="field-group">
+                            <label>Email</label> <input disabled type="text" value="${user.userEmail}" placeholder="email" min="1">
+                        </div>
+                    </div>
+                
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Date</label><input disabled type="date" value="${o.orderDate}"></div>
+                      <div class="field-group" ${display}><label>Pick Up Time</label><input disabled type="text" value="${o.timeSlot}"></div>
+                    </div>
+                
+                    <div class="field-group">
+                      <label>Order Items</label>
+                      <div>
+                        <table>
+                          <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th></tr></thead>
+                          <tbody id="orderItemsBody"> ${rows} </tbody>
+                        </table>
+                      </div>
+                    </div>
+                   
+                    <div class="field-group"><lable>Order Note</lable><input disabled type="text" value="${o.orderNote}" placeholder="Order Note"> </div>
+                    
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Sub Total</label><input disabled type="text" value="${money(o.subTotal)}" placeholder="0"></div>
+                      <div class="field-group"><label>Discount</label><input disabled type="text" value="${money(o.discount)}" placeholder="0"></div>
+                    </div>
+                    
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Total</label><input disabled type="text" value="${money(o.total)}" placeholder="0"></div>
+                    </div>
+                    
+                    ${payDetail}
+                    
+                    <div class="field-group"><label>Status</label>
+                      <select id="f_status">
+                        ${orderStatuses.map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
+                      </select>
+                    </div>
+                    `);
+                }
+                else{
+                    showToast(r.message);
+                }
+            },
+            error: function (r){
+                r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+            }
+        });
+    }
+    else {
+        $.ajax({
+            url: "http://localhost:8080/v1/booking/getBookingById/" + id,
+            type: "GET",
+            headers:{
+                "Authorization" : "Bearer " + localStorage.getItem("JWT")
+            },
+            success: function (r){
+                if(r.status === 200){
+
+                    const b = r.body;
+                    const user = r.body.user;
+
+                    const rows = b.bookingDetailList.map((t) =>
+                        `<tr><td>${t.tableID}</td><td>${t.tableCategory}</td><td>${t.seatCount}</td></tr>`
+                    ).join('');
+
+                    $('#updateModalTitle').text('Update Booking ' + b.bookingId);
+                    $('#updateModalBody').html(`
+                        <div class="field-row-2">
+                        <div class="field-group"><label>${user.userRoles} Name</label><input disabled type="text" value="${user.userName}" placeholder="Customer name"></div>
+                        <div class="field-group"><label>Phone</label><input disabled type="tel" value="${user.userContact}" placeholder="+94 77 000 0000"></div>
+                        </div>
+                        <div class="field-group"><label>Email</label><input disabled type="text" value="${user.userEmail}" placeholder="0" min="1"></div>
+                        <div class="field-group"><label>Booking Created Date</label><input disabled type="text" value="${b.bookingCreatedDate}" placeholder="0" min="1"></div>
+                        <div class="field-row-2">
+                          <div class="field-group"><label>Date</label><input disabled type="date" value="${b.bookingDate}"></div>
+                          <div class="field-group"><label>Time Slot</label><input disabled type="text" value="${b.bookingTime}"></div>
+                        </div>
+                        <div class="field-row-2">
+                            <div class="field-group"><label>Table Category</label><input disabled type="text" value="${b.tableType}" placeholder="0" min="1"></div>
+                            <div class="field-group"><label>Guests</label><input disabled type="number" value="${b.seatCount}" placeholder="0" min="1"></div>
+                        </div>
+                    
+                        <div class="field-group">
+                          <label>Tables for This Booking</label>
+                          <div>
+                            <table>
+                              <thead><tr><th>Table ID</th><th>Table Name</th><th>Seat Count</th></tr></thead>
+                              <tbody id="bookingTablesBody"> ${rows} </tbody>
+                            </table>
+                          </div>
+                          <div class="field-group" style="font-weight: bold">Total: <span>${money(b.total)}</span></div>
+                        </div>
+                    
+                        <div class="field-group"><label>Special Requests</label>
+                            <input disabled type="text" value="${b.bookingNote}" placeholder="note">
+                        </div>
+                    
+                        <div class="field-group"><label>Status</label>
+                          <select id="f_status">
+                            ${bookingStatuses.map(v=>`<option ${formatStatus(b.bookingStatus)===v?'selected':''}>${v}</option>`).join('')}
+                          </select>
+                        </div>
+                    `);
+
+                }
+                else{
+                    showToast(r.message);
+                }
+            },
+            error: function (r){
+                r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+            }
+        });
     }
 
     $updateModal.addClass('show');
     $modalScrim.addClass('show');
 }
+
 function closeUpdateModal(){
     $updateModal.removeClass('show');
     if(!$printModal.hasClass('show') && !$paymentModal.hasClass('show')) $modalScrim.removeClass('show');
@@ -459,63 +708,105 @@ $('#printModalConfirm').on('click', function(){ window.print(); });
 $modalScrim.on('click', function(){ closeUpdateModal(); closePrintPreview(); closePaymentModal(); });
 $(document).on('keydown', function(e){ if(e.key === 'Escape'){ closeUpdateModal(); closePrintPreview(); closePaymentModal(); } });
 
-function buildOrderReceiptHtml(o){
-    const rowsHtml = o.items.split(',').map(s => s.trim()).filter(Boolean).map(s => {
-        const m = s.match(/^(\d+)\s*x\s*(.+)$/i);
-        return m ? `<tr><td>${m[2]}</td><td>${m[1]}</td></tr>` : `<tr><td>${s}</td><td>1</td></tr>`;
-    }).join('') || `<tr><td colspan="2">No items.</td></tr>`;
+function buildOrderReceiptHtml(id){
 
-    const paymentInfo = o.paid
-        ? `<p>Payment Method: ${o.paymentMethod}<br>Amount Paid: ${money(o.amountPaid)}${o.change > 0 ? `<br>Change Given: ${money(o.change)}` : ''}</p>`
-        : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
+    $.ajax({
+        url: "http://localhost:8080/v1/order/getOrderById/" + id,
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                const o = r.body;
 
-    return `
-    <h1>Order ${o.id}</h1>
-    <p>Customer: ${o.customer}<br>Status: ${o.status}<br>Date: ${o.date}</p>
-    <div class="print-table-wrap">
-      <table>
-        <thead><tr><th>Item Name</th><th>Qty</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-        <tfoot><tr><td>Total</td><td>${money(o.total)}</td></tr></tfoot>
-      </table>
-    </div>
-    ${paymentInfo}
-  `;
+                const rowsHtml = o.orderItems.map(i =>
+                    `<tr><td>${i.foodItemName}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.discount}</td><td>${i.finalPrice}</td></tr>`
+                ).join('') || `<tr><td colspan="5">No items.</td></tr>`;
+
+                const p = o.paymentDTO;
+                const paymentInfo = p
+                    ? `<p>Payment Method: ${p.payType}<br>Payment Done Date: ${p.payDate}<br>Amount Paid: ${money(p.payAmount)}${p.dueAmount > 0 ? `<br>Change Given: ${money(o.dueAmount)}` : ''}</p>`
+                    : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
+
+                const u = o.user;  // user
+
+                const html = `
+                  <h1>Order ${o.orderId}</h1>
+                  <p>${u.userRoles}: ${u.userName}<br>Status: ${o.orderStatus}<br>Date: ${o.orderDate} <br>Pick Up Time: ${o.timeSlot}</p>
+                  <div class="print-table-wrap">
+                    <table>
+                      <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th></tr></thead>
+                      <tbody>${rowsHtml}</tbody>
+                      <tfoot><tr><td colspan="4">Sub Total</td><td>${money(o.subTotal)}</td></tr></tfoot>
+                    </table>
+                  </div>
+                  
+                  <p> <br>
+                  Discount: ${money(o.discount)} <br> 
+                  <span style="font-weight: bold; font-size: 16px">Total: ${money(o.total)}</span>
+                  </p>
+                  
+                  ${paymentInfo}
+                `;
+
+                openPrintPreview(html);
+            }
+            else{ showToast(r.message) }
+        },
+        error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR"); }
+    });
 }
 
 function buildBookingReceiptHtml(b){
-    const tableRows = (b.tables && b.tables.length)
-        ? b.tables.map(t => `<tr><td>${t.name}</td></tr>`).join('')
-        : `<tr><td>No tables assigned.</td></tr>`;
 
-    const paymentInfo = b.paid
-        ? `<p>Payment Method: ${b.paymentMethod}<br>Amount Paid: ${money(b.amountPaid)}${b.change > 0 ? `<br>Change Given: ${money(b.change)}` : ''}</p>`
-        : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/getBookingById/" + id,
+        type: "GET",
+        headers:{
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200) {
+                const b = r.body;
 
-    return `
-    <h1>Booking ${b.id}</h1>
-    <p>
-      Customer: ${b.customer}<br>
-      Date: ${b.date}<br>
-      Time: ${b.slot}<br>
-      Guests: ${b.guests}<br>
-      Status: ${b.status}
-    </p>
-    <div class="print-table-wrap">
-      <table>
-        <thead><tr><th>Table</th></tr></thead>
-        <tbody>${tableRows}</tbody>
-        <tfoot><tr><td>Total</td><td>${money(b.total || 0)}</td></tr></tfoot>
-      </table>
-    </div>
-    ${paymentInfo}
-  `;
+                const tableRows = (b.bookingDetailList)
+                    ? b.bookingDetailList.map(t => `<tr><td>${t.tableID}</td><td>${t.tableCategory}</td></tr>`).join('')
+                    : `<tr><td>No tables assigned.</td></tr>`;
+
+                const paymentInfo = b.paid
+                    ? `<p>Payment Method: ${b.paymentMethod}<br>Amount Paid: ${money(b.amountPaid)}${b.change > 0 ? `<br>Change Given: ${money(b.change)}` : ''}</p>`
+                    : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
+
+                return `
+                  <h1>Booking ${b.bookingId}</h1>
+                  <p>
+                    Customer: ${b.user.userName}<br>
+                    Date: ${b.bookingDate}<br>
+                    Time: ${b.bookingTime}<br>
+                    Guests: ${b.seatCount}<br>
+                    Status: ${b.bookingStatus} <br>
+                    Created Date: ${b.bookingCreatedDate}
+                  </p>
+                  <div class="print-table-wrap">
+                    <table>
+                      <thead><tr><th>Table ID</th><th>Table</th></tr></thead>
+                      <tbody>${tableRows}</tbody>
+                      <tfoot><tr><td>Total</td><td>${money(b.total || 0)}</td></tr></tfoot>
+                    </table>
+                  </div>
+                  ${paymentInfo}
+                `;
+            }
+            else{ showToast(r.message) }
+        },
+        error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR"); }
+    });
 }
 
 $(document).on('click', '[data-print-order]', function(){
-    const o = orders.find(x => x.id === $(this).data('print-order'));
-    if(!o) return;
-    openPrintPreview(buildOrderReceiptHtml(o));
+    const id = $(this).data('print-order');
+    buildOrderReceiptHtml(id);
 });
 
 $(document).on('click', '[data-print-booking]', function(){
@@ -533,12 +824,16 @@ function renderMenuItems(filter=''){
 
     $('#menuItemsGrid').html(rows.map(i => `
       <div class="menu-card">
-        <div class="menu-card-img"><img src="${i.imagePath}" alt="${i.foodItemName}"></div>
+        <div class="menu-card-img">
+            ${i.discountPercentage ? `<span class="discount-tag">-${i.discountPercentage}%</span>` : ''}
+            <img src="${i.imagePath}" alt="${i.foodItemName}">
+        </div>
         <div class="menu-card-body">
           <h4>${i.foodItemName}</h4>
           <div class="cat">${i.foodItemCategory}</div>
           <div class="menu-card-foot">
-            <span class="menu-price">${money(i.price)}</span>
+            ${i.discountPercentage ? `<span class="price-original">${money(i.price)}</span>` : ''}
+            <span class="menu-price">${money(finalPrice(i))}</span>
           </div>
         </div>
       </div>
@@ -557,11 +852,17 @@ function renderPosGrid(filter=''){
 
     $('#posGrid').html(rows.map(i => `
       <div class="pos-card" data-item-id="${i.foodItemId}">
-        <div class="pos-card-img"><img src="${i.imagePath}" alt="${i.foodItemName}"></div>
+        <div class="pos-card-img">
+            ${i.discountPercentage ? `<span class="discount-tag">-${i.discountPercentage}%</span>` : ''}
+            <img src="${i.imagePath}" alt="${i.foodItemName}">
+        </div>
         <div class="pos-card-body">
           <h4>${i.foodItemName}</h4>
           <div class="cat" style="font-size: 12px">${i.foodItemCategory}</div>
-          <div class="pos-card-foot"><span class="pos-price">${money(i.price)}</span><span class="pos-add-icon">+</span></div>
+          <div class="pos-card-foot">
+             ${i.discountPercentage ? `<span class="price-original">${money(i.price)}</span>` : ''}
+             <span class="pos-price">${money(finalPrice(i))}</span>
+          <span class="pos-add-icon">+</span></div>
         </div>
       </div>
     `).join('') || `<p style="text-align:center;color:var(--espresso-soft);padding:40px;">No items match your search.</p>`);
@@ -585,7 +886,7 @@ $('#posFulfillToggle').on('click', 'button', function(){
 function posSubtotal(){
     return Object.entries(posCart).reduce((sum,[id,qty]) => {
         const item = menuItems.find(i => i.foodItemId === Number(id));
-        return sum + (item ? item.price * qty : 0);
+        return sum + (item ? finalPrice(item) * qty : 0);
     }, 0);
 }
 

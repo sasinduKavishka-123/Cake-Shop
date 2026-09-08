@@ -146,6 +146,26 @@
         .status-chip input{width:15px;height:15px;accent-color:var(--terracotta);cursor:pointer;}
         .status-chip.active{background:var(--espresso); color:var(--cream-warm); border-color:var(--espresso);}
 
+        /* ============ DATE FILTER (Orders / Bookings) ============ */
+        .date-filter-row{
+            display:flex; align-items:center; gap:12px; flex-wrap:nowrap; margin-bottom:18px;
+        }
+        .date-filter-row label{
+            font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em;
+            color:var(--espresso-soft);
+        }
+        .date-filter-row input[type="date"]{
+            padding:10px 13px; border-radius:12px; border:1.5px solid var(--line); width: max(200px);
+            background:var(--cream-warm); font-size:0.85rem; color:var(--espresso);
+        }
+        .date-filter-row input[type="date"]:focus{outline:none; border-color:var(--gold);}
+        .date-clear-btn{
+            padding:9px 18px; border-radius:100px; border:1.5px solid var(--line);
+            background:var(--cream-warm); font-weight:700; font-size:0.8rem; color:var(--espresso-soft);
+            transition:all .2s ease;
+        }
+        .date-clear-btn:hover{border-color:var(--gold); color:var(--espresso);}
+
         /* ============ TABLE CARD ============ */
         .table-card{
             background:var(--cream-warm); border:1px solid var(--line); border-radius:20px;
@@ -198,9 +218,10 @@
         .scrim.show{opacity:1; pointer-events:auto;}
         .modal{
             position:fixed; top:50%; left:50%; transform:translate(-50%,-46%) scale(0.96);
-            width:min(480px,92vw); max-height:88vh; overflow-y:auto;
+            width:min(720px,94vw); max-height:92vh; overflow-y:auto;
             background:var(--cream-warm); border-radius:26px; z-index:95; box-shadow:var(--shadow-lg);
             opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
         .modal.show{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1);}
         .modal-head{display:flex; align-items:center; justify-content:space-between; padding:26px 28px 18px; border-bottom:1px solid var(--line);}
@@ -228,6 +249,18 @@
             background:var(--cream); font-size:0.88rem; color:var(--espresso);
         }
         .field-group input[type="number"]:focus{outline:none; border-color:var(--gold);}
+        .field-row-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], select, textarea{
+            width:100%;
+            padding:13px 15px;
+            border-radius:13px;
+            border:1.5px solid var(--line);
+            background:var(--cream);
+            font-size:0.9rem;
+            color:var(--espresso);
+            transition:all .2s ease;
+        }
+        textarea{resize:none; min-height:70px;}
         .pm-toggle{display:flex; gap:8px;}
         .pm-toggle button{
             flex:1; padding:11px; border-radius:12px; border:1.5px solid var(--line);
@@ -313,6 +346,20 @@
         }
         .pos-out-badge{font-size:0.65rem; font-weight:800; color:var(--error); text-transform:uppercase;}
 
+        /* discount tag + strikethrough original price — shared by POS and Menu Items grids */
+        .discount-tag{
+            position:absolute; top:10px; right:10px; z-index:2;
+            background:var(--terracotta); color:var(--cream-warm);
+            font-size:0.64rem; font-weight:800; letter-spacing:0.02em;
+            padding:4px 9px; border-radius:100px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.15);
+        }
+        .price-group{display:flex; align-items:baseline; gap:7px; flex-wrap:wrap;}
+        .price-original{
+            font-family:'Manrope',sans-serif; font-size:0.76rem; font-weight:600;
+            color:#B8A99F; text-decoration:line-through;
+        }
+
         /* order panel (sticky cart) */
         .order-panel{
             background:var(--cream-warm); border:1px solid var(--line); border-radius:22px;
@@ -341,6 +388,7 @@
         .op-item-info{flex:1; min-width:0;}
         .op-item-info h5{font-size:0.85rem; font-weight:700; margin-bottom:3px;}
         .op-item-info span{font-size:0.76rem; color:var(--espresso-soft);}
+        .op-item-info .op-original{text-decoration:line-through; color:#B8A99F; margin-right:6px;}
         .op-qty{display:flex; align-items:center; gap:8px; background:var(--cream); border-radius:100px; padding:4px 8px;}
         .op-qty button{width:20px;height:20px;border-radius:50%;background:var(--cream-warm);font-weight:800;font-size:0.85rem;box-shadow:0 2px 5px rgba(0,0,0,0.08);}
         .op-qty span{font-size:0.8rem; font-weight:700; min-width:12px; text-align:center;}
@@ -491,10 +539,15 @@
 
         <!-- ================= ORDERS ================= -->
         <section class="section-panel" id="panel-orders">
+            <div class="date-filter-row">
+                <label for="orderDateFilter">Filter by date</label>
+                <input type="date" id="orderDateFilter">
+                <button type="button" id="clearOrderDateFilter" class="date-clear-btn">Clear</button>
+            </div>
             <div class="status-filter" id="orderStatusFilter"></div>
             <div class="table-card">
                 <table>
-                    <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Status</th><th></th></tr></thead>
+                    <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Pick Up Time</th><th>Status</th><th></th></tr></thead>
                     <tbody id="ordersBody"></tbody>
                 </table>
             </div>
@@ -502,6 +555,11 @@
 
         <!-- ================= BOOKINGS ================= -->
         <section class="section-panel" id="panel-bookings">
+            <div class="date-filter-row">
+                <label for="bookingDateFilter">Filter by date</label>
+                <input type="date" id="bookingDateFilter">
+                <button type="button" id="clearBookingDateFilter" class="date-clear-btn">Clear</button>
+            </div>
             <div class="status-filter" id="bookingStatusFilter"></div>
             <div class="table-card">
                 <table>
