@@ -362,6 +362,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<PlaceOrderDTO> getLatestOrders() {
+        log.info("Executing Method getLatestOrders()");
         List<Order> latestOrders = orderRepository.getLatestOrders();
         List<PlaceOrderDTO> orderDTOList = new ArrayList<>();
         for(Order o : latestOrders){
@@ -376,6 +377,39 @@ public class OrderServiceImpl implements OrderService {
             orderDTOList.add(dto);
         }
         return orderDTOList;
+    }
+
+    @Override
+    public void addPaymentDetails(long id, OrderStatus status, OrderPaymentDTO paymentDTO) {
+        log.info("Executing Method addPaymentDetails()");
+
+        if(paymentDTO == null ||
+                paymentDTO.getPayAmount().doubleValue() < 0 ||
+                paymentDTO.getDueAmount().doubleValue() < 0
+        ){
+            log.error("Error in Method addPaymentDetails()");
+            throw  new CustomException(402, "Invalid Payment Details");
+        }
+
+        Optional<Order> optionalOrder = orderRepository.findById(id);
+        if(optionalOrder.isEmpty()){
+            log.error("Error in Method addPaymentDetails()");
+            throw  new CustomException(404, "Order Not Found");
+        }
+
+        Order order = optionalOrder.get();
+        order.setOrderStatus(status);
+
+        OrderPayment payment = new OrderPayment();
+        payment.setOrder(order);
+        payment.setPayType(paymentDTO.getPayType());
+        payment.setPayAmount(paymentDTO.getPayAmount());
+        payment.setDueAmount(paymentDTO.getDueAmount());
+        payment.setPayDate(paymentDTO.getPayDate());
+
+        order.setOrderPayment(payment);
+
+        orderRepository.save(order);
     }
 
 }

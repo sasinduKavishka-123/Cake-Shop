@@ -1,5 +1,6 @@
 package lk.ijse.CakeShop.service;
 
+import lk.ijse.CakeShop.dto.OrderPaymentDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
 import lk.ijse.CakeShop.dto.overviewDTOs.OrderOverviewDTO;
 import lk.ijse.CakeShop.dto.printDTOs.OrderPrintDTO;
@@ -26,5 +27,7 @@ public interface OrderService {
     OrderOverviewDTO getOrderWeekRevenues();
 
     List<PlaceOrderDTO> getLatestOrders();
+
+    void addPaymentDetails(long id, OrderStatus status, OrderPaymentDTO paymentDTO);
 
 }

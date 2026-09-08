@@ -19,4 +19,10 @@ public class OrderPaymentDTO {
     private LocalDate payDate;
     private String payType;
 
+    public OrderPaymentDTO(BigDecimal payAmount, BigDecimal dueAmount, LocalDate payDate, String payType) {
+        this.payAmount = payAmount;
+        this.dueAmount = dueAmount;
+        this.payDate = payDate;
+        this.payType = payType;
+    }
 }

@@ -29,5 +29,4 @@ public class PlaceOrderDTO {
     private String orderNote;
 
     private OrderPaymentDTO paymentDTO;
-
 }

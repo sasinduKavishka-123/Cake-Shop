@@ -1,7 +1,9 @@
 package lk.ijse.CakeShop.controller;
 
 import lk.ijse.CakeShop.constatns.CommonResponse;
+import lk.ijse.CakeShop.dto.OrderPaymentDTO;
 import lk.ijse.CakeShop.dto.PlaceOrderDTO;
+import lk.ijse.CakeShop.dto.UpdatingDTOs.UpdateOrderPaymentDTO;
 import lk.ijse.CakeShop.enumerations.OrderStatus;
 import lk.ijse.CakeShop.service.OrderService;
 import lombok.AllArgsConstructor;
@@ -46,7 +48,7 @@ public class OrderController {
     @PatchMapping(value = "/updateOrderStatus", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse updateOrderStatus(
             @RequestParam(value = "order_id") long orderId,
-            @RequestParam(value = "order_status") OrderStatus orderStatus
+            @RequestParam(value = "order_status", required = false) OrderStatus orderStatus
     ){
         orderService.updateOrderStatus(orderId, orderStatus);
         return new CommonResponse(200, SUCCESS_MESSAGE);
@@ -65,6 +67,13 @@ public class OrderController {
     @GetMapping(value = "/getOrderWeekRevenues", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getOrderWeekRevenues(){
         return new CommonResponse(200, orderService.getOrderWeekRevenues(), SUCCESS_MESSAGE);
+    }
+
+    @PatchMapping(value = "/addPaymentDetails", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse addPaymentDetails(@RequestBody UpdateOrderPaymentDTO orderDTO){
+
+        orderService.addPaymentDetails(orderDTO.getId(), orderDTO.getStatus(), orderDTO.getPaymentDTO());
+        return new CommonResponse(200, orderDTO, SUCCESS_MESSAGE);
     }
 
 }

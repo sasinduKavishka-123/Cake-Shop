@@ -412,7 +412,98 @@ const $paymentModal = $('#paymentModal');
 let activePayment = null; // {type: 'order'|'booking', id}
 let paymentMethod = 'Cash';
 
-function openPaymentModal(type, id){
+function openOrderPaymentModal(type, id){
+    let total = 0;
+    activePayment = {type, id, total};
+    paymentMethod = 'Cash';
+    $.ajax({
+        url:"http://localhost:8080/v1/order/getOrderFormDetail/" + id,
+        type: "GET",
+        headers: {
+            "Authorization" : "Bearer " + localStorage.getItem("JWT")
+        },
+        success: function (r){
+            if(r.status === 200){
+                const o = r.body;
+                activePayment.total = o.total;
+                const user = r.body.user;
+                let display = o.timeSlot ? "" : "style=\"display: none\" ";
+
+                const rows = o.orderItems.map((i) =>
+                    `<tr><td>${i.foodItemName}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.discount}</td><td>${i.finalPrice}</td></tr>`
+                ).join("");
+
+                $('#paymentModalTitle').text('Take Payment — ' + o.orderId);
+                $('#paymentModalBody').html(`
+                    <div class="field-group"><label>${user.userRoles} Name</label><input disabled type="text" value="${user.userName}" placeholder="Customer name"></div>
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <label>Contact</label> <input disabled type="text" value="${user.userContact}" placeholder="contact">
+                        </div>
+                        <div class="field-group">
+                            <label>Email</label> <input disabled type="text" value="${user.userEmail}" placeholder="email" min="1">
+                        </div>
+                    </div>
+                
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Date</label><input disabled type="date" value="${o.orderDate}"></div>
+                      <div class="field-group" ${display}><label>Pick Up Time</label><input disabled type="text" value="${o.timeSlot}"></div>
+                    </div>
+                
+                    <div class="field-group">
+                      <label>Order Items</label>
+                      <div>
+                        <table>
+                          <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th></tr></thead>
+                          <tbody id="orderItemsBody"> ${rows} </tbody>
+                        </table>
+                      </div>
+                    </div>
+                   
+                    <div class="field-group"><lable>Order Note</lable><input disabled type="text" value="${o.orderNote}" placeholder="Order Note"> </div>
+                    
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Sub Total</label><input disabled type="text" value="${money(o.subTotal)}" placeholder="0"></div>
+                      <div class="field-group"><label>Discount</label><input disabled type="text" value="${money(o.discount)}" placeholder="0"></div>
+                    </div>
+                    
+                    <div class="field-row-2">
+                      <div class="field-group"><label>Total</label><input disabled id="f_total" type="text" value="${money(o.total)}" placeholder="0"></div>
+                    </div>
+                    
+                    <div class="field-group"><label>Status</label><input disabled type="text" value="${formatStatus(o.orderStatus)}"></div>
+                    
+                    <div class="field-group">
+                      <label>Payment Method</label>
+                      <div class="pm-toggle" id="pmMethodToggle">
+                        <button type="button" class="active" data-method="Cash">Cash</button>
+                        <button type="button" data-method="Card">Card</button>
+                      </div>
+                    </div>
+                    
+                    <div class="field-group" id="cashFieldWrap">
+                      <label>Amount Received</label>
+                      <input type="number" id="f_amountReceived" placeholder="${o.total}">
+                      <div class="change-display ok" id="changeDisplay"><span>Change</span><span>Rs. 0</span></div>
+                    </div>
+                    
+                `);
+
+                updateChangeDisplay(o.total);
+                $paymentModal.addClass('show');
+                $modalScrim.addClass('show');
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+}
+
+function openBookingPaymentModal(type, id){
     activePayment = {type, id};
     paymentMethod = 'Cash';
     const record = type === 'order' ? orders.find(x => x.id === id) : bookings.find(x => x.id === id);
@@ -442,6 +533,7 @@ function openPaymentModal(type, id){
     $paymentModal.addClass('show');
     $modalScrim.addClass('show');
 }
+
 function closePaymentModal(){
     $paymentModal.removeClass('show');
     if(!$updateModal.hasClass('show') && !$printModal.hasClass('show')) $modalScrim.removeClass('show');
@@ -458,8 +550,8 @@ function updateChangeDisplay(total){
     }
 }
 
-$(document).on('click', '[data-pay-order]', function(){ openPaymentModal('order', $(this).data('pay-order')); });
-$(document).on('click', '[data-pay-booking]', function(){ openPaymentModal('booking', $(this).data('pay-booking')); });
+$(document).on('click', '[data-pay-order]', function(){ openOrderPaymentModal('order', $(this).data('pay-order')); });
+$(document).on('click', '[data-pay-booking]', function(){ openBookingPaymentModal('booking', $(this).data('pay-booking')); });
 $('#paymentModalClose').on('click', closePaymentModal);
 $('#paymentModalCancel').on('click', closePaymentModal);
 
@@ -470,18 +562,31 @@ $(document).on('click', '#pmMethodToggle button', function(){
     $('#cashFieldWrap').toggle(paymentMethod === 'Cash');
 });
 
+$(document).on('keydown', '#f_amountReceived', function(e) {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+        e.preventDefault();
+    }
+});
+
 $(document).on('input', '#f_amountReceived', function(){
-    if(!activePayment) return;
-    const record = activePayment.type === 'order' ? orders.find(x => x.id === activePayment.id) : bookings.find(x => x.id === activePayment.id);
-    if(record) updateChangeDisplay(activePayment.type === 'order' ? record.total : (record.total || 0));
+    let val = $(this).val();
+
+    // Enforce maximum 2 decimal places using Regex
+    if (val.includes('.')) {
+        const parts = val.split('.');
+        if (parts[1].length > 2) {
+            val = parts[0] + '.' + parts[1].slice(0, 2);
+            $(this).val(val); // Update input field value
+        }
+    }
+
+    updateChangeDisplay(activePayment.total);
 });
 
 $('#paymentModalConfirm').on('click', function(){
     if(!activePayment) return;
     const isOrder = activePayment.type === 'order';
-    const record = isOrder ? orders.find(x => x.id === activePayment.id) : bookings.find(x => x.id === activePayment.id);
-    if(!record) return;
-    const total = isOrder ? record.total : (record.total || 0);
+    const total = activePayment.total;
 
     let amountPaid = total;
     let change = 0;
@@ -495,12 +600,62 @@ $('#paymentModalConfirm').on('click', function(){
         change = received - total;
     }
 
-    record.paid = true;
-    record.paymentMethod = paymentMethod;
-    record.amountPaid = amountPaid;
-    record.change = change;
-    record.status = isOrder ? 'Delivered' : 'Completed';
+    const obj = {
+        id : activePayment.id,
+        status : isOrder ? 'DONE' : 'COMPLETED',
+        paymentDTO : {
+            payAmount : amountPaid,
+            dueAmount : change,
+            payDate : new Date().toISOString().split('T')[0],
+            payType : paymentMethod
+        }
+    }
 
+    if(isOrder){
+        $.ajax({
+            url: "http://localhost:8080/v1/order/addPaymentDetails",
+            type: "PATCH",
+            headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+            data: JSON.stringify(obj),
+            contentType: 'application/json',
+            success: function (r){
+                if(r.status === 200){
+                    console.log(r.body);
+                    showToast("Payment Updated Successfully");
+                    animatePaymentBtn(isOrder);
+                }
+                else{
+                    showToast(r.message);
+                }
+            },
+            error: function (r){
+                r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+            }
+        });
+    }
+    else{
+        // $.ajax({
+        //     url: "http://localhost:8080/v1/booking/",
+        //     type: "PATCH",
+        //     headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        //     data: obj,
+        //     success: function (r){
+        //         if(r.status === 200){
+        //             showToast("Payment Updated Successfully");
+        //             animatePaymentBtn(isOrder);
+        //         }
+        //         else{
+        //             showToast(r.message);
+        //         }
+        //     },
+        //     error: function (r){
+        //         r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        //     }
+        // });
+    }
+});
+
+function animatePaymentBtn(isOrder){
     const $btn = $(this);
     const $label = $('#paymentConfirmLabel');
     const original = $label.text();
@@ -512,15 +667,15 @@ $('#paymentModalConfirm').on('click', function(){
         $label.text(original);
         closePaymentModal();
         renderAll();
-        showToast(`${record.id} marked as paid`);
+        showToast(`${activePayment.id} marked as paid`);
         // automatically open the print preview for the receipt
         if(isOrder){
-            buildOrderReceiptHtml(record);
+            buildOrderReceiptHtml(activePayment.id);
         } else {
-            openPrintPreview(buildBookingReceiptHtml(record));
+            buildBookingReceiptHtml(activePayment.id);
         }
     }, 700);
-});
+}
 
 /* ============================================================
    UPDATE STATUS MODAL — cashier can only change status;
@@ -610,7 +765,7 @@ function openUpdateModal(type, id){
                     ${payDetail}
                     
                     <div class="field-group"><label>Status</label>
-                      <select id="f_status">
+                      <select id="f_updateStatus">
                         ${orderStatuses.map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
                       </select>
                     </div>
@@ -675,7 +830,7 @@ function openUpdateModal(type, id){
                         </div>
                     
                         <div class="field-group"><label>Status</label>
-                          <select id="f_status">
+                          <select id="f_updateStatus">
                             ${bookingStatuses.map(v=>`<option ${formatStatus(b.bookingStatus)===v?'selected':''}>${v}</option>`).join('')}
                           </select>
                         </div>
@@ -711,14 +866,50 @@ $('#updateModalSave').on('click', function(){
     const newStatus = $('#f_updateStatus').val();
 
     if(activeUpdate.type === 'order'){
-        const o = orders.find(x => x.id === activeUpdate.id);
-        if(o) o.status = newStatus;
-    } else {
-        const b = bookings.find(x => x.id === activeUpdate.id);
-        if(b) b.status = newStatus;
-    }
+        const obj = {
+            order_id : Number(activeUpdate.id),
+            order_status: newStatus.toUpperCase()
+        }
 
-    const $btn = $(this);
+        $.ajax({
+            url: "http://localhost:8080/v1/order/updateOrderStatus",
+            type: "PATCH",
+            headers:{"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+            data: obj,
+            success: function (r){
+                if(r.status === 200){
+                    showToast("Order status Updated");
+                    animateUpdateBtn(newStatus);
+                }
+                else{showToast(r.message)}
+            },
+            error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR");}
+        });
+
+    } else {
+        const obj = {
+            booking_id : Number(activeUpdate.id),
+            booking_status : newStatus.toUpperCase()
+        }
+        $.ajax({
+            url: "http://localhost:8080/v1/booking/updateBookingStatus",
+            type: "PATCH",
+            headers:{"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+            data: obj,
+            success: function (r){
+                if(r.status === 200){
+                    showToast("Booking status Updated");
+                    animateUpdateBtn(newStatus);
+                }
+                else{showToast(r.message)}
+            },
+            error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR");}
+        });
+    }
+});
+
+function animateUpdateBtn(newStatus){
+    const $btn = $('#updateModalSave');
     const $label = $('#updateSaveLabel');
     const original = $label.text();
     $label.text('✓ Saved');
@@ -730,7 +921,7 @@ $('#updateModalSave').on('click', function(){
         showToast(`${activeUpdate.id} marked as ${newStatus}`);
         renderAll();
     }, 700);
-});
+}
 
 /* ============================================================
    PRINT PREVIEW — order / booking details
@@ -759,6 +950,7 @@ function buildOrderReceiptHtml(id){
             "Authorization" : "Bearer " + localStorage.getItem("JWT")
         },
         success: function (r){
+            console.log(r.body);
             if(r.status === 200){
                 const o = r.body;
 
@@ -766,9 +958,9 @@ function buildOrderReceiptHtml(id){
                     `<tr><td>${i.foodItemName}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.discount}</td><td>${i.finalPrice}</td></tr>`
                 ).join('') || `<tr><td colspan="5">No items.</td></tr>`;
 
-                const p = o.paymentDTO;
+                const p = o.orderPaymentDTO;
                 const paymentInfo = p
-                    ? `<p>Payment Method: ${p.payType}<br>Payment Done Date: ${p.payDate}<br>Amount Paid: ${money(p.payAmount)}${p.dueAmount > 0 ? `<br>Change Given: ${money(o.dueAmount)}` : ''}</p>`
+                    ? `<p>Payment Method: ${p.payType}<br>Payment Done Date: ${p.payDate}<br>Amount Paid: ${money(p.payAmount)}${p.dueAmount > 0 ? `<br>Change Given: ${money(p.dueAmount)}` : ''}</p>`
                     : `<p style="color:var(--error);">Payment: Not yet paid</p>`;
 
                 const u = o.user;  // user
@@ -917,7 +1109,6 @@ $('#posGrid').on('click', '.pos-card', function(){
     const item = menuItems.find(i => i.foodItemId === id);
     if(!item) return;
     posCart[id] = (posCart[id] || 0) + 1;
-    console.log(posCart);
     renderPosCart();
 });
 
@@ -946,7 +1137,7 @@ function renderPosCart(){
         <div class="op-item" data-item-id="${id}">
           <div class="op-item-info">
             <h5>${item.foodItemName}</h5>
-            <span>${money(item.price)} each</span>
+            <span>${item.discount ? `<span class="op-original">${money(item.price)}</span>` : ''}${money(item.price - item.discount)} each</span>
           </div>
           <div class="op-qty">
             <button class="op-qminus" data-item-id="${id}">−</button>
