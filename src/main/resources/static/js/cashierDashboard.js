@@ -1134,7 +1134,9 @@ function renderMenuItems(filter=''){
    PLACE ORDER (POS)
    ============================================================ */
 let posCart = {}; // itemId -> qty
+let posCategory = 'all';
 let posFulfillment = 'Dine-in';
+let posPaymentMethod = 'Cash';
 
 function renderPosGrid(filter=''){
     const f = filter.toLowerCase();
@@ -1166,16 +1168,64 @@ $('#posGrid').on('click', '.pos-card', function(){
     renderPosCart();
 });
 
-$('#posFulfillToggle').on('click', 'button', function(){
-    posFulfillment = $(this).data('fulfil');
-    $('#posFulfillToggle button').removeClass('active');
+$('#posPaymentToggle').on('click', 'button', function(){
+    posPaymentMethod = $(this).data('method');
+    $('#posPaymentToggle button').removeClass('active');
     $(this).addClass('active');
+    $('#posCashFieldWrap').toggle(posPaymentMethod === 'Cash');
+});
+
+function updatePosChangeDisplay(){
+    const total = posTotal();
+    const received = Number($('#posAmountReceived').val()) || 0;
+    const diff = received - total;
+    const $display = $('#posChangeDisplay');
+    if(diff < 0){
+        $display.attr('class', 'change-display short').html(`<span>Amount Short</span><span>${money(Math.abs(diff))}</span>`);
+    } else {
+        $display.attr('class', 'change-display ok').html(`<span>Change</span><span>${money(diff)}</span>`);
+    }
+}
+
+$('#posAmountReceived').on('input', function(){
+    let val = $(this).val();
+
+    // Enforce maximum 2 decimal places using Regex
+    if (val.includes('.')) {
+        const parts = val.split('.');
+        if (parts[1].length > 2) {
+            val = parts[0] + '.' + parts[1].slice(0, 2);
+            $(this).val(val); // Update input field value
+        }
+    }
+
+    updatePosChangeDisplay();
+});
+
+$('#posAmountReceived').on('keydown', function(e) {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+        e.preventDefault();
+    }
 });
 
 function posSubtotal(){
     return Object.entries(posCart).reduce((sum,[id,qty]) => {
         const item = menuItems.find(i => i.foodItemId === Number(id));
+        return sum + (item ? (item.price * qty) : 0);
+    }, 0);
+}
+
+function posTotal(){
+    return Object.entries(posCart).reduce((sum,[id,qty]) => {
+        const item = menuItems.find(i => i.foodItemId === Number(id));
         return sum + (item ? finalPrice(item) * qty : 0);
+    }, 0);
+}
+
+function posDiscount(){
+    return Object.entries(posCart).reduce((sum,[id,qty]) => {
+        const item = menuItems.find(i => i.foodItemId === Number(id));
+        return sum + (item ? (item.discount * qty) : 0);
     }, 0);
 }
 
@@ -1203,9 +1253,14 @@ function renderPosCart(){
       `;
         }).join(''));
     }
-    const total = posSubtotal();
+    const total = posTotal();
+    const subTotal = posSubtotal();
+    const discount = posDiscount();
     $('#posTotal').text(money(total));
+    $('#posSubtotal').text(money(subTotal));
+    $('#posDiscount').text(money(discount));
     $('#placeOrderBtn').prop('disabled', ids.length === 0);
+    updatePosChangeDisplay();
 }
 
 $('#posCartBody').on('click', '.op-qplus', function(){
@@ -1229,39 +1284,112 @@ $('#placeOrderBtn').on('click', function(){
     const ids = Object.keys(posCart);
     if(ids.length === 0) return;
 
-    const customerName = $('#posCustomerName').val().trim() || 'Walk-in Customer';
-    const itemsSummary = ids.map(id => {
-        const item = menuItems.find(i => i.id === Number(id));
-        return `${posCart[id]}x ${item.name}`;
-    }).join(', ');
-    const total = posSubtotal();
-    const newId = 'ORD-' + (nextOrderNum++);
+    const total = posTotal();
+    let amountPaid = total;
+    let change = 0;
+    if(posPaymentMethod === 'Cash'){
+        const received = Number($('#posAmountReceived').val()) || 0;
+        if(received < total){
+            showToast('Amount received is less than the total due');
+            return;
+        }
+        amountPaid = received;
+        change = received - total;
+    }
 
-    orders.unshift({
-        id:newId,
-        customer: customerName + ` (${posFulfillment})`,
-        items: itemsSummary,
-        total,
-        status:'Pending',
-        date:new Date().toISOString().split('T')[0],
+    // payment details ---------------
+    const paymentDetails = {
+        payAmount : amountPaid,
+        dueAmount : change,
+        payDate : new Date().toISOString().split('T')[0],
+        payType : posPaymentMethod
+    }
+
+    // order item details -------------------------------
+    const itemsDetails = [];
+    ids.map(id => {
+        const item = menuItems.find(i => i.foodItemId === Number(id));
+
+        const qty = posCart[id];
+        const price = item.price;
+        const discount = item.discount;
+        const finalPrice = (price - discount) * qty;
+
+        const itemDetail = {
+            orderItemId : 0,
+            orderID : 0,
+            foodItemId : item.foodItemId,
+            qty : qty,
+            price : price,
+            discount : discount,
+            finalPrice : finalPrice
+        }
+        itemsDetails.push(itemDetail);
     });
 
-    const $btn = $(this);
+    // user detail -----------
+    const userId = localStorage.getItem("UserID");
+    const time = new Date().toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const obj = {
+        orderId : 0,
+        userId : userId,
+        orderDate : paymentDetails.payDate,
+        timeSlot : time,
+        orderItems : itemsDetails,
+        subTotal : posSubtotal(),
+        discount : posDiscount(),
+        total : total,
+        paymentDTO : paymentDetails
+    }
+
+    // save order ----------------
+    $.ajax({
+        url: "http://localhost:8080/v1/order/saveOrder",
+        type:"POST",
+        headers:{"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function (r){
+            if(r.status === 200){
+                showToast("Order Created");
+                buildOrderReceiptHtml(r.body);  // return order id that created
+                animatePosOrderBtn();
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+});
+
+function animatePosOrderBtn(){
+    const $btn = $('#placeOrderBtn');
     const $label = $('#placeOrderLabel');
     $label.text('Placing order...');
     setTimeout(() => {
         $btn.addClass('success');
-        $label.text(`✓ Order ${newId} placed`);
+        $label.text(`✓ Order placed`);
         setTimeout(() => {
             $btn.removeClass('success');
             $label.text('Place Order');
             posCart = {};
-            $('#posCustomerName').val('');
+            $('#posAmountReceived').val('');
+            posPaymentMethod = 'Cash';
+            $('#posPaymentToggle button').removeClass('active');
+            $('#posPaymentToggle button[data-method="Cash"]').addClass('active');
+            $('#posCashFieldWrap').show();
             renderPosCart();
             renderAll();
         }, 1400);
     }, 500);
-});
+}
 
 /* ============================================================
    SEARCH + INIT

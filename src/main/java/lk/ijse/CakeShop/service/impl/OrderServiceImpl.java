@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-    public void saveOrder(PlaceOrderDTO placeOrderDTO) {
+    public long saveOrder(PlaceOrderDTO placeOrderDTO) {
         log.info("Executing Method saveOrder()");
 
         // find user ----------------------
@@ -133,6 +133,8 @@ public class OrderServiceImpl implements OrderService {
 
             orderPaymentRepository.save(p);
         }
+
+        return savedOrder.getOrderId();
     }
 
     @Override

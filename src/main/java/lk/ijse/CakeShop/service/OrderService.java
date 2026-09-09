@@ -12,7 +12,7 @@ import java.util.Set;
 
 public interface OrderService {
 
-    void saveOrder(PlaceOrderDTO placeOrderDTO);
+    long saveOrder(PlaceOrderDTO placeOrderDTO);
 
     List<PlaceOrderDTO> filterOrders(String orderId, String UserName, String date, Set<String> statusList);
 

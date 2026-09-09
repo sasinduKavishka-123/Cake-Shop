@@ -23,8 +23,8 @@ public class OrderController {
 
     @PostMapping(value = "/saveOrder", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse saveOrder(@RequestBody PlaceOrderDTO placeOrderDTO){
-        orderService.saveOrder(placeOrderDTO);
-        return new CommonResponse(200, SUCCESS_MESSAGE);
+        long orderId = orderService.saveOrder(placeOrderDTO);
+        return new CommonResponse(200, orderId, SUCCESS_MESSAGE);
     }
 
     @GetMapping(value = "/filterOrders", produces = MediaType.APPLICATION_JSON_VALUE)
