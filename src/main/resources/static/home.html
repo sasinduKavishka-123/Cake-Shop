@@ -619,6 +619,153 @@
             .hero{padding-top:100px;}
             .strip-inner{grid-template-columns:repeat(1,1fr); gap:36px;}
         }
+
+        /* ================= AI CHAT WIDGET ================= */
+        .chat-toggle-btn{
+            position:fixed;
+            bottom:26px; left:26px;
+            width:60px; height:60px;
+            border-radius:50%;
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:var(--shadow);
+            z-index:200;
+            border:none;
+            cursor:pointer;
+            transition:all .25s ease;
+        }
+        .chat-toggle-btn:hover{background:var(--gold); color:var(--cocoa); transform:translateY(-3px);}
+        .chat-toggle-btn .icon-close{display:none;}
+        .chat-toggle-btn.open .icon-chat{display:none;}
+        .chat-toggle-btn.open .icon-close{display:block;}
+
+        .chat-window{
+            position:fixed;
+            bottom:100px; left:26px;
+            width:340px;
+            max-width:calc(100vw - 40px);
+            height:460px;
+            max-height:70vh;
+            background:var(--cream-warm);
+            border-radius:24px;
+            box-shadow:var(--shadow);
+            border:1px solid var(--line);
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+            z-index:199;
+            opacity:0;
+            transform:translateY(16px) scale(0.96);
+            pointer-events:none;
+            transition:opacity .25s ease, transform .25s ease;
+        }
+        .chat-window.open{
+            opacity:1;
+            transform:translateY(0) scale(1);
+            pointer-events:auto;
+        }
+
+        .chat-header{
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 18px;
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            flex:none;
+        }
+        .chat-header-info{display:flex; align-items:center; gap:10px;}
+        .chat-avatar{
+            width:36px; height:36px;
+            border-radius:50%;
+            background:var(--blush);
+            display:flex; align-items:center; justify-content:center;
+            flex:none;
+        }
+        .chat-header-info h4{font-family:'Fraunces',serif; font-size:0.95rem; font-weight:600; margin-bottom:2px;}
+        .chat-status{display:flex; align-items:center; gap:5px; font-size:0.72rem; color:rgba(255,252,248,0.7);}
+        .status-dot{width:7px; height:7px; border-radius:50%; background:#7ED08B; flex:none;}
+        .chat-close-btn{
+            width:28px; height:28px;
+            border-radius:50%;
+            background:rgba(255,252,248,0.12);
+            color:var(--cream-warm);
+            display:flex; align-items:center; justify-content:center;
+            font-size:0.85rem;
+            border:none;
+            cursor:pointer;
+            transition:background .2s ease;
+            flex:none;
+        }
+        .chat-close-btn:hover{background:rgba(255,252,248,0.22);}
+
+        .chat-messages{
+            flex:1;
+            overflow-y:auto;
+            padding:18px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            background:var(--cream);
+        }
+        .chat-bubble{
+            max-width:82%;
+            padding:11px 14px;
+            border-radius:16px;
+            font-size:0.86rem;
+            line-height:1.55;
+        }
+        .chat-bubble.bot{
+            background:var(--cream-warm);
+            border:1px solid var(--line);
+            border-bottom-left-radius:4px;
+            align-self:flex-start;
+            color:var(--cocoa);
+        }
+        .chat-bubble.user{
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            border-bottom-right-radius:4px;
+            align-self:flex-end;
+        }
+
+        .chat-input-row{
+            display:flex;
+            gap:8px;
+            padding:14px;
+            border-top:1px solid var(--line);
+            background:var(--cream-warm);
+            flex:none;
+        }
+        .chat-input-row input{
+            flex:1;
+            padding:11px 15px;
+            border-radius:100px;
+            border:1.5px solid var(--line);
+            background:var(--cream);
+            font-family:'Manrope',sans-serif;
+            font-size:0.86rem;
+            color:var(--cocoa);
+        }
+        .chat-input-row input:focus{outline:none; border-color:var(--gold);}
+        .chat-send-btn{
+            width:40px; height:40px;
+            border-radius:50%;
+            background:var(--cocoa);
+            color:var(--cream-warm);
+            display:flex; align-items:center; justify-content:center;
+            flex:none;
+            border:none;
+            cursor:pointer;
+            transition:background .2s ease;
+        }
+        .chat-send-btn:hover{background:var(--gold); color:var(--cocoa);}
+
+        @media (max-width:480px){
+            .chat-window{
+                left:16px; right:16px; width:auto; bottom:92px;
+            }
+            .chat-toggle-btn{ left:16px; bottom:16px; width:54px; height:54px; }
+        }
     </style>
 </head>
 <body>
@@ -844,16 +991,76 @@
     </div>
 </footer>
 
-<script>
-    const header = document.getElementById('siteHeader');
-    window.addEventListener('scroll', () => {
-        header.classList.toggle('scrolled', window.scrollY > 40);
-    });
+<!-- ================= AI CHAT WIDGET ================= -->
+<button class="chat-toggle-btn" id="chatToggleBtn" aria-label="Open chat">
+    <svg class="icon-chat" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9A2.5 2.5 0 0 1 17.5 17H9l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 14.5v-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+</button>
 
-    const burger = document.getElementById('burgerBtn');
-    const navLinks = document.getElementById('navLinks');
-    burger.addEventListener('click', () => navLinks.classList.toggle('open'));
-    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <div class="chat-header-info">
+      <span class="chat-avatar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3c2 2 3 4 3 6.2A3 3 0 0 1 12 12a3 3 0 0 1-3-2.8C9 7 10 5 12 3Z" fill="#C79A4B"/><path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v.5c0 .8-.6 1.5-1.4 1.5H5.4A1.4 1.4 0 0 1 4 14.5V14Z" fill="#3A2822"/><rect x="5" y="17" width="14" height="3.2" rx="1.6" fill="#3A2822"/></svg>
+      </span>
+            <div>
+                <h4>Sugar &amp; Flour Assistant</h4>
+                <span class="chat-status"><span class="status-dot"></span>Online</span>
+            </div>
+        </div>
+        <button class="chat-close-btn" id="chatCloseBtn" aria-label="Close chat">✕</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-bubble bot"><p>Hi there! 👋 Welcome to Sugar &amp; Flour.</p></div>
+        <div class="chat-bubble bot"><p>Ask me about our menu, opening hours, or how to place an order.</p></div>
+    </div>
+
+    <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Type a message...">
+        <button class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ============================================================
+                            SCRIPTS
+============================================================ -->
+
+<script src="../lib/jquery-4.0.0.min.js"></script>
+
+<script>
+    $(function() {
+        const $header = $('#siteHeader');
+        const $navLinks = $('#navLinks');
+
+        $(window).on('scroll', function() {
+            $header.toggleClass('scrolled', $(this).scrollTop() > 40);
+        });
+
+        $('#burgerBtn').on('click', function() {
+            $navLinks.toggleClass('open');
+        });
+
+        $navLinks.find('a').on('click', function() {
+            $navLinks.removeClass('open');
+        });
+    });
+</script>
+
+<script>
+    /* ============================================================
+       AI CHAT WIDGET — show/hide toggle only (no chat logic wired up yet)
+       ============================================================ */
+    $('#chatToggleBtn').on('click', function(){
+        $(this).toggleClass('open');
+        $('#chatWindow').toggleClass('open');
+    });
+    $('#chatCloseBtn').on('click', function(){
+        $('#chatToggleBtn').removeClass('open');
+        $('#chatWindow').removeClass('open');
+    });
 </script>
 
 </body>

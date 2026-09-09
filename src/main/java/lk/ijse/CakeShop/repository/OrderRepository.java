@@ -32,4 +32,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT o FROM Order o WHERE (o.orderDate BETWEEN ?2 AND ?1) AND o.orderStatus != 'CANCELLED' " +
             "ORDER BY o.orderDate ASC")
     List<Order> getOrdersWithinMonth(LocalDate startDate, LocalDate endDate);
+
+
+    @Query(value = "SELECT o FROM Order o WHERE o.user.userId = ?1 ORDER BY o.orderDate DESC")
+    List<Order> getAllOrdersByUserId(long userId);
 }

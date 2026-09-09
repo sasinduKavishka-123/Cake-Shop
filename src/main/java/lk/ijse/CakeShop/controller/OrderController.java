@@ -80,4 +80,8 @@ public class OrderController {
         return new CommonResponse(200, orderService.getLastMonthOrders(), SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getAllOrdersByUserId/{user_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllOrdersByUserId(@PathVariable long user_id){
+        return new CommonResponse(200, orderService.getAllOrdersByUserId(user_id), SUCCESS_MESSAGE);
+    }
 }

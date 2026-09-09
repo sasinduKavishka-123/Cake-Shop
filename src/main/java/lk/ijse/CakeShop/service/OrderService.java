@@ -32,4 +32,6 @@ public interface OrderService {
 
     List<PlaceOrderDTO> getLastMonthOrders();
 
+    List<PlaceOrderDTO> getAllOrdersByUserId(long userID);
+
 }

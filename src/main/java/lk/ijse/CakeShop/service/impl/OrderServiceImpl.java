@@ -445,4 +445,34 @@ public class OrderServiceImpl implements OrderService {
         return orderDTOList;
     }
 
+    @Override
+    public List<PlaceOrderDTO> getAllOrdersByUserId(long userID) {
+        log.info("Executing method getAllOrdersByUserId()");
+
+        List<Order> allOrdersByUserId = orderRepository.getAllOrdersByUserId(userID);
+        List<PlaceOrderDTO> dtoList = new ArrayList<>();
+
+        for(Order o : allOrdersByUserId){
+            PlaceOrderDTO placeOrderDTO = new PlaceOrderDTO();
+            placeOrderDTO.setOrderId(o.getOrderId());
+            placeOrderDTO.setOrderDate(o.getOrderDate());
+            placeOrderDTO.setTimeSlot(o.getTimeSlot());
+            placeOrderDTO.setTotal(o.getTotal());
+            placeOrderDTO.setOrderStatus(o.getOrderStatus());
+
+            // fill order items ---------------
+            List<OrderItemsDTO> itemList = new ArrayList<>();
+            for(OrderItem oi : o.getOrderItem()){
+                OrderItemsDTO dto = new OrderItemsDTO();
+                dto.setFoodItemName(oi.getFoodItem().getFoodItemName());
+                dto.setQty(oi.getQty());
+
+                itemList.add(dto);
+            }
+            placeOrderDTO.setOrderItems(itemList);
+            dtoList.add(placeOrderDTO);
+        }
+        return dtoList;
+    }
+
 }
