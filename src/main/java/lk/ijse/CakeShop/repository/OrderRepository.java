@@ -29,7 +29,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             " ORDER BY o.orderDate DESC LIMIT 5")
     List<Order> getLatestOrders();
 
-    @Query(value = "SELECT o FROM Order o WHERE o.orderStatus = ?1")
-    List<Order> getReadyOrders(OrderStatus status);
-
+    @Query(value = "SELECT o FROM Order o WHERE (o.orderDate BETWEEN ?2 AND ?1) AND o.orderStatus != 'CANCELLED' " +
+            "ORDER BY o.orderDate ASC")
+    List<Order> getOrdersWithinMonth(LocalDate startDate, LocalDate endDate);
 }

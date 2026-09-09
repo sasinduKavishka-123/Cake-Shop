@@ -414,4 +414,35 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
+    @Override
+    public List<PlaceOrderDTO> getLastMonthOrders() {
+        log.info("Executing Method getLastMonthOrders()");
+
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.minusMonths(1);
+
+        System.out.println(startDate);
+        System.out.println(endDate);
+
+        List<Order> ordersWithinMonth = orderRepository.getOrdersWithinMonth(startDate, endDate);
+        List<PlaceOrderDTO> orderDTOList = new ArrayList<>();
+
+        for(Order o : ordersWithinMonth){
+            PlaceOrderDTO dto = new PlaceOrderDTO();
+            dto.setOrderId(o.getOrderId());
+
+            List<OrderItemsDTO> itemsDTOS = new ArrayList<>();
+            for(OrderItem i : o.getOrderItem()){
+                OrderItemsDTO itemsDTO = new OrderItemsDTO();
+                itemsDTO.setFoodItemName(i.getFoodItem().getFoodItemName());
+                itemsDTO.setQty(i.getQty());
+                itemsDTOS.add(itemsDTO);
+            }
+
+            dto.setOrderItems(itemsDTOS);
+            orderDTOList.add(dto);
+        }
+        return orderDTOList;
+    }
+
 }

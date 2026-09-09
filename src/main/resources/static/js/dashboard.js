@@ -97,7 +97,7 @@ const sections = {
 let currentSection = 'overview';
 
 const statusOptionsMap = {
-    orders: ['Pending','Preparing','Ready','Delivered','Cancelled'],
+    orders: ['Pending','Preparing','Ready','Done','Cancelled'],
     items: ['Gluten-Free','Nut-Free','Vegan'],
     suppliers: ['Active','Inactive'],
     stock: ['In Stock','Low Stock','Out of Stock'],
@@ -216,7 +216,23 @@ function parseOrderItems(text){
 /* ============================================================
    SET USER DETAILS ON SIDEBAR
    ============================================================ */
+function fillUserDetails(){
+    $('#adminName').text(localStorage.getItem("UserName"));
+    const avatar = localStorage.getItem("UserName").charAt(0);
+    $('#adminAvatar').text(avatar.toUpperCase());
+}
 
+/* ============================================================
+   USER LOG OUT
+   ============================================================ */
+$('#logoutBtn').on('click', ()=>{
+    localStorage.removeItem("JWT");
+    localStorage.removeItem("UserID");
+    localStorage.removeItem("UserName");
+    setTimeout(()=>{
+        window.location.href = "staffLogin.html";
+    }, 500);
+});
 
 /* ============================================================
   VALIDATION CHECKERS
@@ -327,20 +343,38 @@ function validateConfirm() {
    Analyzes order history (via the existing parseOrderItems helper)
    to surface top sellers, sales-velocity spikes, and stockout risk.
    ============================================================ */
-function generateSmartSuggestions(){
-    const validOrders = orders.filter(o => o.status !== 'Cancelled');
+
+let suggestions = [];
+
+function getOrdersWithinLastMonth(){
+
+    $.ajax({
+        url: "http://localhost:8080/v1/order/getLastMonthOrders",
+        type: "GET",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        success: function (r){
+            if(r.status === 200){
+                generateSmartSuggestions(r.body);
+            }else{
+                showToast(r.message);
+            }
+        }
+    });
+}
+
+function generateSmartSuggestions(orderList){
+    const validOrders = orderList;
     if(validOrders.length === 0) return [];
 
-    const sortedByDate = [...validOrders].sort((a,b) => new Date(a.date) - new Date(b.date));
-    const mid = Math.ceil(sortedByDate.length / 2);
-    const olderOrders = sortedByDate.slice(0, mid);
-    const newerOrders = sortedByDate.slice(mid);
+    const mid = Math.ceil(validOrders.length / 2);
+    const olderOrders = validOrders.slice(0, mid);
+    const newerOrders = validOrders.slice(mid);
 
     function tally(orderList){
         const map = {};
         orderList.forEach(o => {
-            parseOrderItems(o.items).forEach(it => {
-                map[it.name] = (map[it.name] || 0) + it.qty;
+            (o.orderItems).forEach(it => {
+                map[it.foodItemName] = (map[it.foodItemName] || 0) + it.qty;
             });
         });
         return map;
@@ -357,7 +391,7 @@ function generateSmartSuggestions(){
         return {name, total: totalTally[name], older, newer, changePct};
     }).sort((a,b) => b.total - a.total);
 
-    const suggestions = [];
+    suggestions = [];
 
     if(ranked.length){
         const top = ranked[0];
@@ -373,40 +407,26 @@ function generateSmartSuggestions(){
         });
     }
 
-    ranked.filter(r => r.changePct >= 30 && r.newer >= 2).slice(0,2).forEach(r => {
+    // changePct >= 30     r.newer >= 2
+    ranked.filter(r => r.changePct >= 0 && r.newer >= 0).slice(0,2).forEach(r => {
         suggestions.push({
             icon:'📈',
             title:`${r.name} is trending up`,
             badge:{label:`+${r.changePct}%`, cls:'up'},
             text:`${r.name} has seen a ${r.changePct}% spike in orders this week — consider increasing production or stock levels to prevent stockouts.`,
             actions:[
-                {label:'Adjust Stock', kind:'primary', editItem:r.name},
+                {label:'View Item details', kind:'primary'},
                 {label:'View Sales Report', kind:'secondary', goto:'orders'},
             ],
         });
     });
-
-    ranked.slice(0,5).forEach(r => {
-        const menuItem = items.find(i => i.name === r.name);
-        if(menuItem && menuItem.stock <= 8){
-            suggestions.push({
-                icon:'⚠️',
-                title:`Stockout risk: ${r.name}`,
-                badge:{label:'Low Stock', cls:'risk'},
-                text:`${r.name} is selling well but only ${menuItem.stock} unit${menuItem.stock===1?'':'s'} remain in stock. Restock soon to avoid disappointing customers.`,
-                actions:[
-                    {label:'Adjust Stock', kind:'primary', editItem:r.name},
-                    {label:'View Sales Report', kind:'secondary', goto:'orders'},
-                ],
-            });
-        }
-    });
-
-    return suggestions.slice(0,4);
+    renderSmartSuggestions(suggestions.slice(0,4));
 }
 
-function renderSmartSuggestions(){
-    const suggestions = generateSmartSuggestions();
+function renderSmartSuggestions(suggestionList){
+    const suggestions = suggestionList;
+    if(!suggestions){ return; }
+
     const $wrap = $('#smartSuggestionsBody');
 
     if(!suggestions.length){
@@ -441,10 +461,7 @@ $(document).on('click', '[data-suggestion-goto]', function(){
 });
 
 $(document).on('click', '[data-suggestion-edit-item]', function(){
-    const name = $(this).data('suggestion-edit-item');
-    const item = items.find(i => i.name === name);
     goToSection('items');
-    if(item) openForm('item', item.id);
 });
 
 /* ============================================================
@@ -543,7 +560,7 @@ function updateOrderRevenue(){
         success: function (r){
             if(r.status === 200){
                 $('#statRevenue').text(money(r.body.thisWeekRevenue));
-                $('#revenuePercentage').text(r.body.percentage + "%");
+                $('#revenuePercentage').text(r.body.percentage.toFixed(2) + "%");
                 if(r.body.percentage < 0){
                     $('#revenuePercentage').addClass("down");
                 }else{
@@ -1568,8 +1585,8 @@ function orderFormHTML(o){
     </div>
     
     <div class="field-group"><label>Status</label>
-      <select id="f_status">
-        ${['Pending','Preparing','Ready','Delivered','Cancelled'].map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
+      <select id="f_status" ${o.orderStatus === 'DONE' ? 'disabled' : ''}>
+        ${['Pending','Preparing','Ready','Done','Cancelled'].map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </div>
   `;
@@ -1893,7 +1910,7 @@ function bookingFormHTML(b){
     </div>
  
     <div class="field-group"><label>Status</label>
-      <select id="f_status">
+      <select id="f_status" ${b.status === 'COMPLETED' ? 'disabled' : ''}>
         ${['Pending','Confirmed','Completed','Cancelled'].map(v=>`<option ${formatStatus(b.status)===v?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
@@ -3150,3 +3167,9 @@ $(document).on('keydown', function(e){ if(e.key==='Escape'){ closeModal(); close
    INIT
    ============================================================ */
 goToSection('overview');
+
+// fill userName in aside
+fillUserDetails();
+
+// smart suggestions
+getOrdersWithinLastMonth();

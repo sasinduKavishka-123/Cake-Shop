@@ -30,4 +30,6 @@ public interface OrderService {
 
     void addPaymentDetails(long id, OrderStatus status, OrderPaymentDTO paymentDTO);
 
+    List<PlaceOrderDTO> getLastMonthOrders();
+
 }

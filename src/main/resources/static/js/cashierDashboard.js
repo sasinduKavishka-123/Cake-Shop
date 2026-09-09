@@ -4,23 +4,6 @@
    ============================================================ */
 let menuItems = [];
 
-let orders = [
-    {id:'ORD-1042', customer:'Nadeesha Perera', items:'2x Butter Croissant, 1x Rose Cake', total:4100, status:'Pending', date:'2026-08-11', paid:false},
-    {id:'ORD-1041', customer:'Kavindu Silva', items:'1x Berry Tart, 2x Latte', total:2190, status:'Preparing', date:'2026-08-11', paid:false},
-    {id:'ORD-1040', customer:'Ishara Fernando', items:'6x Macaron Box', total:1150, status:'Ready', date:'2026-08-10', paid:false},
-    {id:'ORD-1039', customer:'Tharindu Jayasuriya', items:'1x Chocolate Torte', total:1350, status:'Delivered', date:'2026-08-10', paid:true, paymentMethod:'Card', amountPaid:1350, change:0},
-    {id:'ORD-1038', customer:'Amaya Ranasinghe', items:'3x Croissant, 1x Orange Juice', total:1830, status:'Cancelled', date:'2026-08-09', paid:false},
-];
-
-let bookings = [
-    {id:'BK-1001', customer:'Nadeesha Perera', date:'2026-08-31', slot:'11 AM – 1 PM', guests:2, tables:[{id:1,name:'Window Booth A'}], total:500, status:'Confirmed', paid:false},
-    {id:'BK-1002', customer:'Kavindu Rathnayake', date:'2026-08-31', slot:'6 – 8 PM', guests:6, tables:[{id:2,name:'Communal Table'}], total:800, status:'Pending', paid:false},
-    {id:'BK-1003', customer:'Ishara Wickramasinghe', date:'2026-08-30', slot:'1 – 3 PM', guests:3, tables:[{id:3,name:'Quiet Corner B'}], total:650, status:'Completed', paid:true, paymentMethod:'Cash', amountPaid:650, change:0},
-    {id:'BK-1004', customer:'Tharindu Jayasuriya', date:'2026-08-29', slot:'9 – 11 AM', guests:2, tables:[{id:4,name:'Window Booth C'}], total:500, status:'Cancelled', paid:false},
-];
-
-let nextOrderNum = 1043;
-
 /* ============================================================
    NAVIGATION
    ============================================================ */
@@ -46,7 +29,6 @@ const $navItems = $('.nav-item');
 const $searchWrap = $('#searchWrap');
 const $searchInput = $('#searchInput');
 
-function statusAllowed(label){ return activeStatuses.size === 0 || activeStatuses.has(label); }
 function statusClass(status){
     return {Pending:'badge-pending',Preparing:'badge-preparing',Ready:'badge-ready',Done:'badge-delivered',
         Cancelled:'badge-cancelled',Confirmed:'badge-confirmed',Completed:'badge-completed'}[status] || 'badge-pending';
@@ -126,6 +108,27 @@ $(document).on('change', '.status-filter input[type="checkbox"]', function(){
     renderAll();
 });
 
+/* ============================================================
+   SET USER DETAILS ON SIDEBAR
+   ============================================================ */
+function fillUserDetails(){
+    $('#cashierName').text(localStorage.getItem("UserName"));
+    const avatar = localStorage.getItem("UserName").charAt(0);
+    $('#cashierAvatar').text(avatar.toUpperCase());
+}
+
+
+/* ============================================================
+   USER LOG OUT
+   ============================================================ */
+$('#logoutBtn').on('click', ()=>{
+   localStorage.removeItem("JWT");
+   localStorage.removeItem("UserID");
+   localStorage.removeItem("UserName");
+   setTimeout(()=>{
+       window.location.href = "staffLogin.html";
+   }, 500);
+});
 
 /* ============ Get Food items ============ */
 function getAllFoodItems(){
@@ -360,6 +363,12 @@ function renderPaymentsOrders(){
                   </tr>
                 `).join('') || `<tr class="empty-row"><td colspan="6">No orders to pay.</td></tr>`);
             }
+            else if(r.status === 401){
+                showToast("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "staffLogin.html";
+                }, 2000);
+            }
             else{ showToast(r.message); }
         },
         error: function (r){ r.message ? alert(r.message) : alert("UNEXPECTED ERROR"); }
@@ -398,6 +407,12 @@ function renderPaymentsBookings(){
                     </td>
                   </tr>
                 `).join('') || `<tr class="empty-row"><td colspan="7">No bookings to pay.</td></tr>`);
+            }
+            else if(r.status === 401){
+                showToast("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "staffLogin.html";
+                }, 2000);
             }
             else{ showToast(r.message); }
         },
@@ -819,7 +834,7 @@ function openUpdateModal(type, id){
                     ${payDetail}
                     
                     <div class="field-group"><label>Status</label>
-                      <select id="f_updateStatus">
+                      <select id="f_updateStatus" ${o.orderStatus === 'DONE' ? 'disabled' : ''}>
                         ${orderStatuses.map(s=>`<option ${formatStatus(o.orderStatus)===s?'selected':''}>${s}</option>`).join('')}
                       </select>
                     </div>
@@ -884,7 +899,7 @@ function openUpdateModal(type, id){
                         </div>
                     
                         <div class="field-group"><label>Status</label>
-                          <select id="f_updateStatus">
+                          <select id="f_updateStatus" ${b.bookingStatus === 'COMPLETED' ? 'disabled' : ''}>
                             ${bookingStatuses.map(v=>`<option ${formatStatus(b.bookingStatus)===v?'selected':''}>${v}</option>`).join('')}
                           </select>
                         </div>
@@ -1127,7 +1142,7 @@ function renderMenuItems(filter=''){
           </div>
         </div>
       </div>
-    `).join('') || `<p style="text-align:center;color:var(--espresso-soft);padding:40px;">No items match your search.</p>`);$('#navCountMenuItems').text(menuItems.length);
+    `).join('') || `<p style="text-align:center;color:var(--espresso-soft);padding:40px;">No items match your search.</p>`);
 }
 
 /* ============================================================
@@ -1404,17 +1419,14 @@ function renderAll(){
         renderPosGrid($searchInput.val());
         renderPosCart();
     }
-    $('#navCountOrders').text(orders.length);
-    $('#navCountBookings').text(bookings.length);
-    $('#navCountMenuItems').text(menuItems.length);
-    const unpaidCount = orders.filter(o => !o.paid && o.status !== 'Cancelled').length
-        + bookings.filter(b => !b.paid && b.status !== 'Cancelled').length;
-    $('#navCountPayments').text(unpaidCount);
 }
 $searchInput.on('input', function(){ renderAll(); });
 
 
 // get all food items from backend
 getAllFoodItems();
+
+// fill user details
+fillUserDetails();
 
 goToSection('placeorder');

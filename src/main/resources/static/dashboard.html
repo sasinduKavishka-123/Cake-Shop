@@ -89,7 +89,7 @@
             display:flex;
             align-items:center;
             gap:12px;
-            padding:13px 14px;
+            padding:11px 14px;
             border-radius:12px;
             font-weight:700;
             font-size:0.9rem;
@@ -121,9 +121,10 @@
             padding:18px 24px 26px;
             border-top:1px solid rgba(255,253,251,0.1);
             display:flex;
-            align-items:center;
+            flex-direction:column;
             gap:12px;
         }
+        .sidebar-foot .profile-row{display:flex; align-items:center; gap:12px;}
         .admin-avatar{
             width:38px;height:38px;
             border-radius:50%;
@@ -137,7 +138,19 @@
         .sidebar-foot .who{display:flex;flex-direction:column;}
         .sidebar-foot .who strong{font-size:0.85rem;}
         .sidebar-foot .who span{font-size:0.72rem;color:rgba(255,253,251,0.55);}
-
+        .logout-btn{
+            display:flex; align-items:center; gap:10px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            background:rgba(255,253,251,0.06);
+            color:rgba(255,253,251,0.68);
+            font-weight:700; font-size:0.85rem;
+            border:none; cursor:pointer;
+            transition:all .2s ease;
+        }
+        .logout-btn:hover{background:rgba(255,253,251,0.12); color:var(--cream-warm);}
+        .logout-btn svg{flex:none;}
         .sidebar-close{display:none;}
 
         /* ============ MAIN LAYOUT ============ */
@@ -950,11 +963,17 @@
         </li>
     </ul>
     <div class="sidebar-foot">
-        <span class="admin-avatar">A</span>
-        <div class="who">
-            <strong>Amaya R.</strong>
-            <span>Shop Admin</span>
+        <div class="profile-row">
+            <span class="admin-avatar" id="adminAvatar"></span>
+            <div class="who">
+                <strong id="adminName"></strong>
+                <span>Shop Admin</span>
+            </div>
         </div>
+        <button class="logout-btn" id="logoutBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Log Out
+        </button>
     </div>
 </aside>
 
@@ -993,13 +1012,12 @@
 
             <div class="panel-title">
                 <h3>Smart Suggestions</h3>
-                <span style="font-size:0.78rem; color:var(--espresso-soft); font-weight:600;">Auto-generated from recent order activity</span>
             </div>
             <div class="smart-suggestions" id="smartSuggestionsBody"></div>
 
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div class="s-top"><span class="stat-icon blush">📦</span><span class="stat-trend" id="statOrdersTrend">+12%</span></div>
+                    <div class="s-top"><span class="stat-icon blush">📦</span><span class="stat-trend">Completed</span></div>
                     <div class="s-val" id="statOrders">0</div>
                     <div class="s-lbl">This Week Orders</div>
                 </div>

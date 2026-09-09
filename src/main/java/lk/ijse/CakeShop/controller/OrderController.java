@@ -75,4 +75,9 @@ public class OrderController {
         return new CommonResponse(200, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/getLastMonthOrders", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getLastMonthOrders(){
+        return new CommonResponse(200, orderService.getLastMonthOrders(), SUCCESS_MESSAGE);
+    }
+
 }
