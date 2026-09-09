@@ -14,19 +14,27 @@ function parseOrderItems(list){
     let itemList = '';
     list.forEach((item, index) => {
         if (index === list.length - 1) {
-            itemList += item.qty + "x" + item.foodItemName;
+            itemList += item.qty + " x " + item.foodItemName;
         } else {
-            itemList += item.qty + "x" + item.foodItemName + ", ";
+            itemList += item.qty + " x " + item.foodItemName + ", ";
         }
     });
     return itemList;
+}
+
+// return value as money string
+function money(n){ return 'Rs. ' + n.toLocaleString(); }
+
+function showToast(msg){
+    $('#toastMsg').text(msg);
+    $('#toast').addClass('show');
+    setTimeout(()=> $('#toast').removeClass('show'), 2200);
 }
 
 function openProfileModal(){
     $('#f_profileName').val($('#profileName').text().trim());
     $('#f_profileEmail').val($('#profileEmail').text().trim());
     $('#f_profilePhone').val($('#profilePhone').text().trim());
-    $('#f_profileAddress').val($('#profileAddress').text().trim());
     $editProfileModal.addClass('show');
     $profileScrim.addClass('show');
 }
@@ -45,11 +53,11 @@ $('#profileModalSave').on('click', function(){
     const name = $('#f_profileName').val().trim();
     const email = $('#f_profileEmail').val().trim();
     const phone = $('#f_profilePhone').val().trim();
-    const address = $('#f_profileAddress').val().trim();
 
-    if(!name || !email){
+    if(!name || !email || !phone){
         $('#f_profileName').css('border-color', name ? '' : '#B3452E');
         $('#f_profileEmail').css('border-color', email ? '' : '#B3452E');
+        $('#f_profilePhone').css('border-color', phone ? '' : '#B3452E');
         return;
     }
     $('#f_profileName, #f_profileEmail').css('border-color', '');
@@ -110,6 +118,35 @@ $('#signOutBtn').on('click', function (){
 });
 
 
+/* ============================================================
+                        FILL USER DATA
+   ============================================================ */
+function getUserDetails(){
+    const userId = localStorage.getItem("UserID");
+
+    $.ajax({
+        url: "http://localhost:8080/v1/user/findUserById/" + userId,
+        type: "GET",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        success: function (r){
+            if(r.status === 200){
+                const user = r.body;
+                $('#profileName').text(user.userName);
+                $('#userNameTitle').text(user.userName);
+                $('#profileAvatar').text(user.userName.charAt(0).toUpperCase());
+                $('#profileEmail').text(user.userEmail);
+                $('#profilePhone').text(user.userContact);
+                $('#profileStatus').text(user.userStatus);
+                $('#editProfileBtn').val(userId);
+            }
+            else{
+                showToast(r.message());
+            }
+        }
+    });
+}
+
+
 function renderAllOrders(){
     const userId = localStorage.getItem("UserID");
 
@@ -148,7 +185,7 @@ function renderAllOrders(){
                 }).join(''));
 
                 // set latest orders ----------------
-                const latestList = r.body.slice(0, 2);
+                const latestList = r.body.slice(0, 3);
                 $('#recentOrderList').html(latestList.map(o => {
                     const items = parseOrderItems(o.orderItems);
                     const date = new Intl.DateTimeFormat('en-US', {
@@ -180,17 +217,63 @@ const $orderScrim = $('#profileScrim'); // reuse the same scrim as the Edit Prof
 const $updateOrderModal = $('#updateOrderModal');
 const $confirmCancelModal = $('#confirmCancelModal');
 
-function openUpdateModal(orderId){
-    const order = customerOrders.find(o => o.id === orderId);
-    if(!order) return;
-    activeOrderId = orderId;
-    $('#updateOrderId').text(order.id);
-    $('#updateOrderItemsDisplay').text(order.items);
-    $('#updateOrderStatusBadge').html(`<span class="badge-pill ${orderStatusClass(order.status)}">${order.status}</span>`);
-    $('#f_orderNote').val(order.note || '');
+function openUpdateModal(order){
+
+    const items = order.orderItems.map(it =>
+        `<tr>
+               <td>${it.foodItemName}</td>
+               <td>${it.qty}</td>
+               <td>${it.price}</td>
+               <td>${it.discount}</td>
+               <td>${it.finalPrice}</td>
+           </tr>`
+    ).join('');
+
+    const html = `<div class="field-group"><label>${order.user.userRoles} Name</label><input disabled type="text" id="f_customer" value="${order.user.userName}" placeholder="Customer name"></div>
+       <div class="field-row-2">
+           <div class="field-group">
+               <label>Contact</label> <input disabled type="text" id="f_customer_contact" value="${order.user.userContact}" placeholder="contact">
+           </div>
+           <div class="field-group">
+               <label>Email</label> <input disabled type="text" id="f_customer_email" value="${order.user.userEmail}" placeholder="email" min="1">
+           </div>
+       </div>
+
+       <div class="field-row-2">
+           <div class="field-group"><label>Date</label><input disabled type="date" id="f_date" value="${order.orderDate}"></div>
+           <div class="field-group"><label>Pick Up Time</label><input disabled type="text" id="f_date" value="${order.timeSlot}"></div>
+       </div>
+
+       <div class="field-group">
+           <label>Order Items</label>
+           <div class="restock-table-wrap">
+               <table class="restock-table">
+                   <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Discount</th><th>Final Price</th></tr></thead>
+                   <tbody id="orderItemsBody"> ${items} </tbody>
+               </table>
+           </div>
+       </div>
+
+       <div class="field-group"> <lable>Order Note</lable> <input disabled type="text" id="f_note" value="${order.orderNote}" placeholder="Order Note"> </div>
+
+       <div class="field-row-2">
+           <div class="field-group"><label>Sub Total (Rs.)</label><input disabled type="text" value="${money(order.subTotal)}"></div>
+           <div class="field-group"><label>Discount (Rs.)</label><input disabled type="text"  value="${money(order.discount)}"></div>
+       </div>
+
+       <div class="field-row-2">
+           <div class="field-group"><label>Total (Rs.)</label><input disabled type="text"  value="${money(order.total)}" ></div>
+           <div class="field-group"><label>Status</label><input disabled type="text" value="${formatStatus(order.orderStatus)}" ></div>
+       </div>
+        `;
+
+    $('#updateModalBody').html(html);
     $updateOrderModal.addClass('show');
     $orderScrim.addClass('show');
+
+    $('#cancelOrderBtn').toggle(isOrderEditable(formatStatus(order.orderStatus)));
 }
+
 function closeUpdateModal(){
     $updateOrderModal.removeClass('show');
     if(!$confirmCancelModal.hasClass('show') && !$editProfileModal.hasClass('show')) $orderScrim.removeClass('show');
@@ -200,7 +283,28 @@ function closeConfirmCancel(){
     if(!$updateOrderModal.hasClass('show') && !$editProfileModal.hasClass('show')) $orderScrim.removeClass('show');
 }
 
-$(document).on('click', '.icon-btn', function(){ openUpdateModal($(this).data('order-id')); });
+$(document).on('click', '.icon-btn', function(){
+
+    activeOrderId = $(this).data('order-id');
+
+    $.ajax({
+        url: "http://localhost:8080/v1/order/getOrderFormDetail/" +  activeOrderId,
+        type: "GET",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        success: function (r){
+            if(r.status === 200){
+                openUpdateModal(r.body);
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) :alert("UNEXPECTED ERROR");
+        }
+    });
+});
+
 $('#orderModalClose').on('click', closeUpdateModal);
 $orderScrim.on('click', function(){ closeUpdateModal(); closeConfirmCancel(); });
 $(document).on('keydown', function(e){ if(e.key === 'Escape'){ closeUpdateModal(); closeConfirmCancel(); } });
@@ -226,11 +330,40 @@ $('#cancelOrderBtn').on('click', function(){
 });
 $('#confirmCancelBack').on('click', closeConfirmCancel);
 $('#confirmCancelYes').on('click', function(){
-    const order = customerOrders.find(o => o.id === activeOrderId);
-    if(order) order.status = 'Cancelled';
-    renderAllOrders();
-    closeConfirmCancel();
-    closeUpdateModal();
+
+    const obj = {
+        order_id : activeOrderId,
+        order_status : 'CANCELLED'
+    };
+
+    $.ajax({
+        url: "http://localhost:8080/v1/order/updateOrderStatus",
+        type: "PATCH",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        data: obj,
+        success: function (r){
+            if(r.status === 200){
+                showToast("Order Canceled 😭");
+                renderAllOrders();
+                closeConfirmCancel();
+                closeUpdateModal();
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("UNEXPECTED ERROR");
+        }
+    });
+
 });
 
 renderAllOrders();
+
+// fill user data
+getUserDetails();
+
+
+
+

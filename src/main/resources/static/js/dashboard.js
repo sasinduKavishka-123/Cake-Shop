@@ -665,9 +665,9 @@ function renderOrders(filter=''){
                     let itemList = '';
                     o.orderItems.forEach( (item, index) =>{
                         if(index === o.orderItems.length-1){
-                            itemList += item.qty + "x" + item.foodItemName;
+                            itemList += item.qty + " x " + item.foodItemName;
                         }else{
-                            itemList += item.qty + "x" + item.foodItemName + ", ";
+                            itemList += item.qty + " x " + item.foodItemName + ", ";
                         }
                     });
 
