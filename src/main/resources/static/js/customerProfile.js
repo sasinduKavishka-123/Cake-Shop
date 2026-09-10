@@ -85,25 +85,37 @@ $('#profileModalSave').on('click', function(){
     }, 500);
 });
 
-/* ============================================================
-   ALL ORDERS — view full history, update notes, cancel orders
-   ============================================================ */
-let customerOrders = [
-    {id:'ORD-2041', date:'2026-08-11', items:'2x Butter Croissant, 1x Rose Cake', total:4100, status:'Pending', note:''},
-    {id:'ORD-2038', date:'2026-08-05', items:'1x Berry Tart, 2x Latte', total:2190, status:'Preparing', note:''},
-    {id:'ORD-2030', date:'2026-07-29', items:'6x Macaron Box', total:1150, status:'Ready', note:'Please add a candle'},
-    {id:'ORD-2021', date:'2026-07-18', items:'1x Rose Vanilla Cake', total:3200, status:'Delivered', note:''},
-    {id:'ORD-2015', date:'2026-07-02', items:'3x Croissant, 1x Orange Juice', total:1830, status:'Delivered', note:''},
-    {id:'ORD-2002', date:'2026-06-20', items:'1x Chocolate Torte', total:1350, status:'Cancelled', note:''},
-];
 
-function orderStatusClass(status){
-    return {Pending:'badge-pending', Preparing:'badge-preparing', Ready:'badge-ready', Done:'badge-delivered', Cancelled:'badge-cancelled'}[status] || 'badge-pending';
+/* ============================================================
+     MY TABLE BOOKINGS — view only
+     ============================================================ */
+function renderMyBookings(){
+
+    $.ajax({
+        url: "http://localhost:8080/v1/booking/getAllBookingsByUserId/" + localStorage.getItem("UserID"),
+        type:"GET",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        success: function (r){
+            if(r.status === 200){
+
+                $('#myBookingsBody').html((r.body).map(b => `
+                  <tr>
+                    <td class="cell-title">${b.bookingId}</td>
+                    <td>${b.bookingDate}</td>
+                    <td>${b.bookingTime}</td>
+                    <td>${b.seatCount}</td>
+                    <td>${b.tableType}</td>
+                    <td><span class="badge-pill ${orderStatusClass(formatStatus(b.bookingStatus))}">${formatStatus(b.bookingStatus)}</span></td>
+                  </tr>
+                `).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--espresso-soft);">No table bookings yet.</td></tr>`);
+            }
+            else{
+                showToast(r.message);
+            }
+        }
+    });
 }
-/* only orders that haven't shipped yet can be updated or cancelled by the customer */
-function isOrderEditable(status){
-    return status === 'Pending' || status === 'Preparing';
-}
+
 
 /* ============================================================
                             LOG OUT
@@ -147,6 +159,27 @@ function getUserDetails(){
 }
 
 
+/* ============================================================
+   ALL ORDERS — view full history, update notes, cancel orders
+   ============================================================ */
+let totalSpent = 0;
+let orderCount = 0;
+const $orderCount = $("#orderCount");
+const $totalSpent = $("#totalSpent");
+const $favoriteItem = $("#favoriteItem");
+
+function orderStatusClass(status){
+    return {
+        Pending:'badge-pending', Preparing:'badge-preparing',
+        Ready:'badge-ready', Done:'badge-delivered', Cancelled:'badge-cancelled',
+        Confirmed:'badge-confirmed', Completed:'badge-completed'
+    }[status] || 'badge-pending';
+}
+/* only orders that haven't shipped yet can be updated or cancelled by the customer */
+function isOrderEditable(status){
+    return status === 'Pending' || status === 'Preparing';
+}
+
 function renderAllOrders(){
     const userId = localStorage.getItem("UserID");
 
@@ -165,10 +198,26 @@ function renderAllOrders(){
         success: function (r){
             if(r.status === 200) {
                 const orders = r.body;
+                totalSpent = 0;
+                orderCount = 0;
+                const map = {};
+
                 // set all orders ----------------
                 $('#allOrdersBody').html(orders.map(o => {
+
                     const status = formatStatus(o.orderStatus);
+
+                    if(status === 'Done'){
+                        totalSpent += o.total;
+                    }
+                    orderCount++;
+
+                    (o.orderItems).forEach(it => {
+                        map[it.foodItemName] = (map[it.foodItemName] || 0) + it.qty;
+                    });
+
                     const items = parseOrderItems(o.orderItems);
+
                     return `
                     <tr>
                       <td class="cell-title">${o.orderId}</td>
@@ -183,6 +232,14 @@ function renderAllOrders(){
                     </tr>
                     `
                 }).join(''));
+
+                // set profile statuses
+                $orderCount.text(orderCount);
+                $totalSpent.text(money(totalSpent));
+                const [maxItem] = Object.entries(map).reduce((max, current) =>
+                    current[1] > max[1] ? current : max
+                );
+                $favoriteItem.text(maxItem);
 
                 // set latest orders ----------------
                 const latestList = r.body.slice(0, 3);
@@ -283,6 +340,9 @@ function closeConfirmCancel(){
     if(!$updateOrderModal.hasClass('show') && !$editProfileModal.hasClass('show')) $orderScrim.removeClass('show');
 }
 
+/* ********************************************
+            GET ORDER DETAIL FORM
+ ******************************************** */
 $(document).on('click', '.icon-btn', function(){
 
     activeOrderId = $(this).data('order-id');
@@ -309,26 +369,18 @@ $('#orderModalClose').on('click', closeUpdateModal);
 $orderScrim.on('click', function(){ closeUpdateModal(); closeConfirmCancel(); });
 $(document).on('keydown', function(e){ if(e.key === 'Escape'){ closeUpdateModal(); closeConfirmCancel(); } });
 
-$('#saveOrderUpdateBtn').on('click', function(){
-    const order = customerOrders.find(o => o.id === activeOrderId);
-    if(!order) return;
-    order.note = $('#f_orderNote').val().trim();
-    renderAllOrders();
 
-    const $btn = $(this);
-    const original = $btn.text();
-    $btn.text('✓ Saved');
-    setTimeout(() => {
-        $btn.text(original);
-        closeUpdateModal();
-    }, 900);
-});
 
+/* ********************************************
+                CANCEL ORDER
+ ******************************************** */
 $('#cancelOrderBtn').on('click', function(){
     $('#confirmCancelOrderId').text(activeOrderId);
     $confirmCancelModal.addClass('show');
 });
+
 $('#confirmCancelBack').on('click', closeConfirmCancel);
+
 $('#confirmCancelYes').on('click', function(){
 
     const obj = {
@@ -360,6 +412,7 @@ $('#confirmCancelYes').on('click', function(){
 });
 
 renderAllOrders();
+renderMyBookings();
 
 // fill user data
 getUserDetails();

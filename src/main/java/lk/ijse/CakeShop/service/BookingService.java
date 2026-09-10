@@ -34,4 +34,6 @@ public interface BookingService {
 
     void addPaymentDetails(long id, BookingStatus status, BookingPaymentDTO paymentDTO);
 
+    List<BookingDTO> getAllBookingsByUserID(long userID);
+
 }

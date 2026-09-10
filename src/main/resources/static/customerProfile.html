@@ -420,6 +420,8 @@
         .badge-ready{background:#E4EFDD; color:var(--success) !important;}
         .badge-delivered{background:#EFE9E2; color:var(--espresso-soft);}
         .badge-cancelled{background:#F6E2DC; color:var(--error);}
+        .badge-confirmed{background:#E4EFDD; color:var(--success);}
+        .badge-completed{background:#EFE9E2; color:var(--espresso-soft);}
 
         .update-btn{
             padding:8px 16px;
@@ -532,7 +534,7 @@
 
 <div class="page-head container">
     <span class="eyebrow">My Account</span>
-    <h1>Welcome back,<span id="userNameTitle"></span></h1>
+    <h1>Welcome back, <span id="userNameTitle"></span></h1>
     <p>Manage your profile and revisit your past orders.</p>
 </div>
 
@@ -555,15 +557,15 @@
     <div class="account-side">
         <div class="account-stats">
             <div class="account-stat">
-                <span class="stat-num">14</span>
+                <span class="stat-num" id="orderCount"></span>
                 <span class="stat-lbl">Orders Placed</span>
             </div>
             <div class="account-stat">
-                <span class="stat-num">Rs. 28,400</span>
+                <span class="stat-num" id="totalSpent"></span>
                 <span class="stat-lbl">Total Spent</span>
             </div>
             <div class="account-stat">
-                <span class="stat-num">Butter Croissant</span>
+                <span class="stat-num" style="font-size: 16px" id="favoriteItem">Butter Croissant</span>
                 <span class="stat-lbl">Favorite Item</span>
             </div>
         </div>
@@ -587,6 +589,20 @@
         <table>
             <thead><tr><th>Order</th><th>Date</th><th>Pick Up Time</th><th style="width: max(300px)">Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
             <tbody id="allOrdersBody"></tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ================= MY TABLE BOOKINGS ================= -->
+<section class="orders-section container" style="padding-top:0;">
+    <div class="panel-title">
+        <h3>My Table Bookings</h3>
+        <span>Reservations you've made at Sugar &amp; Flour</span>
+    </div>
+    <div class="orders-table-card">
+        <table>
+            <thead><tr><th>Booking</th><th>Date</th><th>Time</th><th>Guests</th><th>Table</th><th>Status</th></tr></thead>
+            <tbody id="myBookingsBody"></tbody>
         </table>
     </div>
 </section>

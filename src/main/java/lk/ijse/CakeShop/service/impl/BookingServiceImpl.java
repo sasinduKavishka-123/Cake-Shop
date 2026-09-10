@@ -365,4 +365,29 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
     }
 
+    @Override
+    public List<BookingDTO> getAllBookingsByUserID(long userID) {
+        log.info("Executing Method getAllBookingsByUserID()");
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDay = today.minusMonths(3); /// 3 months before
+
+        List<Booking> allBookingsByUserID = bookingRepository.getAllBookingsByUserID(userID, endDay, today);
+        List<BookingDTO> dtos = new ArrayList<>();
+
+        for(Booking b : allBookingsByUserID){
+            BookingDTO dto = new BookingDTO();
+            dto.setBookingId(b.getBookingId());
+            dto.setBookingDate(b.getBookingDate());
+            dto.setBookingTime(b.getBookingTime());
+            dto.setSeatCount(b.getSeatCount());
+            dto.setTableType(b.getTableType());
+            dto.setBookingStatus(b.getBookingStatus());
+
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+
 }

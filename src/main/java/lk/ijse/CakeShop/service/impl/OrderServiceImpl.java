@@ -449,7 +449,10 @@ public class OrderServiceImpl implements OrderService {
     public List<PlaceOrderDTO> getAllOrdersByUserId(long userID) {
         log.info("Executing method getAllOrdersByUserId()");
 
-        List<Order> allOrdersByUserId = orderRepository.getAllOrdersByUserId(userID);
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.minusMonths(3); /// 3 months before
+
+        List<Order> allOrdersByUserId = orderRepository.getAllOrdersByUserId(userID, endDate, today);
         List<PlaceOrderDTO> dtoList = new ArrayList<>();
 
         for(Order o : allOrdersByUserId){
