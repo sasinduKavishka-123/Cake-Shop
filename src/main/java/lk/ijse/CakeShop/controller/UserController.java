@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -82,5 +83,17 @@ public class UserController {
     public CommonResponse getUserById(@PathVariable long userId){
         UserDTO responseDTO = userService.findUserById(userId);
         return new CommonResponse(200, responseDTO, SUCCESS_MESSAGE);
+    }
+
+    @PatchMapping(value = "/updateCustomerDetails" , produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updateCustomerDetails(@RequestBody UserDTO userDTO){
+        UserDTO userDetails = userService.updateCustomerDetails(userDTO);
+        String token = jwtUtil.generateToken(userDetails);
+
+        List<Object> responseList = new ArrayList<>();
+        responseList.add(userDetails);
+        responseList.add(token);
+
+        return new CommonResponse(200, responseList, SUCCESS_MESSAGE);
     }
 }

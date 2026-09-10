@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class UserDTO {
-    private long userId;
+    private long   userId;
     private String userName;
     private String userEmail;
     private String userContact;
@@ -26,5 +26,12 @@ public class UserDTO {
         this.userEmail = userEmail;
         this.password = password;
         this.userRoles = userRoles;
+    }
+
+    public UserDTO(long userId, String userName, String userEmail, String userContact) {
+        this.userId = userId;
+        this.userName = userName;
+        this.userEmail = userEmail;
+        this.userContact = userContact;
     }
 }

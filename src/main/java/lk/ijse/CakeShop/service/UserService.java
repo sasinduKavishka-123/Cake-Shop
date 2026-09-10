@@ -21,4 +21,6 @@ public interface UserService {
 
     void updateUserStatus(long id, UserStatus userStatus);
 
+    UserDTO updateCustomerDetails(UserDTO userDTO);
+
 }

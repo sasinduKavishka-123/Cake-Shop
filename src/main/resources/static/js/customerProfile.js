@@ -49,41 +49,139 @@ $('#profileModalCancel').on('click', closeProfileModal);
 $profileScrim.on('click', closeProfileModal);
 $(document).on('keydown', function(e){ if(e.key === 'Escape') closeProfileModal(); });
 
+/* *****************************************************
+                    UPDATE PROFILE
+ ***************************************************** */
+
+function formatPhoneNumber(phoneNumber) {
+    const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+
+    if(phoneNumber.length === 9){
+        return '+94'+phoneNumber;
+    }
+
+    // Standardize local 07XXXXXXXX or 0XX-XXXXXXX to +94...
+    if (/^0\d{9}$/.test(cleaned)) {
+        return '+94' + cleaned.substring(1);
+    }
+
+    // Standardize 947XXXXXXXX
+    if (/^94\d{9}$/.test(cleaned)) {
+        return '+' + cleaned;
+    }
+
+    // Standardize +947XXXXXXXX or 00947XXXXXXXX
+    if (/^(?:\+|00)94\d{9}$/.test(cleaned)) {
+        return '+' + cleaned.replace(/^(?:\+|00)/, '');
+    }
+
+    return null; // Invalid number
+}
+
+function validatePhoneNumber(phoneNumber) {
+    // Remove whitespace, hyphens, and parentheses
+    const cleaned = phoneNumber.trim().replace(/[\s\-\(\)]/g, '');
+
+    if(cleaned === ''){ return false; }
+    // Strictly enforces length:
+    // - Mobile: 07X XXX XXXX (10 digits) OR +947X XXX XXXX (11 digits after +)
+    // - Landline: 0XX XXX XXXX (10 digits) OR +94XX XXX XXXX
+    const slRegex = /^(?:(?:\+|00)?94|0)?(?:7[0-2,4-8]\d{7}|(?:11|21|23|24|25|26|27|31|32|33|34|35|36|37|38|41|45|47|51|52|54|55|57|63|65|66|67|81|91)\d{7})$/;
+
+    let ok = slRegex.test(cleaned);
+    return ok;
+}
+
+function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
 $('#profileModalSave').on('click', function(){
     const name = $('#f_profileName').val().trim();
     const email = $('#f_profileEmail').val().trim();
-    const phone = $('#f_profilePhone').val().trim();
+    let phone = $('#f_profilePhone').val().trim();
 
-    if(!name || !email || !phone){
-        $('#f_profileName').css('border-color', name ? '' : '#B3452E');
-        $('#f_profileEmail').css('border-color', email ? '' : '#B3452E');
-        $('#f_profilePhone').css('border-color', phone ? '' : '#B3452E');
+    let phoneOk = validatePhoneNumber(phone);
+    let emailOk = validEmail(email);
+
+    let nameOk = true;
+    if(!name || name.length < 2){ nameOk = false; }
+
+    if(!nameOk || !emailOk || !phoneOk){
+        $('#f_profileName').css('border-color', nameOk ? '' : '#B3452E');
+        $('#f_profileEmail').css('border-color', emailOk ? '' : '#B3452E');
+        $('#f_profilePhone').css('border-color', phoneOk ? '' : '#B3452E');
         return;
     }
-    $('#f_profileName, #f_profileEmail').css('border-color', '');
+    $('#f_profileName, #f_profileEmail, #f_profilePhone').css('border-color', '');
 
-    $('#profileName').text(name);
-    $('#profileEmail').text(email);
-    $('#profilePhone').text(phone || '—');
-    $('#profileAddress').text(address || '—');
-    $('#profileAvatar').text(
-        name.split(' ').map(w => w.charAt(0)).join('').slice(0,2).toUpperCase() || 'AR'
-    );
+    phone = formatPhoneNumber(phone);
 
-    const $btn = $(this);
-    const $label = $('#profileSaveLabel');
-    const originalText = $label.text();
-    $label.text('Saving...');
-    setTimeout(() => {
-        $btn.addClass('success');
-        $label.text('✓ Saved');
-        setTimeout(() => {
-            $btn.removeClass('success');
-            $label.text(originalText);
-            closeProfileModal();
-        }, 1000);
-    }, 500);
+    const obj = {
+        userId : localStorage.getItem("UserID"),
+        userName : name,
+        userEmail : email,
+        userContact : phone
+    }
+
+    $.ajax({
+        url : "http://localhost:8080/v1/user/updateCustomerDetails",
+        type : "PATCH",
+        headers: {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        contentType : "application/json",
+        data: JSON.stringify(obj),
+        success: function (r){
+            if(r.status === 200){
+                showToast("Profile Updated Successfully");
+                const u = r.body[0];
+
+                const $btn = $(this);
+                const $label = $('#profileSaveLabel');
+                const originalText = $label.text();
+                $label.text('Saving...');
+                setTimeout(() => {
+                    $btn.addClass('success');
+                    $label.text('✓ Saved');
+                    setTimeout(() => {
+                        $btn.removeClass('success');
+                        $label.text(originalText);
+                        closeProfileModal();
+                    }, 1000);
+
+                    $('#profileName').text(u.userName);
+                    $('#profileEmail').text(u.userEmail);
+                    $('#profilePhone').text(u.userContact);
+                    $('#userNameTitle').text(u.userName.split(' ')[0]);
+                    $('#profileAvatar').text(
+                        u.userName.split(' ').map(w => w.charAt(0)).join('').slice(0,2).toUpperCase()
+                    );
+                }, 500);
+
+                setLocalStorageDetails(u.userId, u.userName, r.body[1]);
+            }
+            else if(r.status === 401){
+                showToast("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "customerLogin.html";
+                }, 1000);
+            }
+            else{
+                showToast(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("Unexpected Error");
+        }
+    });
 });
+
+function setLocalStorageDetails(id, name, token){
+    localStorage.removeItem("JWT");
+    localStorage.removeItem("UserID");
+    localStorage.removeItem("UserName");
+
+    localStorage.setItem("JWT", token);
+    localStorage.setItem("UserID", id);
+    localStorage.setItem("UserName", name);
+}
 
 
 /* ============================================================
@@ -144,8 +242,10 @@ function getUserDetails(){
             if(r.status === 200){
                 const user = r.body;
                 $('#profileName').text(user.userName);
-                $('#userNameTitle').text(user.userName);
-                $('#profileAvatar').text(user.userName.charAt(0).toUpperCase());
+                $('#userNameTitle').text(user.userName.split(' ')[0]);
+                $('#profileAvatar').text(
+                    user.userName.split(' ').map(w => w.charAt(0)).join('').slice(0,2).toUpperCase()
+                );
                 $('#profileEmail').text(user.userEmail);
                 $('#profilePhone').text(user.userContact);
                 $('#profileStatus').text(user.userStatus);

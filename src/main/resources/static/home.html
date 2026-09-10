@@ -836,63 +836,63 @@
             <h2>Straight from the oven</h2>
             <p>The pastries our regulars order again and again — each one made in small batches so every bite tastes like it just came out of the oven.</p>
         </div>
-        <div class="card-grid">
+        <div class="card-grid" id="itemCardGrid">
 
-            <div class="p-card">
-                <div class="p-card-img">
-                    <span class="p-tag">Best Seller</span>
-                    <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" alt="Flaky butter croissant">
-                </div>
-                <div class="p-card-body">
-                    <h3>Butter Croissant</h3>
-                    <p>72-hour laminated dough, baked golden and shatteringly flaky.</p>
-                    <div class="p-card-foot">
-                        <span class="price">Rs. 450</span>
-                    </div>
-                </div>
-            </div>
+<!--            <div class="p-card">-->
+<!--                <div class="p-card-img">-->
+<!--                    <span class="p-tag">Best Seller</span>-->
+<!--                    <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" alt="Flaky butter croissant">-->
+<!--                </div>-->
+<!--                <div class="p-card-body">-->
+<!--                    <h3>Butter Croissant</h3>-->
+<!--                    <p>72-hour laminated dough, baked golden and shatteringly flaky.</p>-->
+<!--                    <div class="p-card-foot">-->
+<!--                        <span class="price">Rs. 450</span>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-            <div class="p-card">
-                <div class="p-card-img">
-                    <span class="p-tag">Popular</span>
-                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80" alt="Slice of layered celebration cake">
-                </div>
-                <div class="p-card-body">
-                    <h3>Rose Vanilla Cake</h3>
-                    <p>Soft vanilla sponge, whipped cream, and candied rose petals.</p>
-                    <div class="p-card-foot">
-                        <span class="price">Rs. 3,200</span>
-                    </div>
-                </div>
-            </div>
+<!--            <div class="p-card">-->
+<!--                <div class="p-card-img">-->
+<!--                    <span class="p-tag">Popular</span>-->
+<!--                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80" alt="Slice of layered celebration cake">-->
+<!--                </div>-->
+<!--                <div class="p-card-body">-->
+<!--                    <h3>Rose Vanilla Cake</h3>-->
+<!--                    <p>Soft vanilla sponge, whipped cream, and candied rose petals.</p>-->
+<!--                    <div class="p-card-foot">-->
+<!--                        <span class="price">Rs. 3,200</span>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-            <div class="p-card">
-                <div class="p-card-img">
-                    <span class="p-tag">Seasonal</span>
-                    <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80" alt="Fresh mixed berry tart">
-                </div>
-                <div class="p-card-body">
-                    <h3>Berry Fruit Tart</h3>
-                    <p>Crisp shortcrust, silky custard, and glazed seasonal berries.</p>
-                    <div class="p-card-foot">
-                        <span class="price">Rs. 890</span>
-                    </div>
-                </div>
-            </div>
+<!--            <div class="p-card">-->
+<!--                <div class="p-card-img">-->
+<!--                    <span class="p-tag">Seasonal</span>-->
+<!--                    <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80" alt="Fresh mixed berry tart">-->
+<!--                </div>-->
+<!--                <div class="p-card-body">-->
+<!--                    <h3>Berry Fruit Tart</h3>-->
+<!--                    <p>Crisp shortcrust, silky custard, and glazed seasonal berries.</p>-->
+<!--                    <div class="p-card-foot">-->
+<!--                        <span class="price">Rs. 890</span>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-            <div class="p-card">
-                <div class="p-card-img">
-                    <span class="p-tag">New</span>
-                    <img src="https://images.unsplash.com/photo-1558326567-98ae2405596b?auto=format&fit=crop&w=500&q=80" alt="Colorful French macarons">
-                </div>
-                <div class="p-card-body">
-                    <h3>Macaron Box (6)</h3>
-                    <p>Crisp shells, chewy centers, six flavors hand-piped daily.</p>
-                    <div class="p-card-foot">
-                        <span class="price">Rs. 1,150</span>
-                    </div>
-                </div>
-            </div>
+<!--            <div class="p-card">-->
+<!--                <div class="p-card-img">-->
+<!--                    <span class="p-tag">New</span>-->
+<!--                    <img src="https://images.unsplash.com/photo-1558326567-98ae2405596b?auto=format&fit=crop&w=500&q=80" alt="Colorful French macarons">-->
+<!--                </div>-->
+<!--                <div class="p-card-body">-->
+<!--                    <h3>Macaron Box (6)</h3>-->
+<!--                    <p>Crisp shells, chewy centers, six flavors hand-piped daily.</p>-->
+<!--                    <div class="p-card-foot">-->
+<!--                        <span class="price">Rs. 1,150</span>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
         </div>
         <div class="see-all-wrap">
@@ -1047,6 +1047,56 @@
             $navLinks.removeClass('open');
         });
     });
+</script>
+
+<script>
+    /* ============================================================
+                           GET MENU ITEMS
+       ============================================================ */
+    $.ajax({
+        url: "http://localhost:8080/v1/foodItems/getAllFoodItems",
+        type: "GET",
+        headers : {"Authorization" : "Bearer " + localStorage.getItem("JWT")},
+        success : function (r){
+            if(r.status === 200){
+
+                const items = r.body.slice(0,4);
+                $('#itemCardGrid').html( items.map(i => {
+                    const badge = i.badges.split(',')[0];
+                    const tag = badge ? '<span class="p-tag">' + badge + '</span>' : '';
+
+                    return `<div class="p-card">
+                        <div class="p-card-img">
+                            ${tag}
+                            <img src=${i.imagePath} alt="Flaky butter croissant">
+                        </div>
+                        <div class="p-card-body">
+                            <h3>${i.foodItemName}</h3>
+                            <p>${i.description}</p>
+                            <div class="p-card-foot">
+                                <span class="price">Rs. ${i.price}</span>
+                            </div>
+                        </div>
+                    </div>`
+                }).join(''));
+
+            }
+            else if(r.status === 401){
+                alert("Please Login First");
+                setTimeout(()=>{
+                    window.location.href = "customerLogin.html";
+                }, 1000);
+            }
+            else{
+                alert(r.message);
+            }
+        },
+        error: function (r){
+            r.message ? alert(r.message) : alert("Unexpected Error");
+            console.log(r);
+        }
+    });
+
 </script>
 
 <script>

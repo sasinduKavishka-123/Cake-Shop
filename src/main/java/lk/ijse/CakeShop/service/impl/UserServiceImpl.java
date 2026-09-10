@@ -178,4 +178,39 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public UserDTO updateCustomerDetails(UserDTO userDTO) {
+        log.info("Execute method updateCustomerDetails()");
+
+        Optional<User> optionalUser = userRepository.findById(userDTO.getUserId());
+        if(optionalUser.isEmpty()){
+            log.error("Error in Method updateCustomerDetails()");
+            throw new CustomException(404, "User not Found");
+        }
+
+        if(userDTO.getUserContact() == null){
+            log.error("Error in Method updateCustomerDetails()");
+            throw new CustomException(402, "Invalid Contact");
+        }
+        if(userDTO.getUserEmail() == null){
+            log.error("Error in Method updateCustomerDetails()");
+            throw new CustomException(402, "Invalid Email");
+        }
+
+        User user = optionalUser.get();
+        user.setUserName(userDTO.getUserName());
+        user.setUserContact(userDTO.getUserContact());
+        user.setUserEmail(userDTO.getUserEmail());
+
+        User saved = userRepository.save(user);
+        UserDTO newDto = new UserDTO();
+        newDto.setUserId(saved.getUserId());
+        newDto.setUserName(saved.getUserName());
+        newDto.setUserContact(saved.getUserContact());
+        newDto.setUserEmail(saved.getUserEmail());
+        newDto.setUserRoles(saved.getUserRoles());
+
+        return newDto;
+    }
+
 }
