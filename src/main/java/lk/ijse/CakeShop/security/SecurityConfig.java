@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/v1/user/saveCustomer").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/bakeryChat/chat").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/user/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/user/saveStaff").hasAnyRole("Admin")
                         .requestMatchers(HttpMethod.PATCH, "/v1/user/updateUserStatus").hasAnyRole("Admin")

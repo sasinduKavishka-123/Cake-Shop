@@ -26,4 +26,13 @@ public class FoodItemDTO {
     private String badges;
     private List<String> badgesList;
 
+
+    // for Ai
+    public FoodItemDTO(String foodItemName, BigDecimal price, String description, String foodItemCategory, String badges) {
+        this.foodItemName = foodItemName;
+        this.price = price;
+        this.description = description;
+        this.foodItemCategory = foodItemCategory;
+        this.badges = badges;
+    }
 }

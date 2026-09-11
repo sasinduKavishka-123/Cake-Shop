@@ -1,0 +1,9 @@
+To reserve a table online at Sugar & Flour Bakery, follow these steps:
+
+1. **Navigate to Reservations:** Click on the "Reserve a Table" tab on our main website menu.
+2. **Select Date & Party Size:** Choose your desired date, time, and the number of guests in your party.
+3. **Choose Seating Option:** Select your preferred seating area (Window Seat, Communal Table or Quiet Corner).
+4. **Enter Guest Details:** Provide your full name, phone number and email address. You can also leave a note for special occasions (e.g., birthday celebrations or high tea setup).
+5. **Confirmation & Deposit (if applicable):** Click "Confirm Reservation." For parties larger than 10 guests contact us (011 2 345 678).
+7. **Check In:** Show your booking ID or name to our host upon arrival. We hold reserved tables for up to 15 minutes past your booking time.
+8. **View Orders:** You can view Reservations status in your profile.

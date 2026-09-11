@@ -12,14 +12,6 @@ import java.util.List;
 
 @Repository
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
-
-//    @Query(value = "SELECT DISTINCT f FROM FoodItem f WHERE " +
-//            "( (f.foodItemName IS NULL OR f.foodItemName LIKE %?1%) OR " +
-//            "(f.foodItemCategory.categoryName IS NULL OR f.foodItemCategory.categoryName LIKE %?2%) )" +
-//            "AND " +
-//            "(?3 IS NULL OR f.badges IN ?3)")
-//    List<FoodItem> filterFoodItems(String itemName, String itemCategory, List<String> badges);
-
     @Query(value = """
         SELECT DISTINCT f.* FROM food_item f
         LEFT JOIN food_item_category c ON f.category_id = c.category_id
@@ -37,4 +29,6 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 
     @Query(value = "SELECT COUNT(f.foodItemId) FROM FoodItem f")
     int getFoodItemCount();
+
+    List<FoodItem> findByFoodItemNameContainingIgnoreCase(String name);
 }

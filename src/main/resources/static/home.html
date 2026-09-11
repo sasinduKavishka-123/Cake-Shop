@@ -1098,20 +1098,10 @@
     });
 
 </script>
-
-<script>
-    /* ============================================================
-       AI CHAT WIDGET — show/hide toggle only (no chat logic wired up yet)
-       ============================================================ */
-    $('#chatToggleBtn').on('click', function(){
-        $(this).toggleClass('open');
-        $('#chatWindow').toggleClass('open');
-    });
-    $('#chatCloseBtn').on('click', function(){
-        $('#chatToggleBtn').removeClass('open');
-        $('#chatWindow').removeClass('open');
-    });
-</script>
+<!-- ============================================================
+                          AI CHAT WIDGET
+     ============================================================ -->
+<script src="js/chatBot.js"></script>
 
 </body>
 </html>

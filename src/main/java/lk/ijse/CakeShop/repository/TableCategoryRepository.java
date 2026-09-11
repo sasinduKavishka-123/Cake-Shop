@@ -18,4 +18,7 @@ public interface TableCategoryRepository extends JpaRepository<TableCategory, Lo
     @Query(value = "SELECT tc FROM TableCategory tc " +
             "WHERE tc.tableCategoryName = ?1")
     TableCategory getTableCategoryByName(String name);
+
+
+    List<TableCategory> findByTableCategoryNameContainingIgnoreCase(String tableCategoryName);
 }
