@@ -39,6 +39,8 @@ $(document.ready).ready(function() {
         const $botBubble = appendMessage('', 'bot');
         const $botParagraph = $botBubble.find('p');
 
+        let rawMarkdown = '';
+
         try {
             // 3. Make Streaming Request to Spring Boot
             const response = await fetch('http://localhost:8080/v1/bakeryChat/chat', {
@@ -63,8 +65,10 @@ $(document.ready).ready(function() {
 
                 const chunk = decoder.decode(value, { stream: true });
 
+                rawMarkdown += chunk;
+
                 // Append streamed token text
-                $botParagraph.text($botParagraph.text() + chunk);
+                $botParagraph.html(marked.parse(rawMarkdown));
 
                 // Auto-scroll to bottom as text stream arrives
                 scrollToBottom();

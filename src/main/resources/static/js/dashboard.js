@@ -401,7 +401,7 @@ function generateSmartSuggestions(orderList){
             badge:{label:'Top Performer', cls:'up'},
             text:`${top.name} is your best-selling item right now, with ${top.total} unit${top.total===1?'':'s'} sold across recent orders.`,
             actions:[
-                {label:'Adjust Stock', kind:'primary', editItem:top.name},
+                {label:'View Item details', kind:'primary', editItem:top.name},
                 {label:'View Sales Report', kind:'secondary', goto:'orders'},
             ],
         });
@@ -415,7 +415,7 @@ function generateSmartSuggestions(orderList){
             badge:{label:`+${r.changePct}%`, cls:'up'},
             text:`${r.name} has seen a ${r.changePct}% spike in orders this week — consider increasing production or stock levels to prevent stockouts.`,
             actions:[
-                {label:'View Item details', kind:'primary'},
+                {label:'View Item details', kind:'primary', editItem: 'items'},
                 {label:'View Sales Report', kind:'secondary', goto:'orders'},
             ],
         });
@@ -3163,13 +3163,25 @@ $('#confirmDelete').on('click', function(){
 $modalScrim.on('click', function(){ closeModal(); closeConfirm(); });
 $(document).on('keydown', function(e){ if(e.key==='Escape'){ closeModal(); closeConfirm(); closeSidebar(); } });
 
+
+
 /* ============================================================
-   INIT
+                         INIT
    ============================================================ */
-goToSection('overview');
+const userId = localStorage.getItem("UserID");
+// CHECK USER DETAILS
+if(!userId) {
+    showToast("Please Login First");
+    setTimeout(()=>{
+        window.location.href = "staffLogin.html";
+    }, 500);
+}
+else{
 
-// fill userName in aside
-fillUserDetails();
+    goToSection('overview');
+    // fill userName in aside
+    fillUserDetails();
 
-// smart suggestions
-getOrdersWithinLastMonth();
+    // smart suggestions
+    getOrdersWithinLastMonth();
+}

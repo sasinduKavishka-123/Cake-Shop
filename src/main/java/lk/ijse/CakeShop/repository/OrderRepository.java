@@ -16,7 +16,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT o FROM Order o WHERE " +
             "( (?1 IS NULL OR CAST(o.orderId AS string) LIKE ?1%) OR (?2 IS NULL OR o.user.userName LIKE %?2%) ) " +
             "AND (?3 IS NULL OR CAST(o.orderDate AS string) LIKE ?3%)" +
-            "AND ( ?4 IS NULL OR str(o.orderStatus) IN ?4)")
+            "AND ( ?4 IS NULL OR str(o.orderStatus) IN ?4) " +
+            "ORDER BY o.orderDate DESC ")
     List<Order> filterOrders(String orderId, String userName, String orderDate, String[] statusList);
 
     @Query(value = "SELECT COUNT(o.orderId) FROM Order o WHERE o.orderDate BETWEEN ?1 AND ?2")
